@@ -25,11 +25,10 @@ class SetupController @Inject()(
     try {
       val gameCreation = request.body.asJson.get.as[GameCreation]
       val eventualPlayers = userDao.findPlayers(gameCreation.players)
-      val currentUser = request.user
       eventualPlayers.map(players => {
         State(request.user.userId, players)
       }).flatMap(state => {
-        gameDao.insertGame(currentUser, state)
+        gameDao.insertGame(state)
       }).map(row => Ok(Json.toJson(models.GameListItem(row))))
     } catch {
       case _: Throwable =>

@@ -2,7 +2,6 @@ import React, {useState, useEffect} from "react";
 import axios from "axios";
 import { useAuth } from "../context/auth";
 import { GameStateContext } from "../context/GameState";
-import TemperatureRoller from "../components/TemperatureRoller";
 import {useParams} from "react-router";
 import GameHeader from "../components/GameHeader"
 
@@ -43,7 +42,7 @@ function Game(props) {
         }
         switch (gameState.stage) {
             case "PickDestination":
-                return <PickDestination gameId={game.gameId} />
+                return <div />
         }
     }
 

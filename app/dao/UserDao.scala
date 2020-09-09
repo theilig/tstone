@@ -91,7 +91,7 @@ class UserDao @Inject() (
   }
 
   def findPlayers(players: List[Int]): Future[List[Tables.UserRow]] = {
-    db.run(Users.filter(u => players.contains(u.userId)).result).map(_.toList)
+    db.run(Users.filter(u => u.userId.inSet(players.toSet)).result).map(_.toList)
   }
 
 }

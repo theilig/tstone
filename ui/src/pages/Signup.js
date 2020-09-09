@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import { Link } from "react-router-dom";
 import axios from 'axios';
-import logoImg from "../img/logo.png";
+import logoImg from "../img/logo.jpg";
 import { Card, Logo, Form, Input, Button, Error, Success, EmailRegex } from '../components/AuthForm';
 
 function Signup() {

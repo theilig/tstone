@@ -42,6 +42,6 @@ object State {
   }
 
   def apply(gameRow: GameRow): State = {
-    Json.parse(gameRow.state.get).as[State]
+    Json.parse(gameRow.state).as[State]
   }
 }

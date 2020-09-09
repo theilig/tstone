@@ -10,8 +10,7 @@ POST    /api/login                  controllers.LoginController.processLoginAtte
 POST    /api/signup                 controllers.LoginController.processSignupAttempt
 POST    /api/confirm                controllers.LoginController.processConfirmation
 GET     /api/games                  controllers.SetupController.showGameList
-GET     /api/game/:resource         controllers.GameController.getGame(resource: String)
+GET     /api/game                   controllers.GameController.getGame
 POST    /api/game/:resource         controllers.GameController.setGame(resource: String)
-GET     /api/teamData               controllers.SetupController.teamData
 POST    /api/createGame             controllers.SetupController.newGame
 GET     /assets/*file               controllers.FrontendController.assetOrDefault(file)
