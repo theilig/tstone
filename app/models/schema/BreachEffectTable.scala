@@ -19,7 +19,7 @@ trait BreachEffectTable {
     BreachEffectRow.tupled((<<[Int], <<[Int], <<[String]))
   }
   /** Table description of table BreachEffect. Objects of this class serve as prototypes for rows in queries. */
-  class BreachEffect(_tableTag: Tag) extends profile.api.Table[BreachEffectRow](_tableTag, Some("TSDev"), "BreachEffect") {
+  class BreachEffect(_tableTag: Tag) extends profile.api.Table[BreachEffectRow](_tableTag, Some("TStone"), "BreachEffect") {
     def * = (effectId, cardId, effect) <> (BreachEffectRow.tupled, BreachEffectRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = ((Rep.Some(effectId), Rep.Some(cardId), Rep.Some(effect))).shaped.<>({r=>import r._; _1.map(_=> BreachEffectRow.tupled((_1.get, _2.get, _3.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))

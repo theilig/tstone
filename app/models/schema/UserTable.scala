@@ -22,7 +22,7 @@ trait UserTable {
     UserRow.tupled((<<[Int], <<[String], <<[String], <<[String], <<[String], <<[Boolean]))
   }
   /** Table description of table User. Objects of this class serve as prototypes for rows in queries. */
-  class User(_tableTag: Tag) extends profile.api.Table[UserRow](_tableTag, Some("TSDev"), "User") {
+  class User(_tableTag: Tag) extends profile.api.Table[UserRow](_tableTag, Some("TStone"), "User") {
     def * = (userId, firstName, lastName, passwordHash, email, confirmed) <> (UserRow.tupled, UserRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = ((Rep.Some(userId), Rep.Some(firstName), Rep.Some(lastName), Rep.Some(passwordHash), Rep.Some(email), Rep.Some(confirmed))).shaped.<>({r=>import r._; _1.map(_=> UserRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))

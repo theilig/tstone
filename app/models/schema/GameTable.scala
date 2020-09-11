@@ -19,7 +19,7 @@ trait GameTable {
     GameRow.tupled((<<[Int], <<[String], <<[Boolean]))
   }
   /** Table description of table Game. Objects of this class serve as prototypes for rows in queries. */
-  class Game(_tableTag: Tag) extends profile.api.Table[GameRow](_tableTag, Some("TSDev"), "Game") {
+  class Game(_tableTag: Tag) extends profile.api.Table[GameRow](_tableTag, Some("TStone"), "Game") {
     def * = (gameId, state, completed) <> (GameRow.tupled, GameRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = ((Rep.Some(gameId), Rep.Some(state), Rep.Some(completed))).shaped.<>({r=>import r._; _1.map(_=> GameRow.tupled((_1.get, _2.get, _3.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))

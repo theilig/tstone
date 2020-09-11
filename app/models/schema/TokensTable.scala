@@ -20,7 +20,7 @@ trait TokensTable {
     TokensRow.tupled((<<[Int], <<[Int], <<[Int], <<[String]))
   }
   /** Table description of table Tokens. Objects of this class serve as prototypes for rows in queries. */
-  class Tokens(_tableTag: Tag) extends profile.api.Table[TokensRow](_tableTag, Some("TSDev"), "Tokens") {
+  class Tokens(_tableTag: Tag) extends profile.api.Table[TokensRow](_tableTag, Some("TStone"), "Tokens") {
     def * = (tokenId, expires, userId, tokenValue) <> (TokensRow.tupled, TokensRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = ((Rep.Some(tokenId), Rep.Some(expires), Rep.Some(userId), Rep.Some(tokenValue))).shaped.<>({r=>import r._; _1.map(_=> TokensRow.tupled((_1.get, _2.get, _3.get, _4.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))

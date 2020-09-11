@@ -19,7 +19,7 @@ trait VillageEffectTable {
     VillageEffectRow.tupled((<<[Int], <<[Int], <<[String]))
   }
   /** Table description of table VillageEffect. Objects of this class serve as prototypes for rows in queries. */
-  class VillageEffect(_tableTag: Tag) extends profile.api.Table[VillageEffectRow](_tableTag, Some("TSDev"), "VillageEffect") {
+  class VillageEffect(_tableTag: Tag) extends profile.api.Table[VillageEffectRow](_tableTag, Some("TStone"), "VillageEffect") {
     def * = (effectId, cardId, effect) <> (VillageEffectRow.tupled, VillageEffectRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = ((Rep.Some(effectId), Rep.Some(cardId), Rep.Some(effect))).shaped.<>({r=>import r._; _1.map(_=> VillageEffectRow.tupled((_1.get, _2.get, _3.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))

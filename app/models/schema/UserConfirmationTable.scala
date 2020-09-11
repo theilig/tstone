@@ -19,7 +19,7 @@ trait UserConfirmationTable {
     UserConfirmationRow.tupled((<<[Int], <<[String], <<[Int]))
   }
   /** Table description of table UserConfirmation. Objects of this class serve as prototypes for rows in queries. */
-  class UserConfirmation(_tableTag: Tag) extends profile.api.Table[UserConfirmationRow](_tableTag, Some("TSDev"), "UserConfirmation") {
+  class UserConfirmation(_tableTag: Tag) extends profile.api.Table[UserConfirmationRow](_tableTag, Some("TStone"), "UserConfirmation") {
     def * = (userConfirmationId, token, userId) <> (UserConfirmationRow.tupled, UserConfirmationRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = ((Rep.Some(userConfirmationId), Rep.Some(token), Rep.Some(userId))).shaped.<>({r=>import r._; _1.map(_=> UserConfirmationRow.tupled((_1.get, _2.get, _3.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))

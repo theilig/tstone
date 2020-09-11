@@ -20,7 +20,7 @@ trait HeroClassTable {
   }
   /** Table description of table HeroClass. Objects of this class serve as prototypes for rows in queries.
    *  NOTE: The following names collided with Scala keywords and were escaped: trait */
-  class HeroClass(_tableTag: Tag) extends profile.api.Table[HeroClassRow](_tableTag, Some("TSDev"), "HeroClass") {
+  class HeroClass(_tableTag: Tag) extends profile.api.Table[HeroClassRow](_tableTag, Some("TStone"), "HeroClass") {
     def * = (traitId, cardId, `trait`) <> (HeroClassRow.tupled, HeroClassRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = ((Rep.Some(traitId), Rep.Some(cardId), Rep.Some(`trait`))).shaped.<>({r=>import r._; _1.map(_=> HeroClassRow.tupled((_1.get, _2.get, _3.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))

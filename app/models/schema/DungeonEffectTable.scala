@@ -19,7 +19,7 @@ trait DungeonEffectTable {
     DungeonEffectRow.tupled((<<[Int], <<[Int], <<[String]))
   }
   /** Table description of table DungeonEffect. Objects of this class serve as prototypes for rows in queries. */
-  class DungeonEffect(_tableTag: Tag) extends profile.api.Table[DungeonEffectRow](_tableTag, Some("TSDev"), "DungeonEffect") {
+  class DungeonEffect(_tableTag: Tag) extends profile.api.Table[DungeonEffectRow](_tableTag, Some("TStone"), "DungeonEffect") {
     def * = (effectId, cardId, effect) <> (DungeonEffectRow.tupled, DungeonEffectRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = ((Rep.Some(effectId), Rep.Some(cardId), Rep.Some(effect))).shaped.<>({r=>import r._; _1.map(_=> DungeonEffectRow.tupled((_1.get, _2.get, _3.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))

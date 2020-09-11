@@ -10,27 +10,24 @@ trait MonsterTable {
   import slick.jdbc.{GetResult => GR}
   /** Entity class storing rows of table Monster
    *  @param cardId Database column card_id SqlType(INT), PrimaryKey
-   *  @param name Database column name SqlType(VARCHAR), Length(100,true)
    *  @param light Database column light SqlType(INT)
    *  @param health Database column health SqlType(INT)
    *  @param goldValue Database column gold_value SqlType(INT)
    *  @param victoryPoints Database column victory_points SqlType(INT) */
-  case class MonsterRow(cardId: Int, name: String, light: Int, health: Int, goldValue: Int, victoryPoints: Int)
+  case class MonsterRow(cardId: Int, light: Int, health: Int, goldValue: Int, victoryPoints: Int)
   /** GetResult implicit for fetching MonsterRow objects using plain SQL queries */
-  implicit def GetResultMonsterRow(implicit e0: GR[Int], e1: GR[String]): GR[MonsterRow] = GR{
+  implicit def GetResultMonsterRow(implicit e0: GR[Int]): GR[MonsterRow] = GR{
     prs => import prs._
-    MonsterRow.tupled((<<[Int], <<[String], <<[Int], <<[Int], <<[Int], <<[Int]))
+    MonsterRow.tupled((<<[Int], <<[Int], <<[Int], <<[Int], <<[Int]))
   }
   /** Table description of table Monster. Objects of this class serve as prototypes for rows in queries. */
-  class Monster(_tableTag: Tag) extends profile.api.Table[MonsterRow](_tableTag, Some("TSDev"), "Monster") {
-    def * = (cardId, name, light, health, goldValue, victoryPoints) <> (MonsterRow.tupled, MonsterRow.unapply)
+  class Monster(_tableTag: Tag) extends profile.api.Table[MonsterRow](_tableTag, Some("TStone"), "Monster") {
+    def * = (cardId, light, health, goldValue, victoryPoints) <> (MonsterRow.tupled, MonsterRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(cardId), Rep.Some(name), Rep.Some(light), Rep.Some(health), Rep.Some(goldValue), Rep.Some(victoryPoints))).shaped.<>({r=>import r._; _1.map(_=> MonsterRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(cardId), Rep.Some(light), Rep.Some(health), Rep.Some(goldValue), Rep.Some(victoryPoints))).shaped.<>({r=>import r._; _1.map(_=> MonsterRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column card_id SqlType(INT), PrimaryKey */
     val cardId: Rep[Int] = column[Int]("card_id", O.PrimaryKey)
-    /** Database column name SqlType(VARCHAR), Length(100,true) */
-    val name: Rep[String] = column[String]("name", O.Length(100,varying=true))
     /** Database column light SqlType(INT) */
     val light: Rep[Int] = column[Int]("light")
     /** Database column health SqlType(INT) */

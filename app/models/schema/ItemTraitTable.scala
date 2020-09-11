@@ -20,7 +20,7 @@ trait ItemTraitTable {
   }
   /** Table description of table ItemTrait. Objects of this class serve as prototypes for rows in queries.
    *  NOTE: The following names collided with Scala keywords and were escaped: trait */
-  class ItemTrait(_tableTag: Tag) extends profile.api.Table[ItemTraitRow](_tableTag, Some("TSDev"), "ItemTrait") {
+  class ItemTrait(_tableTag: Tag) extends profile.api.Table[ItemTraitRow](_tableTag, Some("TStone"), "ItemTrait") {
     def * = (traitId, cardId, `trait`) <> (ItemTraitRow.tupled, ItemTraitRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = ((Rep.Some(traitId), Rep.Some(cardId), Rep.Some(`trait`))).shaped.<>({r=>import r._; _1.map(_=> ItemTraitRow.tupled((_1.get, _2.get, _3.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
