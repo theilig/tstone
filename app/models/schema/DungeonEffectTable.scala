@@ -19,6 +19,7 @@ trait DungeonEffectTable {
     DungeonEffectRow.tupled((<<[Int], <<[Int], <<[String]))
   }
   /** Table description of table DungeonEffect. Objects of this class serve as prototypes for rows in queries. */
+  //noinspection ScalaUnnecessaryParentheses
   class DungeonEffect(_tableTag: Tag) extends profile.api.Table[DungeonEffectRow](_tableTag, Some("TStone"), "DungeonEffect") {
     def * = (effectId, cardId, effect) <> (DungeonEffectRow.tupled, DungeonEffectRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

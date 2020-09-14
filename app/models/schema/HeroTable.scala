@@ -23,6 +23,7 @@ trait HeroTable {
     HeroRow.tupled((<<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<?[Int], <<[Int]))
   }
   /** Table description of table Hero. Objects of this class serve as prototypes for rows in queries. */
+  //noinspection ScalaUnnecessaryParentheses
   class Hero(_tableTag: Tag) extends profile.api.Table[HeroRow](_tableTag, Some("TStone"), "Hero") {
     def * = (cardId, light, strength, level, cost, goldValue, victoryPoints) <> (HeroRow.tupled, HeroRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

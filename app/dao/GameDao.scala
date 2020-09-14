@@ -21,7 +21,7 @@ class GameDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
 
 
   def gameList: Future[List[GameListItem]] = {
-    val allGames = db.run(Games.result)
+    val allGames = db.run(Games.filter(_.completed === false).result)
     allGames.map (list => {
       list.map(game => {
         GameListItem(game.gameId, Json.parse(game.state))
@@ -40,4 +40,13 @@ class GameDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     db.run(Games.filter(_.gameId === gameId).result.headOption)
   }
 
+  def completeGame(gameId: Int): Future[Int] = {
+    val updateQuery = for { g <- Games if g.gameId === gameId } yield g.completed
+    db.run(updateQuery.update(true))
+  }
+
+  def updateGame(gameId: Int, newState: State): Future[Int] = {
+    val updateQuery = for { g <- Games if g.gameId === gameId } yield g.state
+    db.run(updateQuery.update(Json.toJson(newState).toString))
+  }
 }

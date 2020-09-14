@@ -20,6 +20,7 @@ trait VillagerTable {
     VillagerRow.tupled((<<[Int], <<[Int], <<?[Int], <<[Int]))
   }
   /** Table description of table Villager. Objects of this class serve as prototypes for rows in queries. */
+  //noinspection ScalaUnnecessaryParentheses
   class Villager(_tableTag: Tag) extends profile.api.Table[VillagerRow](_tableTag, Some("TStone"), "Villager") {
     def * = (cardId, cost, goldValue, victoryPoints) <> (VillagerRow.tupled, VillagerRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

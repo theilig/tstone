@@ -15,7 +15,7 @@ const Team = styled.div`
     width: 100%;
     max-height: 50px;
     font-weight: 400;
-    font-size: xx-large;
+    font-size: large;
     min-width: 175px;
 `;
 
@@ -58,6 +58,10 @@ const InningSummary = styled.div`
 function GameListItem(props) {
     return (
         <Summary>
+            <Team>Started by {props.game.state.players[0].name}</Team>
+            {props.game.state.players.slice(1).map((player) => (
+                <Team>{player.name}</Team>
+            ))}
         </Summary>
     );
 }

@@ -7,8 +7,8 @@ object FrontendRunHook {
   def apply(base: File): PlayRunHook = {
     object UIBuildHook extends PlayRunHook {
       var process: Option[Process] = None
-      var install: String = FrontendCommands.dependencyInstall
-      var run: String = FrontendCommands.serve
+      val install: String = FrontendCommands.dependencyInstall
+      val run: String = FrontendCommands.serve
 
       override def beforeStarted(): Unit = {
         if (!(base / "ui" / "node_modules").exists()) Process(install, base / "ui").!

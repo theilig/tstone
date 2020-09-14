@@ -43,11 +43,12 @@ const Logo = styled.img`
 `;
 
 const Error = styled.div`
+    display: block;
     background-color: red;
 `;
 
 const Success = styled.div`
-    backgroupd-color: green;
+    background-color: green;
 `;
 
 export { Form, Input, Button, Logo, Card, Error, Success, EmailRegex };

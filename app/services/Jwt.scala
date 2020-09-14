@@ -7,7 +7,6 @@ import com.nimbusds.jose.{JWSAlgorithm, JWSHeader}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import javax.inject.Inject
 import play.api.Configuration
-import play.api.mvc.Request
 
 import scala.concurrent.duration.{FiniteDuration, HOURS}
 import scala.util.Try
@@ -29,7 +28,7 @@ class Jwt @Inject() (config: Configuration) {
     signedJWT.serialize()
   }
 
-  private def decodePayload(token: String): Option[Int] = {
+  def decodePayload(token: String): Option[Int] = {
     Try({
       val signedJWT = SignedJWT.parse(token)
       val verifier = new MACVerifier(JwtSecretKey)
@@ -46,16 +45,5 @@ class Jwt @Inject() (config: Configuration) {
     }).recover({
       case _: Throwable => None
     }).get
-  }
-
-  def getUserId(request: Request[Any]): Option[Int] = {
-    val HeaderTokenRegex = """Bearer\s+(.+?)""".r
-
-    val authHeader = request.headers.get("Authorization").getOrElse("")
-    val jwtToken = authHeader match {
-      case HeaderTokenRegex(token) => token
-      case _ => ""
-    }
-    decodePayload(jwtToken)
   }
 }

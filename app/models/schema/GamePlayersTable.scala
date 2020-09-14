@@ -19,6 +19,7 @@ trait GamePlayersTable {
     GamePlayersRow.tupled((<<[Int], <<[Int], <<[Int]))
   }
   /** Table description of table GamePlayers. Objects of this class serve as prototypes for rows in queries. */
+  //noinspection ScalaUnnecessaryParentheses
   class GamePlayers(_tableTag: Tag) extends profile.api.Table[GamePlayersRow](_tableTag, Some("TStone"), "GamePlayers") {
     def * = (gamePlayerId, gameId, userId) <> (GamePlayersRow.tupled, GamePlayersRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

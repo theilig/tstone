@@ -22,6 +22,7 @@ trait WeaponTable {
     WeaponRow.tupled((<<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int]))
   }
   /** Table description of table Weapon. Objects of this class serve as prototypes for rows in queries. */
+  //noinspection ScalaUnnecessaryParentheses
   class Weapon(_tableTag: Tag) extends profile.api.Table[WeaponRow](_tableTag, Some("TStone"), "Weapon") {
     def * = (cardId, light, weight, cost, goldValue, victoryPoints) <> (WeaponRow.tupled, WeaponRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

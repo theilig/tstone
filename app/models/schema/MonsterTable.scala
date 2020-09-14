@@ -21,6 +21,7 @@ trait MonsterTable {
     MonsterRow.tupled((<<[Int], <<[Int], <<[Int], <<[Int], <<[Int]))
   }
   /** Table description of table Monster. Objects of this class serve as prototypes for rows in queries. */
+  //noinspection ScalaUnnecessaryParentheses,DuplicatedCode
   class Monster(_tableTag: Tag) extends profile.api.Table[MonsterRow](_tableTag, Some("TStone"), "Monster") {
     def * = (cardId, light, health, goldValue, victoryPoints) <> (MonsterRow.tupled, MonsterRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

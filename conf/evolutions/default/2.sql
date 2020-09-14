@@ -1,3 +1,5 @@
+# noinspection SqlResolveForFile
+
 -- !Ups
 ALTER TABLE Card ADD COLUMN name VARCHAR(100) NOT NULL;
 ALTER TABLE Item DROP COLUMN name;

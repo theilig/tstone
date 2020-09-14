@@ -20,6 +20,7 @@ trait ItemTraitTable {
   }
   /** Table description of table ItemTrait. Objects of this class serve as prototypes for rows in queries.
    *  NOTE: The following names collided with Scala keywords and were escaped: trait */
+  //noinspection ScalaUnnecessaryParentheses
   class ItemTrait(_tableTag: Tag) extends profile.api.Table[ItemTraitRow](_tableTag, Some("TStone"), "ItemTrait") {
     def * = (traitId, cardId, `trait`) <> (ItemTraitRow.tupled, ItemTraitRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

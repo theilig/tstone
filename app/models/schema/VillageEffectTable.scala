@@ -19,6 +19,7 @@ trait VillageEffectTable {
     VillageEffectRow.tupled((<<[Int], <<[Int], <<[String]))
   }
   /** Table description of table VillageEffect. Objects of this class serve as prototypes for rows in queries. */
+  //noinspection ScalaUnnecessaryParentheses
   class VillageEffect(_tableTag: Tag) extends profile.api.Table[VillageEffectRow](_tableTag, Some("TStone"), "VillageEffect") {
     def * = (effectId, cardId, effect) <> (VillageEffectRow.tupled, VillageEffectRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
