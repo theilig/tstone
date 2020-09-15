@@ -4,13 +4,14 @@ import { GameStateContext } from "../context/GameState";
 import {useParams} from "react-router";
 import GameHeader from "../components/GameHeader"
 import Startup from "./Startup";
+import {Redirect} from "react-router";
 
 function Game(props) {
     const [ gameState, setGameState ] = useState()
     const [ gameSocket, setGameSocket ] = useState(null)
     const { authTokens } = useAuth()
     const [ error, setLastError ] = useState("")
-    const [ reload, setReload] = useState(true)
+    const [ gameOver, setGameOver] = useState(false)
     let game = useParams()
     let gameId = parseInt(game.gameId)
 
@@ -45,6 +46,8 @@ function Game(props) {
                 const message = JSON.parse(evt.data)
                 if (message.messageType === "GameState") {
                     setState(message.data.state)
+                } else if (message.messageType === "GameOver") {
+                    setGameOver(true)
                 }
                 console.log(message)
             }
@@ -66,6 +69,15 @@ function Game(props) {
         return ""
     }
 
+    if (gameOver) {
+        if (gameSocket !== null) {
+            setGameSocket(null)
+            gameSocket.close()
+        }
+        return (
+            <Redirect to={"/"} />
+        )
+    }
     return (
         <GameStateContext.Provider value={{ gameState, setGameState: setState  }}>
             <GameHeader />

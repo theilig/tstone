@@ -29,6 +29,10 @@ case object GameOver extends Message
 
 case object LeaveGame extends Message
 
+case object JoinGame extends Message
+
+case object StartGame extends Message
+
 object Message {
   implicit val messageFormat: Format[Message] = Format[Message](
     Reads { js =>
@@ -40,6 +44,8 @@ object Message {
           case "ConnectToGame" =>
             (JsPath \ "data").read[ConnectToGame].reads(js)
           case "LeaveGame" => JsSuccess(LeaveGame)
+          case "JoinGame" => JsSuccess(JoinGame)
+          case "StartGame" => JsSuccess(StartGame)
         }
       )
     },
@@ -61,7 +67,8 @@ object Message {
       case m =>
         JsObject(
           Seq(
-            "messageType" -> JsString(m.getClass.getSimpleName)
+            // Scala classes end up with $ tacked at the end
+            "messageType" -> JsString(m.getClass.getSimpleName.replace("$", ""))
           )
         )
     }
@@ -69,4 +76,3 @@ object Message {
 }
 
 case object Village extends Message
-case object JoinRequest extends Message

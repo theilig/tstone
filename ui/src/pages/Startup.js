@@ -35,44 +35,22 @@ function Startup(props) {
         )
     }
     function requestToJoin() {
-        axios("/api/game/requestJoin", {
-            params: {
-                gameId: gameState.gameId
-            },
-            method: "post",
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Authorization': 'Bearer ' + authTokens.token
-            }
-        }).then(() => {
-            props.reload()
-        }).catch(error => {
-            if (error.response) {
-                setLastError(error.response.data)
-            } else {
-                setLastError("Problem leaving the game")
-            }
-        });
+        props.gameSocket.send(
+            JSON.stringify(
+                {
+                    messageType: "JoinGame"
+                }
+            )
+        )
     }
     function startGame() {
-        axios("/api/game/start", {
-            params: {
-                gameId: gameState.gameId
-            },
-            method: "post",
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Authorization': 'Bearer ' + authTokens.token
-            }
-        }).then(() => {
-            props.reload()
-        }).catch(error => {
-            if (error.response) {
-                setLastError(error.response.data)
-            } else {
-                setLastError("Problem starting the game")
-            }
-        });
+        props.gameSocket.send(
+            JSON.stringify(
+                {
+                    messageType: "StartGame"
+                }
+            )
+        )
     }
     if (cancelled) {
         return (<Redirect to={"/"} />)

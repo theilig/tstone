@@ -1,15 +1,20 @@
 package controllers.game.stage
 
-import models.User
-import models.game.{GameError, JoinRequest, LeaveGame, Message, State}
+import models.{Player, User}
+import models.game.{GameError, JoinGame, LeaveGame, Message, State}
 
 case object WaitingForPlayers extends GameStage {
-  def receive(message: Message, user: User,state: State): Either[State, GameError] = {
+  val MaxPlayers = 5
+  def receive(message: Message, user: User, state: State): Either[State, GameError] = {
     message match {
-      case JoinRequest if state.players.exists(p => p.userId == user.userId) =>
+      case JoinGame if state.players.exists(p => p.userId == user.userId) =>
         Right(GameError("You are already in the player list"))
-      case JoinRequest if state.players.filterNot(p => p.pending).length >= 4 =>
+      case JoinGame if state.players.filterNot(p => p.pending).length >= MaxPlayers =>
         Right(GameError("The Game is Full"))
+      case JoinGame =>
+        val newPlayer = Player(user, pending = true)
+        val newPlayerList = state.players ::: newPlayer :: Nil
+        Left(state.copy(players = newPlayerList))
       case LeaveGame =>
         val players = state.players.filterNot(p => p.userId == user.userId)
         // We don't need to update if the person leaving hadn't requested to join yet

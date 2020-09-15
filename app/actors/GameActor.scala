@@ -1,9 +1,9 @@
 package actors
 
-import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import controllers.game.stage.WaitingForPlayers
 import dao.{CardDao, GameDao}
-import models.game.{ConnectToGame, GameError, GameOver, GameState, Message, State, UserMessage}
+import models.game.{ConnectToGame, GameError, GameOver, GameState, LeaveGame, Message, State, UserMessage}
 
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 import scala.concurrent.{Await, ExecutionContext}
@@ -27,20 +27,33 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
     case UserMessage(user, ConnectToGame(desiredGameId)) if desiredGameId == gameId =>
       watchers += (user.userId -> sender())
       sender() ! GameState(state)
-    case UserMessage(user, m) =>
-      val result = state.currentStage.receive(m, user, state)
+    case UserMessage(user, LeaveGame) =>
+      val result = state.currentStage.receive(LeaveGame, user, state)
       result match {
         case Left(newState) =>
           if (newState.players.isEmpty) {
             gameDao.completeGame(gameId)
             notifyWatchers(GameOver)
           } else {
-            gameDao.updateGame(gameId, newState)
-            notifyWatchers(GameState(state))
+            updateGameState(newState)
+            watchers -= user.userId
+            sender() ! GameOver
           }
+        case Right(e: GameError) => sender() ! e
+      }
+      case UserMessage(user, m) =>
+      val result = state.currentStage.receive(m, user, state)
+      result match {
+        case Left(newState) => updateGameState(newState)
         case Right(e : GameError) => sender() ! e
       }
     case m => log.warning("Throwing away " + m)
+  }
+
+  private def updateGameState(newState: State) = {
+    gameDao.updateGame(gameId, newState)
+    state = newState
+    notifyWatchers(GameState(state))
   }
 
   def notifyWatchers(message: Message): Unit = {
