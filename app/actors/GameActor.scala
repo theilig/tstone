@@ -50,7 +50,7 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
     case m => log.warning("Throwing away " + m)
   }
 
-  private def updateGameState(newState: State) = {
+  private def updateGameState(newState: State): Unit = {
     gameDao.updateGame(gameId, newState)
     state = newState
     notifyWatchers(GameState(state))

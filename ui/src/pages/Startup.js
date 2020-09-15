@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import axios from 'axios';
 import { useAuth } from "../context/auth";
 import styled from "styled-components";
 import {Button, Error} from "../components/AuthForm"
-import { Redirect } from 'react-router-dom';
 import {useGameState} from "../context/GameState";
 
 const PlayerList = styled.div`
@@ -23,7 +21,6 @@ function Startup(props) {
     const { authTokens } = useAuth()
     const { gameState } = useGameState()
     const [ lastError, setLastError ] = useState("")
-    const [ cancelled, setCancelled ] = useState(false)
     const MAX_PLAYERS = 4
     function leaveGame() {
         props.gameSocket.send(
@@ -51,9 +48,6 @@ function Startup(props) {
                 }
             )
         )
-    }
-    if (cancelled) {
-        return (<Redirect to={"/"} />)
     }
 
     const renderOptions = () => {

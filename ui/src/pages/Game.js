@@ -2,7 +2,6 @@ import React, {useState, useEffect} from "react";
 import { useAuth } from "../context/auth";
 import { GameStateContext } from "../context/GameState";
 import {useParams} from "react-router";
-import GameHeader from "../components/GameHeader"
 import Startup from "./Startup";
 import {Redirect} from "react-router";
 
@@ -10,7 +9,6 @@ function Game(props) {
     const [ gameState, setGameState ] = useState()
     const [ gameSocket, setGameSocket ] = useState(null)
     const { authTokens } = useAuth()
-    const [ error, setLastError ] = useState("")
     const [ gameOver, setGameOver] = useState(false)
     let game = useParams()
     let gameId = parseInt(game.gameId)
@@ -56,7 +54,7 @@ function Game(props) {
                 // automatically try to reconnect on connection loss
             }
         }
-    })
+    }, [gameSocket, authTokens.token, gameId])
 
     const renderGameStage = () => {
         if (!gameState) {
@@ -65,8 +63,9 @@ function Game(props) {
         switch (gameState.currentStage.stage) {
             case "WaitingForPlayers":
                 return <Startup gameSocket={gameSocket} />
+            default:
+                return ""
         }
-        return ""
     }
 
     if (gameOver) {
@@ -80,7 +79,6 @@ function Game(props) {
     }
     return (
         <GameStateContext.Provider value={{ gameState, setGameState: setState  }}>
-            <GameHeader />
             {renderGameStage()}
         </GameStateContext.Provider>
     )
