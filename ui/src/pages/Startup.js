@@ -26,24 +26,13 @@ function Startup(props) {
     const [ cancelled, setCancelled ] = useState(false)
     const MAX_PLAYERS = 4
     function leaveGame() {
-        axios("/api/game/leave", {
-            params: {
-                gameId: gameState.gameId
-            },
-            method: "post",
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Authorization': 'Bearer ' + authTokens.token
-            }
-        }).then(() => {
-            setCancelled(true)
-        }).catch(error => {
-            if (error.response) {
-                setLastError(error.response.data)
-            } else {
-                setLastError("Problem leaving the game")
-            }
-        });
+        props.gameSocket.send(
+            JSON.stringify(
+                {
+                    messageType: "LeaveGame"
+                }
+            )
+        )
     }
     function requestToJoin() {
         axios("/api/game/requestJoin", {

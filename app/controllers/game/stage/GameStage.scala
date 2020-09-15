@@ -1,16 +1,11 @@
 package controllers.game.stage
 
-import dao.GameDao
 import models.User
-import models.game.{Message, State}
+import models.game.{GameError, Message, State}
 import play.api.libs.json.{Format, JsError, JsObject, JsPath, JsString, JsSuccess, Reads, Writes}
-import play.api.mvc.Result
-
-import scala.concurrent.{ExecutionContext, Future}
 
 abstract class GameStage {
-  def receive(message: Message, user: User, gameId: Int, state: State, gameDao: GameDao)
-             (implicit executionContext: ExecutionContext): Future[Result]
+  def receive(message: Message, user: User, state: State): Either[State, GameError]
   def canAddPlayers: Boolean = false
 }
 

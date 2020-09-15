@@ -29,5 +29,10 @@ libraryDependencies += "com.nimbusds" % "nimbus-jose-jwt" % "8.19"
 
 libraryDependencies += specs2 % Test
 
+libraryDependencies ++= Seq(
+  "com.typesafe.akka" %% "akka-slf4j" % "2.6.5",
+  "ch.qos.logback" % "logback-classic" % "1.2.3"
+)
+
 unmanagedResourceDirectories in Test +=  baseDirectory ( _ /"target/web/public/test" ).value
 

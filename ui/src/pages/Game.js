@@ -7,32 +7,51 @@ import Startup from "./Startup";
 
 function Game(props) {
     const [ gameState, setGameState ] = useState()
-    const { authTokens } = useAuth();
+    const [ gameSocket, setGameSocket ] = useState(null)
+    const { authTokens } = useAuth()
     const [ error, setLastError ] = useState("")
     const [ reload, setReload] = useState(true)
     let game = useParams()
-    let ws = null
+    let gameId = parseInt(game.gameId)
 
     const setState = (data) => {
         setGameState(data);
     }
 
     useEffect(() => {
-        ws = new WebSocket('ws://localhost:9000/api/game')
-        ws.onopen = () => {
-            ws.send('{"messageType": "Authentication", "data": {"token":"' +
-                authTokens.token + '"}}')
-            ws.send('{"messageType": "ConnectToGame", "data": {"gameId":' +
-                game.gameId + '}}')
-        }
-        ws.onmessage = evt => {
-            // listen to data sent from the websocket server
-            const message = JSON.parse(evt.data)
-            console.log(message)
-        }
-        ws.onclose = () => {
-            console.log('disconnected')
-            // automatically try to reconnect on connection loss
+        if (gameSocket === null) {
+            let ws = new WebSocket('ws://localhost:9000/api/game')
+            setGameSocket(ws)
+            ws.onopen = () => {
+                ws.send(JSON.stringify(
+                    {
+                        messageType: "Authentication",
+                        data: {
+                            token: authTokens.token
+                        }
+                    }
+                ))
+                ws.send(JSON.stringify(
+                    {
+                        messageType: "ConnectToGame",
+                        data: {
+                            gameId: gameId
+                        }
+                    }
+                ))
+            }
+            ws.onmessage = evt => {
+                // listen to data sent from the websocket server
+                const message = JSON.parse(evt.data)
+                if (message.messageType === "GameState") {
+                    setState(message.data.state)
+                }
+                console.log(message)
+            }
+            ws.onclose = () => {
+                console.log('disconnected')
+                // automatically try to reconnect on connection loss
+            }
         }
     })
 
@@ -42,7 +61,7 @@ function Game(props) {
         }
         switch (gameState.currentStage.stage) {
             case "WaitingForPlayers":
-                return <Startup reload={() => setReload(true)} />
+                return <Startup gameSocket={gameSocket} />
         }
         return ""
     }
