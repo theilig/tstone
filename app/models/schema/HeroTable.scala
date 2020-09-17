@@ -1,6 +1,6 @@
 package models.schema
 // AUTO-GENERATED Slick data model for table Hero
-trait HeroTable {
+trait fdHeroTable {
 
   self:Tables  =>
 

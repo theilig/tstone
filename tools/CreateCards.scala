@@ -1,6 +1,6 @@
 import java.sql.DriverManager
 
-import models.Card
+import models.game.Card
 
 import scala.io.Source
 

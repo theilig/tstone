@@ -72,7 +72,7 @@ function GameList() {
             });
         };
         fetchData()
-        const tick = setInterval(fetchData, 60000)
+        const tick = setInterval(fetchData, 15000)
         return (() => clearInterval(tick))
     }, [authTokens.token])
 

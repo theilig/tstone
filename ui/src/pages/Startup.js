@@ -21,7 +21,7 @@ function Startup(props) {
     const { authTokens } = useAuth()
     const { gameState } = useGameState()
     const [ lastError, setLastError ] = useState("")
-    const MAX_PLAYERS = 4
+    const MAX_PLAYERS = 5
     function leaveGame() {
         props.gameSocket.send(
             JSON.stringify(
@@ -50,14 +50,41 @@ function Startup(props) {
         )
     }
 
-    const renderOptions = () => {
-        if (authTokens.user.userId === gameState.ownerId) {
+    function acceptPlayer(userId) {
+        props.gameSocket.send(
+            JSON.stringify(
+                {
+                    messageType: "AcceptPlayer",
+                    data: {
+                        userId: userId
+                    }
+                }
+            )
+        )
+    }
+
+    function rejectPlayer(userId) {
+        props.gameSocket.send(
+            JSON.stringify(
+                {
+                    messageType: "RejectPlayer",
+                    data: {
+                        userId: userId
+                    }
+                }
+            )
+        )
+    }
+
+    const renderOptions = (isGameOwner) => {
+        if (isGameOwner) {
             return (
                 <Options>
                     <Button onClick={startGame}>Start Game</Button>
                     <Button onClick={leaveGame}>Leave Game</Button>
                 </Options>
             )
+
         }
         let alreadyIn = false
         let playerCount = 0
@@ -69,14 +96,7 @@ function Startup(props) {
                 playerCount += 1
             }
         }
-        if (alreadyIn) {
-            return (
-                <Options>
-                    <Button onClick={leaveGame}>Leave Game</Button>
-                </Options>
-            )
-        }
-        if (playerCount >= MAX_PLAYERS) {
+        if (alreadyIn || playerCount >= MAX_PLAYERS) {
             return (
                 <Options>
                     <Button onClick={leaveGame}>Leave Game</Button>
@@ -91,15 +111,39 @@ function Startup(props) {
         )
     }
 
+    const renderPlayer = (player, isGameOwner) => {
+        if (player.pending && isGameOwner) {
+            return (
+                <div key={player.userId}>
+                    <Options>
+                        <div>{player.name} (Pending)</div>
+                        <Button key={player.userId + "accept"} onClick={() => acceptPlayer(player.userId)}>accept</Button>
+                        <Button key={player.userId + "reject"} onClick={() => rejectPlayer(player.userId)}>reject</Button>
+                    </Options>
+                </div>
+            )
+        }
+        if (player.pending) {
+            return (<div>{player.name} (Pending)</div>)
+        }
+        return (<div>{player.name}</div>)
+    }
+
+    let isGameOwner = false
+    if (gameState.players[0] && authTokens.user.userId === gameState.players[0].userId) {
+        isGameOwner = true
+    }
+
     return (
         <div>
             <PlayerList>
                 <div>Current Players</div>
                 {gameState && gameState.players.map((player) => (
-                    <div>{player.name}</div>
-                ))}
+                        renderPlayer(player, isGameOwner)
+                    )
+                )}
             </PlayerList>
-            {renderOptions()}
+            {renderOptions(isGameOwner)}
             { lastError && <div><Error>{lastError}</Error></div> }
         </div>
     )

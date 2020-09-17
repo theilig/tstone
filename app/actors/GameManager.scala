@@ -15,7 +15,7 @@ class GameManager(gameDao: GameDao, cardDao: CardDao)
       sender ! GameManager.GameActorRef(gameActors(gameId))
     case ConnectToGame(gameId) =>
       val response: Future[Product] = gameDao.findById(gameId).map {
-        case Some(_) =>
+        case Some(gameRow) if !gameRow.completed =>
           val gameActor = context.actorOf(GameActor.props(gameId, gameDao, cardDao), s"Game$gameId")
           context.watch(gameActor)
           gameActors += (gameId -> gameActor)
