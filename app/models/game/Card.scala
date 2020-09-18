@@ -20,8 +20,31 @@ class Card(id: Int, name: String, imageName: String) {
 }
 
 object Card {
-  implicit val cardFormat: OFormat[Card] = Json.format[Card]
-
+  implicit val cardFormat: Format[Card] = Format[Card](
+    Reads { js =>
+      val cardType = (JsPath \ "cardType").read[String].reads(js)
+      cardType.fold(
+        _ => JsError("cardType undefined or incorrect"), {
+          case "HeroCard" => (JsPath \ "data").read[HeroCard].reads(js)
+          case "ItemCard" => (JsPath \ "data").read[ItemCard].reads(js)
+          case "MonsterCard" => (JsPath \ "data").read[MonsterCard].reads(js)
+          case "SpellCard" => (JsPath \ "data").read[SpellCard].reads(js)
+          case "ThunderstoneCard" => (JsPath \ "data").read[ThunderstoneCard].reads(js)
+          case "WeaponCard" => (JsPath \ "data").read[WeaponCard].reads(js)
+          case "VillagerCard" => (JsPath \ "data").read[VillagerCard].reads(js)
+        }
+      )
+    },
+    Writes {
+      case h: HeroCard => JsObject(Seq("cardType" -> JsString("HeroCard"), "data" -> HeroCard.heroFormat.writes(h)))
+      case i: ItemCard => JsObject(Seq("cardType" -> JsString("ItemCard"), "data" -> ItemCard.itemFormat.writes(i)))
+      case m: MonsterCard => JsObject(Seq("cardType" -> JsString("MonsterCard"), "data" -> MonsterCard.monsterFormat.writes(m)))
+      case s: SpellCard => JsObject(Seq("cardType" -> JsString("SpellCard"), "data" -> SpellCard.spellFormat.writes(s)))
+      case t: ThunderstoneCard => JsObject(Seq("cardType" -> JsString("ThunderstoneCard"), "data" -> ThunderstoneCard.thunderstoneFormat.writes(t)))
+      case w: WeaponCard => JsObject(Seq("cardType" -> JsString("WeaponCard"), "data" -> WeaponCard.weaponFormat.writes(w)))
+      case v: VillagerCard => JsObject(Seq("cardType" -> JsString("VillagerCard"), "data" -> VillagerCard.villagerFormat.writes(v)))
+    }
+  )
   def apply(line: String): Card = {
     val fields = line.split("""\s+""")
     val name = fields.tail.takeWhile(f => !f.contains(":")).mkString(" ")
@@ -61,7 +84,6 @@ object Card {
   }
 }
 
-class VillageCard(id: Int, name: String, imageName: String, cost: Int) extends Card(id, name, imageName)
 
 case class HeroCard(
                      id: Int,
@@ -75,9 +97,11 @@ case class HeroCard(
                      heroType: String,
                      goldValue: Option[Int],
                      victoryPoints: Int
-                   ) extends VillageCard(id, name, imageName, cost)
+                   ) extends Card(id, name, imageName)
 
 object HeroCard {
+  implicit val heroFormat: Format[HeroCard] = Json.format[HeroCard]
+
   def apply(cardRow: CardRow, heroRow: HeroRow, classes: Seq[HeroClassRow], battleEffects: Seq[BattleEffectRow],
             dungeonEffects: Seq[DungeonEffectRow]): HeroCard = {
     new HeroCard(cardRow.cardId, cardRow.name, cardRow.image, heroRow.light, heroRow.level, heroRow.strength, heroRow.cost,
@@ -95,9 +119,10 @@ case class ItemCard(
                      traits: List[String],
                      goldValue: Int,
                      victoryPoints: Int
-                   ) extends VillageCard(id, name, imageName, cost)
+                   ) extends Card(id, name, imageName)
 
 object ItemCard {
+  implicit val itemFormat: Format[ItemCard] = Json.format[ItemCard]
   def apply(cardRow: CardRow, itemRow: ItemRow, itemTraits: Seq[ItemTraitRow], dungeonEffects: Seq[DungeonEffectRow],
             villageEffects: Seq[VillageEffectRow]): ItemCard = {
     new ItemCard(cardRow.cardId, cardRow.name, cardRow.image, itemRow.light, itemRow.cost,
@@ -113,8 +138,9 @@ case class SpellCard(
                       cost: Int,
                       traits: List[String],
                       victoryPoints: Int
-                    ) extends VillageCard(id, name, imageName, cost)
+                    ) extends Card(id, name, imageName)
 object SpellCard {
+  implicit val spellFormat: Format[SpellCard] = Json.format[SpellCard]
   def apply(cardRow: CardRow, spellRow: SpellRow, itemTraits: Seq[ItemTraitRow], battleEffects: Seq[BattleEffectRow],
             dungeonEffects: Seq[DungeonEffectRow]): SpellCard = {
     new SpellCard(cardRow.cardId, cardRow.name, cardRow.image, spellRow.light, spellRow.cost,
@@ -130,9 +156,10 @@ case class VillagerCard(
                          traits: List[String],
                          goldValue: Option[Int],
                          victoryPoints: Int
-                       ) extends VillageCard(id, name, imageName, cost)
+                       ) extends Card(id, name, imageName)
 
 object VillagerCard {
+  implicit val villagerFormat: Format[VillagerCard] = Json.format[VillagerCard]
   def apply(cardRow: CardRow, villagerRow: VillagerRow, villageEffects: Seq[VillageEffectRow]): VillagerCard = {
     new VillagerCard(cardRow.cardId, cardRow.name, cardRow.image, villagerRow.cost, Nil, villagerRow.goldValue,
       villagerRow.victoryPoints)
@@ -149,28 +176,14 @@ case class WeaponCard(
                        traits: List[String],
                        goldValue: Int,
                        victoryPoints: Int
-                    ) extends VillageCard(id, name, imageName, cost)
+                    ) extends Card(id, name, imageName)
 
 object WeaponCard {
+  implicit val weaponFormat: Format[WeaponCard] = Json.format[WeaponCard]
   def apply(cardRow: CardRow, weaponRow: WeaponRow, itemTraits: Seq[ItemTraitRow],
             dungeonEffects: Seq[DungeonEffectRow]): WeaponCard = {
     new WeaponCard(cardRow.cardId, cardRow.name, cardRow.image, weaponRow.light, weaponRow.weight, weaponRow.cost,
       itemTraits.map(_.`trait`).toList, weaponRow.goldValue, weaponRow.victoryPoints)
-  }
-}
-
-
-
-class DungeonCard(id: Int, name: String, imageName: String) extends Card(id, name, imageName)
-
-object DungeonCard {
-  implicit val dungeonCardWrites: Writes[DungeonCard] = (card: DungeonCard) => Card.cardFormat.writes(card)
-  implicit val dungeonCardReads: Reads[DungeonCard] = (js: JsValue) => {
-    val cResult = Card.cardFormat.reads(js)
-    cResult match {
-      case JsSuccess(card, path) => JsSuccess(new DungeonCard(0, card.getName, card.getImageName), path)
-      case e: JsError => e
-    }
   }
 }
 
@@ -183,9 +196,10 @@ case class MonsterCard(
                         traits: List[String],
                         goldValue: Int,
                         victoryPoints: Int
-                      ) extends DungeonCard(id, name, imageName)
+                      ) extends Card(id, name, imageName)
 
 object MonsterCard {
+  implicit val monsterFormat: Format[MonsterCard] = Json.format[MonsterCard]
   def apply(cardRow: CardRow, monsterRow: MonsterRow, monsterTypes: Seq[MonsterTypeRow],
             battleEffects: Seq[BattleEffectRow], dungeonEffects: Seq[DungeonEffectRow],
             breachEffects: Seq[BreachEffectRow]): MonsterCard = {
@@ -199,8 +213,9 @@ case class ThunderstoneCard(
                             name: String,
                             imageName: String,
                             victoryPoints: Int
-                      ) extends DungeonCard(id, name, imageName)
+                      ) extends Card(id, name, imageName)
 object ThunderstoneCard {
+  implicit val thunderstoneFormat: Format[ThunderstoneCard] = Json.format[ThunderstoneCard]
   def apply(row: CardRow): ThunderstoneCard = {
     new ThunderstoneCard(row.cardId, row.name, row.image, 3)
   }

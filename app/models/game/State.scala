@@ -11,21 +11,7 @@ case class State(players: List[Player], village: Option[Village], dungeon: Optio
 }
 
 object State {
-  implicit val stateReads: Reads[State] = (
-    (JsPath \ "players").read[List[Player]] and
-      (JsPath \ "village").readNullable[Village] and
-      (JsPath \ "dungeon").readNullable[Dungeon] and
-      (JsPath \ "currentStage").read[GameStage]
-    )(State.apply _)
-
-  implicit val stateFormat: Writes[State] = (state: State) => JsObject(
-    Seq(
-      "players" -> Json.toJson(state.players),
-      "village" -> Json.toJson(state.village),
-      "dungeon" -> Json.toJson(state.dungeon),
-      "currentStage" -> Json.toJson(state.currentStage)
-    )
-  )
+  implicit val stateFormat: Format[State] = Json.format[State]
 
   def apply(gameOwner: Player): State = {
     val players = List(gameOwner)

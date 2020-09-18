@@ -8,16 +8,21 @@ import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
-class Village(
+case class Village(
                heroes: List[HeroPile],
                weapons: List[WeaponPile],
                items: List[ItemPile],
                spells: List[SpellPile],
                villagers: List[VillagerPile]
              ) {
-  def findPile(name: String): Pile = {
-    val allPiles: List[Pile] = heroes ::: weapons ::: items ::: spells ::: villagers
-    allPiles.find(p => p.cards.exists(c => c.getName == name)).get
+  def findPile(name: String): Pile[Card] = {
+    List(heroes, weapons, items, spells, villagers).foldLeft[Option[Pile[Card]]](None)((found, nextList) => {
+      if (found.nonEmpty) {
+        found
+      } else {
+        nextList.find(_.topCard.getName == name).map(p => p.asInstanceOf[Pile[Card]])
+      }
+    }).get
   }
 }
 
