@@ -20,7 +20,6 @@ trait SpellTable {
     SpellRow.tupled((<<[Int], <<[Int], <<[Int], <<[Int]))
   }
   /** Table description of table Spell. Objects of this class serve as prototypes for rows in queries. */
-  //noinspection ScalaUnnecessaryParentheses
   class Spell(_tableTag: Tag) extends profile.api.Table[SpellRow](_tableTag, Some("TStone"), "Spell") {
     def * = (cardId, light, cost, victoryPoints) <> (SpellRow.tupled, SpellRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

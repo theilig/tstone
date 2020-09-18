@@ -19,7 +19,6 @@ trait BreachEffectTable {
     BreachEffectRow.tupled((<<[Int], <<[Int], <<[String]))
   }
   /** Table description of table BreachEffect. Objects of this class serve as prototypes for rows in queries. */
-  //noinspection ScalaUnnecessaryParentheses
   class BreachEffect(_tableTag: Tag) extends profile.api.Table[BreachEffectRow](_tableTag, Some("TStone"), "BreachEffect") {
     def * = (effectId, cardId, effect) <> (BreachEffectRow.tupled, BreachEffectRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

@@ -21,7 +21,6 @@ trait ItemTable {
     ItemRow.tupled((<<[Int], <<[Int], <<[Int], <<[Int], <<[Int]))
   }
   /** Table description of table Item. Objects of this class serve as prototypes for rows in queries. */
-  //noinspection ScalaUnnecessaryParentheses,DuplicatedCode
   class Item(_tableTag: Tag) extends profile.api.Table[ItemRow](_tableTag, Some("TStone"), "Item") {
     def * = (cardId, light, cost, goldValue, victoryPoints) <> (ItemRow.tupled, ItemRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

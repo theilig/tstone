@@ -19,7 +19,6 @@ trait BattleEffectTable {
     BattleEffectRow.tupled((<<[Int], <<[Int], <<[String]))
   }
   /** Table description of table BattleEffect. Objects of this class serve as prototypes for rows in queries. */
-  //noinspection ScalaUnnecessaryParentheses
   class BattleEffect(_tableTag: Tag) extends profile.api.Table[BattleEffectRow](_tableTag, Some("TStone"), "BattleEffect") {
     def * = (effectId, cardId, effect) <> (BattleEffectRow.tupled, BattleEffectRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

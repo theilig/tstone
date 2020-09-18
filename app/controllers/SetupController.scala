@@ -2,8 +2,7 @@ package controllers
 
 import dao.GameDao
 import javax.inject.Inject
-import models.Player
-import models.game.State
+import models.game.{Player, State}
 import play.api.libs.json.Json
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 

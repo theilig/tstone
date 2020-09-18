@@ -20,7 +20,6 @@ trait HeroClassTable {
   }
   /** Table description of table HeroClass. Objects of this class serve as prototypes for rows in queries.
    *  NOTE: The following names collided with Scala keywords and were escaped: trait */
-  //noinspection ScalaUnnecessaryParentheses
   class HeroClass(_tableTag: Tag) extends profile.api.Table[HeroClassRow](_tableTag, Some("TStone"), "HeroClass") {
     def * = (traitId, cardId, `trait`) <> (HeroClassRow.tupled, HeroClassRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

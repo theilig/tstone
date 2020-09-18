@@ -20,7 +20,6 @@ trait TokensTable {
     TokensRow.tupled((<<[Int], <<[Int], <<[Int], <<[String]))
   }
   /** Table description of table Tokens. Objects of this class serve as prototypes for rows in queries. */
-  //noinspection ScalaUnnecessaryParentheses
   class Tokens(_tableTag: Tag) extends profile.api.Table[TokensRow](_tableTag, Some("TStone"), "Tokens") {
     def * = (tokenId, expires, userId, tokenValue) <> (TokensRow.tupled, TokensRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

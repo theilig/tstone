@@ -1,18 +1,20 @@
 package actors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
-import controllers.game.stage.WaitingForPlayers
+import controllers.game.stage.{PickDestination, WaitingForPlayers}
 import dao.{CardDao, GameDao}
 import models.User
-import models.game.{ConnectToGame, GameError, GameOver, GameState, LeaveGame, Message, State, UserMessage}
+import models.game.{ConnectToGame, GameError, GameOver, GameState, LeaveGame, Message, StartGame, State, UserMessage}
+import services.GameSetup
 
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.Random
 
 class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
                (implicit ec: ExecutionContext) extends Actor with ActorLogging {
   // Placeholder state while we look up the actual state
-  var state: State = State(Nil, Nil, Nil, WaitingForPlayers)
+  var state: State = State(Nil, None, None, WaitingForPlayers)
   var watchers: Map[Int, ActorRef] = Map()
   override def preStart(): Unit = {
     val lookup = gameDao.findById(gameId).map {
@@ -23,6 +25,14 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
     // from the database
     Await.result(lookup, GameActor.LookupTimeout)
   }
+
+  private def setUpGame(state: State)(implicit ec: ExecutionContext): Future[State] = {
+    val random = new Random
+    val newPlayers = random.shuffle(state.players.filterNot(_.pending))
+    val setup = new GameSetup(cardDao)
+    setup.setupGame(state.copy(players = newPlayers))
+  }
+
 
   def processUserMessage(user: User, message: Message): Unit = {
     message match {
@@ -45,6 +55,13 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
             }
           case Right(e: GameError) => sender() ! e
         }
+      case StartGame =>
+        // Quickly shift into frozen state, we don't use updateGameState
+        // because we want to avoid notifying anyone
+        state = state.copy(currentStage = PickDestination(0))
+        setUpGame(state).map(newState => {
+          updateGameState(newState)
+        })
       case m =>
         val result = state.currentStage.receive(m, user, state)
         result match {

@@ -1,6 +1,6 @@
 package models.schema
 // AUTO-GENERATED Slick data model for table Hero
-trait fdHeroTable {
+trait HeroTable {
 
   self:Tables  =>
 
@@ -15,19 +15,19 @@ trait fdHeroTable {
    *  @param level Database column level SqlType(INT)
    *  @param cost Database column cost SqlType(INT)
    *  @param goldValue Database column gold_value SqlType(INT), Default(None)
-   *  @param victoryPoints Database column victory_points SqlType(INT) */
-  case class HeroRow(cardId: Int, light: Int, strength: Int, level: Int, cost: Int, goldValue: Option[Int] = None, victoryPoints: Int)
+   *  @param victoryPoints Database column victory_points SqlType(INT)
+   *  @param heroType Database column hero_type SqlType(VARCHAR), Length(50,true) */
+  case class HeroRow(cardId: Int, light: Int, strength: Int, level: Int, cost: Int, goldValue: Option[Int] = None, victoryPoints: Int, heroType: String)
   /** GetResult implicit for fetching HeroRow objects using plain SQL queries */
-  implicit def GetResultHeroRow(implicit e0: GR[Int], e1: GR[Option[Int]]): GR[HeroRow] = GR{
+  implicit def GetResultHeroRow(implicit e0: GR[Int], e1: GR[Option[Int]], e2: GR[String]): GR[HeroRow] = GR{
     prs => import prs._
-    HeroRow.tupled((<<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<?[Int], <<[Int]))
+    HeroRow.tupled((<<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<?[Int], <<[Int], <<[String]))
   }
   /** Table description of table Hero. Objects of this class serve as prototypes for rows in queries. */
-  //noinspection ScalaUnnecessaryParentheses
   class Hero(_tableTag: Tag) extends profile.api.Table[HeroRow](_tableTag, Some("TStone"), "Hero") {
-    def * = (cardId, light, strength, level, cost, goldValue, victoryPoints) <> (HeroRow.tupled, HeroRow.unapply)
+    def * = (cardId, light, strength, level, cost, goldValue, victoryPoints, heroType) <> (HeroRow.tupled, HeroRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = ((Rep.Some(cardId), Rep.Some(light), Rep.Some(strength), Rep.Some(level), Rep.Some(cost), goldValue, Rep.Some(victoryPoints))).shaped.<>({r=>import r._; _1.map(_=> HeroRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6, _7.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = ((Rep.Some(cardId), Rep.Some(light), Rep.Some(strength), Rep.Some(level), Rep.Some(cost), goldValue, Rep.Some(victoryPoints), Rep.Some(heroType))).shaped.<>({r=>import r._; _1.map(_=> HeroRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6, _7.get, _8.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column card_id SqlType(INT), PrimaryKey */
     val cardId: Rep[Int] = column[Int]("card_id", O.PrimaryKey)
@@ -43,6 +43,11 @@ trait fdHeroTable {
     val goldValue: Rep[Option[Int]] = column[Option[Int]]("gold_value", O.Default(None))
     /** Database column victory_points SqlType(INT) */
     val victoryPoints: Rep[Int] = column[Int]("victory_points")
+    /** Database column hero_type SqlType(VARCHAR), Length(50,true) */
+    val heroType: Rep[String] = column[String]("hero_type", O.Length(50,varying=true))
+
+    /** Index over (heroType) (database name hero_type) */
+    val index1 = index("hero_type", heroType)
   }
   /** Collection-like TableQuery object for table Hero */
   lazy val Hero = new TableQuery(tag => new Hero(tag))

@@ -19,7 +19,6 @@ trait UserConfirmationTable {
     UserConfirmationRow.tupled((<<[Int], <<[String], <<[Int]))
   }
   /** Table description of table UserConfirmation. Objects of this class serve as prototypes for rows in queries. */
-  //noinspection ScalaUnnecessaryParentheses
   class UserConfirmation(_tableTag: Tag) extends profile.api.Table[UserConfirmationRow](_tableTag, Some("TStone"), "UserConfirmation") {
     def * = (userConfirmationId, token, userId) <> (UserConfirmationRow.tupled, UserConfirmationRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

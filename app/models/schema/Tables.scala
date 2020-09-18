@@ -6,9 +6,8 @@ object Tables extends {
 } with Tables
 
 /** Slick data model trait for extension, choice of backend or usage in the cake pattern. (Make sure to initialize this late.)
-    *Each generated XXXXTable trait is mixed in this trait hence allowing access to all the TableQuery lazy vals.
+    Each generated XXXXTable trait is mixed in this trait hence allowing access to all the TableQuery lazy vals.
   */
-//noinspection TypeAnnotation
 trait Tables extends CardTable with BreachEffectTable with PlayEvolutionsTable with GameTable with MonsterTable with VillageEffectTable with TokensTable with SpellTable with VillagerTable with HeroTable with ItemTraitTable with ItemTable with UserConfirmationTable with BattleEffectTable with UserTable with WeaponTable with MonsterTypeTable with HeroClassTable with GamePlayersTable with DungeonEffectTable {
   val profile: slick.jdbc.JdbcProfile
   import profile.api._

@@ -19,7 +19,6 @@ trait CardTable {
     CardRow.tupled((<<[Int], <<[String], <<[String]))
   }
   /** Table description of table Card. Objects of this class serve as prototypes for rows in queries. */
-  //noinspection ScalaUnnecessaryParentheses
   class Card(_tableTag: Tag) extends profile.api.Table[CardRow](_tableTag, Some("TStone"), "Card") {
     def * = (cardId, image, name) <> (CardRow.tupled, CardRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

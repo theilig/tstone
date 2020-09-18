@@ -20,7 +20,6 @@ trait MonsterTypeTable {
   }
   /** Table description of table MonsterType. Objects of this class serve as prototypes for rows in queries.
    *  NOTE: The following names collided with Scala keywords and were escaped: trait */
-  //noinspection ScalaUnnecessaryParentheses
   class MonsterType(_tableTag: Tag) extends profile.api.Table[MonsterTypeRow](_tableTag, Some("TStone"), "MonsterType") {
     def * = (traitId, cardId, `trait`) <> (MonsterTypeRow.tupled, MonsterTypeRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */

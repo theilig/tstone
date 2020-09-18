@@ -1,10 +1,7 @@
 package controllers.game.stage
 
-import models.{Player, User}
-import models.game.{AcceptPlayer, GameError, JoinGame, LeaveGame, Message, RejectPlayer, StartGame, State}
-import services.GameSetup
-
-import scala.util.Random
+import models.User
+import models.game.{AcceptPlayer, GameError, JoinGame, LeaveGame, Message, Player, RejectPlayer, StartGame, State}
 
 case object WaitingForPlayers extends GameStage {
   val MaxPlayers = 5
@@ -55,14 +52,6 @@ case object WaitingForPlayers extends GameStage {
         Right(GameError("Player has already been accepted"))
       case RejectPlayer(_) =>
         Right(GameError("Player not found"))
-      case StartGame =>
-        Left(setUpGame(state))
     }
-  }
-  private def setUpGame(state: State): State = {
-    val random = new Random
-    val newPlayers = random.shuffle(state.players.filterNot(_.pending))
-    val setup = new GameSetup()
-    val newState = setup.startGame(state.copy(players = newPlayers))
   }
 }
