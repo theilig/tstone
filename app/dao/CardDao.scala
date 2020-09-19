@@ -57,7 +57,7 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     db.run(cards.filter(_.name.inSet(names)).result)
   }
 
-  def getMonstersByType: Future[Map[String, Seq[MonsterCard]]] = {
+  def getMonstersByType: Future[Map[String, Seq[(MonsterCard, Int)]]] = {
     val monsterQuery = for {
       (card, monster) <- cards join monsters on (_.cardId === _.cardId)
     } yield (card, monster)
@@ -84,15 +84,15 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
       battleEffectRows <- eventualBattleEffectRows
       dungeonEffectRows <- eventualDungeonEffectRows
     } yield monsterPairs.map {
-      case (card, monster) => MonsterCard(
+      case (card, monster) => (MonsterCard(
         card,
         monster,
         monsterTypesByCardId(card.cardId),
         battleEffectRows.filter(_.cardId == card.cardId),
         dungeonEffectRows.filter(_.cardId == card.cardId),
         breachEffectRows.filter(_.cardId == card.cardId)
-      )
-    }.groupBy(m => m.traits.mkString(" "))
+      ), monster.frequency)
+    }.groupBy(m => m._1.traits.mkString(" "))
   }
 
   private def getCardInfoByIds(cardIds: List[Int]): Future[Map[Int, CardInfo]] = {

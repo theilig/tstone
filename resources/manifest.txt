@@ -57,7 +57,7 @@
 057 Town Guard c:3 t:Villager ve:card+2,DesSelf|card+3
 058 Spear gv:2 w:4 c:4 t:Weapon,Edged de:ATT+2,destself|ATT+3
 059 Short Sword gv:3 w:4 c:6 t:Weapon,Edged de:ATT+4
-060 Polearm gv:3 w:2 t:Weapon,Edged de:ATT+2,Hero8+str|ATT+4
+060 Polearm gv:3 w:2 c:7 t:Weapon,Edged de:ATT+2,Hero8+str|ATT+4
 061 Pawnbroker c:3 t:Villager ve:destgv|gold+3,destself|gold+2
 062 Magical Aura c:4 t:Spell gv:2 de:Weap|w0,card+1
 063 Lightstone Gem gv:3 li:3 c:6 t:Item,Light,Magic
@@ -68,7 +68,7 @@
 068 Stone Of Mystery vp:3 t:Thunderstone
 069 Iron Rations gv:2 c:2 t:ITEM,FOOD de:H|str+2
 070 Torch gv:2 c:3 li:1 t:Item,Light
-071 Dagger gv:1 w:2 t:Weapon,Edged de:ATT+1
+071 Dagger gv:1 w:2 c:3 t:Weapon,Edged de:ATT+1
 072 Disease de:ATT-1
 073 Outlands Slayer str:8 lv:2 c:11 t:Fighter de:ATT+5,DesFood|ATT+3(R),Mon|ATT+1(R)
 074 Feayn Sniper str:6 lv:3 li:2 c:12 t:Fighter,Archer de:NoR1,ATT+4,R3|xp+1 vp:2

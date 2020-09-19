@@ -55,7 +55,18 @@ object Card {
       }
       (pair(0), pair(1))
     }).toMap
-    new Card(0, name, s"card${fields.head}.png")
+    val image = s"card${fields.head}.png"
+    if (attributes.contains("str")) {
+      HeroCard(name, image, attributes)
+    } else if (attributes.getOrElse("t", "").contains("Item")) {
+      ItemCard(name, image, attributes)
+    } else if (attributes.getOrElse("t", "").contains("Weapon")) {
+      WeaponCard(name, image, attributes)
+    } else if (attributes.contains("health")) {
+      MonsterCard(name, image, attributes)
+    } else {
+      new Card(0, name, image)
+    }
   }
 
   def apply(info: CardInfo): Card = {
@@ -108,6 +119,12 @@ object HeroCard {
       classes.map(_.`trait`).toList, heroRow.heroType, heroRow.goldValue,
       heroRow.victoryPoints)
   }
+  def apply(name: String, image: String, attributes: Map[String, String]): HeroCard = {
+    new HeroCard(0, name, image, attributes.getOrElse("li", "0").toInt, attributes.getOrElse("lv", "0").toInt,
+      attributes("str").toInt, attributes("c").toInt,
+      attributes.getOrElse("t", "").split(",").toList.filterNot(_ == ""),
+      name.split(" ")(0), attributes.get("gv").map(_.toInt), attributes.getOrElse("vp", "0").toInt)
+  }
 }
 
 case class ItemCard(
@@ -127,6 +144,11 @@ object ItemCard {
             villageEffects: Seq[VillageEffectRow]): ItemCard = {
     new ItemCard(cardRow.cardId, cardRow.name, cardRow.image, itemRow.light, itemRow.cost,
       itemTraits.map(_.`trait`).toList, itemRow.goldValue, itemRow.victoryPoints)
+  }
+  def apply(name: String, image: String, attributes: Map[String, String]): ItemCard = {
+    new ItemCard(0, name, image, attributes.getOrElse("li", "0").toInt, attributes("c").toInt,
+      attributes.getOrElse("t", "").split(",").toList.filterNot(_ == ""), attributes("gv").toInt,
+      attributes.getOrElse("vp", "0").toInt)
   }
 }
 
@@ -185,6 +207,11 @@ object WeaponCard {
     new WeaponCard(cardRow.cardId, cardRow.name, cardRow.image, weaponRow.light, weaponRow.weight, weaponRow.cost,
       itemTraits.map(_.`trait`).toList, weaponRow.goldValue, weaponRow.victoryPoints)
   }
+  def apply(name: String, image: String, attributes: Map[String, String]): WeaponCard = {
+    new WeaponCard(0, name, image, attributes.getOrElse("li", "0").toInt, attributes.getOrElse("w", "0").toInt,
+      attributes("c").toInt, attributes.getOrElse("t", "").split(",").toList.filterNot(_ == ""),
+      attributes.getOrElse("gv", "0").toInt, attributes.getOrElse("vp", "0").toInt)
+  }
 }
 
 case class MonsterCard(
@@ -195,7 +222,8 @@ case class MonsterCard(
                         health: Int,
                         traits: List[String],
                         goldValue: Int,
-                        victoryPoints: Int
+                        victoryPoints: Int,
+                        experiencePoints: Int
                       ) extends Card(id, name, imageName)
 
 object MonsterCard {
@@ -204,8 +232,14 @@ object MonsterCard {
             battleEffects: Seq[BattleEffectRow], dungeonEffects: Seq[DungeonEffectRow],
             breachEffects: Seq[BreachEffectRow]): MonsterCard = {
     new MonsterCard(cardRow.cardId, cardRow.name, cardRow.image, monsterRow.light, monsterRow.health,
-      monsterTypes.map(_.`trait`).toList, monsterRow.goldValue, monsterRow.victoryPoints)
+      monsterTypes.map(_.`trait`).toList, monsterRow.goldValue, monsterRow.victoryPoints, monsterRow.experience)
   }
+  def apply(name: String, image: String, attributes: Map[String, String]): MonsterCard = {
+    new MonsterCard(0, name, image, attributes.getOrElse("li", "0").toInt, attributes("health").toInt,
+      attributes.getOrElse("t", "").split(",").toList.filterNot(_ == ""),
+      attributes("gv").toInt, attributes("vp").toInt, attributes("xp").toInt)
+  }
+
 }
 
 case class ThunderstoneCard(
