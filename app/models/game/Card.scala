@@ -80,7 +80,7 @@ object Card {
       VillagerCard(name, image, attributes)
     } else if (name == "Disease") {
       new DiseaseCard(0, name, image,
-        TurnEffect.parse("Dungeon", attributes("de")).asInstanceOf[List[DungeonEffect]])
+        TurnEffect.parse("Dungeon", attributes("de")))
     } else {
       new ThunderstoneCard(0, name, image, attributes("vp").toInt)
     }
@@ -88,25 +88,24 @@ object Card {
 
   def apply(info: CardInfo): Card = {
     if (info.heroRow.nonEmpty) {
-      HeroCard(info.cardRow, info.heroRow.get, info.battleEffects, info.dungeonEffects)
+      HeroCard(info.cardRow, info.heroRow.get, info.turnEffects)
     } else if (info.itemRow.nonEmpty) {
-      ItemCard(info.cardRow, info.itemRow.get, info.dungeonEffects, info.villageEffects)
+      ItemCard(info.cardRow, info.itemRow.get, info.turnEffects)
     } else if (info.monsterRow.nonEmpty) {
       MonsterCard(
         info.cardRow,
         info.monsterRow.get,
-        info.battleEffects,
-        info.dungeonEffects,
+        info.turnEffects,
         info.breachEffects
       )
     } else if (info.spellRow.nonEmpty) {
-      SpellCard(info.cardRow, info.spellRow.get, info.battleEffects, info.dungeonEffects)
+      SpellCard(info.cardRow, info.spellRow.get, info.turnEffects)
     } else if (info.weaponRow.nonEmpty) {
-      WeaponCard(info.cardRow, info.weaponRow.get, info.dungeonEffects)
+      WeaponCard(info.cardRow, info.weaponRow.get, info.turnEffects)
     } else if (info.villagerRow.nonEmpty) {
-      VillagerCard(info.cardRow, info.villagerRow.get, info.villageEffects)
+      VillagerCard(info.cardRow, info.villagerRow.get, info.turnEffects)
     } else if (info.cardRow.name == "Disease") {
-      DiseaseCard(info.cardRow, info.dungeonEffects)
+      DiseaseCard(info.cardRow, info.turnEffects)
     } else if (info.thunderstones.nonEmpty) {
       ThunderstoneCard(
         info.cardRow.cardId,
@@ -123,7 +122,7 @@ case class DiseaseCard(
                          id: Int,
                          name: String,
                          imageName: String,
-                         dungeonEffects: List[DungeonEffect],
+                         dungeonEffects: List[TurnEffect],
                        ) extends Card(id, name, imageName, 45) {
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
@@ -134,13 +133,13 @@ case class DiseaseCard(
 
 object DiseaseCard {
   implicit val diseaseFormat: Format[DiseaseCard] = Json.format[DiseaseCard]
-  def apply(cardRow: Tables.CardRow, dungeonEffects: Seq[Tables.DungeonEffectRow]): DiseaseCard = {
+  def apply(cardRow: Tables.CardRow, turnEffects: Seq[Tables.TurnEffectRow]): DiseaseCard = {
     new DiseaseCard(cardRow.cardId, cardRow.name, cardRow.image,
-      dungeonEffects.map(DungeonEffect(_)).toList)
+      turnEffects.map(TurnEffect(_)).toList)
   }
   def apply(name: String, image: String, attributes: Map[String, String]): DiseaseCard = {
     new DiseaseCard(0, name, image,
-      TurnEffect.parse("Dungeon", attributes.getOrElse("de", "")).asInstanceOf[List[DungeonEffect]])
+      TurnEffect.parse("Dungeon", attributes.getOrElse("de", "")))
   }
 }
 
@@ -154,8 +153,8 @@ case class HeroCard(
                      cost: Int,
                      traits: List[String],
                      heroType: String,
-                     battleEffects: List[BattleEffect],
-                     dungeonEffects: List[DungeonEffect],
+                     battleEffects: List[TurnEffect],
+                     dungeonEffects: List[TurnEffect],
                      goldValue: Option[Int],
                      victoryPoints: Int,
                      override val frequency: Int
@@ -190,19 +189,19 @@ case class HeroCard(
 object HeroCard {
   implicit val heroFormat: Format[HeroCard] = Json.format[HeroCard]
 
-  def apply(cardRow: Tables.CardRow, heroRow: Tables.HeroRow, battleEffects: Seq[Tables.BattleEffectRow],
-            dungeonEffects: Seq[Tables.DungeonEffectRow]): HeroCard = {
+  def apply(cardRow: Tables.CardRow, heroRow: Tables.HeroRow, turnEffects: Seq[Tables.TurnEffectRow]): HeroCard = {
+    val allEffects = turnEffects.map(TurnEffect(_)).toList
     new HeroCard(cardRow.cardId, cardRow.name, cardRow.image, heroRow.light, heroRow.level, heroRow.strength, heroRow.cost,
-      heroRow.heroClasses.split(",").toList, heroRow.heroType, battleEffects.map(BattleEffect(_)).toList,
-      dungeonEffects.map(DungeonEffect(_)).toList, heroRow.goldValue, heroRow.victoryPoints, cardRow.frequency)
+      heroRow.heroClasses.split(",").toList, heroRow.heroType, allEffects.filter(_.effectType == "Battle"),
+      allEffects.filter(_.effectType == "Dungeon"), heroRow.goldValue, heroRow.victoryPoints, cardRow.frequency)
   }
   def apply(name: String, image: String, attributes: Map[String, String]): HeroCard = {
     new HeroCard(0, name, image, attributes.getOrElse("li", "0").toInt, attributes.getOrElse("lv", "0").toInt,
       attributes("str").toInt, attributes("c").toInt,
       attributes.getOrElse("t", "").split(",").toList.filterNot(_ == ""),
       name.split(" ")(0),
-      TurnEffect.parse("Battle", attributes.getOrElse("be", "")).asInstanceOf[List[BattleEffect]],
-      TurnEffect.parse("Dungeon", attributes.getOrElse("de", "")).asInstanceOf[List[DungeonEffect]],
+      TurnEffect.parse("Battle", attributes.getOrElse("be", "")),
+      TurnEffect.parse("Dungeon", attributes.getOrElse("de", "")),
       attributes.get("gv").map(_.toInt), attributes.getOrElse("vp", "0").toInt, attributes("f").toInt)
   }
 }
@@ -214,7 +213,7 @@ case class ItemCard(
                      light: Int,
                      cost: Int,
                      traits: List[String],
-                     dungeonEffects: List[DungeonEffect],
+                     dungeonEffects: List[TurnEffect],
                      goldValue: Int,
                      victoryPoints: Int,
                      override val frequency: Int
@@ -240,16 +239,15 @@ case class ItemCard(
 
 object ItemCard {
   implicit val itemFormat: Format[ItemCard] = Json.format[ItemCard]
-  def apply(cardRow: Tables.CardRow, itemRow: Tables.ItemRow, dungeonEffects: Seq[Tables.DungeonEffectRow],
-            villageEffects: Seq[Tables.VillageEffectRow]): ItemCard = {
+  def apply(cardRow: Tables.CardRow, itemRow: Tables.ItemRow, turnEffects: Seq[Tables.TurnEffectRow]): ItemCard = {
     new ItemCard(cardRow.cardId, cardRow.name, cardRow.image, itemRow.light, itemRow.cost,
-      itemRow.itemTraits.split(",").toList, dungeonEffects.map(DungeonEffect(_)).toList, itemRow.goldValue,
+      itemRow.itemTraits.split(",").toList, turnEffects.map(TurnEffect(_)).toList, itemRow.goldValue,
       itemRow.victoryPoints, cardRow.frequency)
   }
   def apply(name: String, image: String, attributes: Map[String, String]): ItemCard = {
     new ItemCard(0, name, image, attributes.getOrElse("li", "0").toInt, attributes("c").toInt,
       attributes.getOrElse("t", "").split(",").toList.filterNot(_ == ""),
-      TurnEffect.parse("Dungeon", attributes.getOrElse("de", "")).asInstanceOf[List[DungeonEffect]],
+      TurnEffect.parse("Dungeon", attributes.getOrElse("de", "")),
       attributes("gv").toInt, attributes.getOrElse("vp", "0").toInt, attributes.getOrElse("f", "8").toInt)
   }
 }
@@ -261,7 +259,7 @@ case class SpellCard(
                       light: Int,
                       cost: Int,
                       traits: List[String],
-                      dungeonEffects: List[DungeonEffect],
+                      dungeonEffects: List[TurnEffect],
                       victoryPoints: Int
                     ) extends Card(id, name, imageName, 8) {
   override def write(connection: Connection): Int = {
@@ -283,15 +281,14 @@ case class SpellCard(
 }
 object SpellCard {
   implicit val spellFormat: Format[SpellCard] = Json.format[SpellCard]
-  def apply(cardRow: Tables.CardRow, spellRow: Tables.SpellRow, battleEffects: Seq[Tables.BattleEffectRow],
-            dungeonEffects: Seq[Tables.DungeonEffectRow]): SpellCard = {
+  def apply(cardRow: Tables.CardRow, spellRow: Tables.SpellRow, turnEffects: Seq[Tables.TurnEffectRow]): SpellCard = {
     new SpellCard(cardRow.cardId, cardRow.name, cardRow.image, spellRow.light, spellRow.cost,
-      spellRow.spellTypes.split(",").toList, dungeonEffects.map(DungeonEffect(_)).toList, spellRow.victoryPoints)
+      spellRow.spellTypes.split(",").toList, turnEffects.map(TurnEffect(_)).toList, spellRow.victoryPoints)
   }
   def apply(name: String, image: String, attributes: Map[String, String]): SpellCard = {
     new SpellCard(0, name, image, attributes.getOrElse("li", "0").toInt, attributes("c").toInt,
       attributes.getOrElse("t", "").split(",").toList.filterNot(_ == ""),
-      TurnEffect.parse("Dungeon", attributes.getOrElse("de", "")).asInstanceOf[List[DungeonEffect]],
+      TurnEffect.parse("Dungeon", attributes.getOrElse("de", "")),
       attributes.getOrElse("vp", "0").toInt)
   }
 }
@@ -302,7 +299,7 @@ case class VillagerCard(
                          imageName: String,
                          cost: Int,
                          traits: List[String],
-                         villageEffects: List[VillageEffect],
+                         villageEffects: List[TurnEffect],
                          goldValue: Option[Int],
                          victoryPoints: Int
                        ) extends Card(id, name, imageName, 8) {
@@ -331,16 +328,16 @@ case class VillagerCard(
 object VillagerCard {
   implicit val villagerFormat: Format[VillagerCard] = Json.format[VillagerCard]
   def apply(cardRow: Tables.CardRow, villagerRow: Tables.VillagerRow,
-            villageEffects: Seq[Tables.VillageEffectRow]): VillagerCard = {
+            turnEffects: Seq[Tables.TurnEffectRow]): VillagerCard = {
     new VillagerCard(cardRow.cardId, cardRow.name, cardRow.image, villagerRow.cost,
       villagerRow.villagerTypes.split(",").toList,
-      villageEffects.map(VillageEffect(_)).toList, villagerRow.goldValue,
+      turnEffects.map(TurnEffect(_)).toList, villagerRow.goldValue,
       villagerRow.victoryPoints)
   }
   def apply(name: String, image: String, attributes: Map[String, String]): VillagerCard = {
     new VillagerCard(0, name, image, attributes("c").toInt,
       attributes.getOrElse("t", "").split(",").toList.filterNot(_ == ""),
-      TurnEffect.parse("Village", attributes.getOrElse("ve", "")).asInstanceOf[List[VillageEffect]],
+      TurnEffect.parse("Village", attributes.getOrElse("ve", "")),
       attributes.get("gv").map(_.toInt), attributes.getOrElse("vp", "0").toInt)
   }
 }
@@ -353,7 +350,7 @@ case class WeaponCard(
                        weight: Int,
                        cost: Int,
                        traits: List[String],
-                       dungeonEffects: List[DungeonEffect],
+                       dungeonEffects: List[TurnEffect],
                        goldValue: Int,
                        victoryPoints: Int,
                        override val frequency: Int
@@ -381,16 +378,16 @@ case class WeaponCard(
 object WeaponCard {
   implicit val weaponFormat: Format[WeaponCard] = Json.format[WeaponCard]
   def apply(
-             cardRow: Tables.CardRow, weaponRow: Tables.WeaponRow, dungeonEffects: Seq[Tables.DungeonEffectRow]
+             cardRow: Tables.CardRow, weaponRow: Tables.WeaponRow, turnEffects: Seq[Tables.TurnEffectRow]
            ): WeaponCard = {
     new WeaponCard(cardRow.cardId, cardRow.name, cardRow.image, weaponRow.light, weaponRow.weight, weaponRow.cost,
-      weaponRow.weaponTypes.split(",").toList, dungeonEffects.map(DungeonEffect(_)).toList, weaponRow.goldValue,
+      weaponRow.weaponTypes.split(",").toList, turnEffects.map(TurnEffect(_)).toList, weaponRow.goldValue,
       weaponRow.victoryPoints, cardRow.frequency)
   }
   def apply(name: String, image: String, attributes: Map[String, String]): WeaponCard = {
     new WeaponCard(0, name, image, attributes.getOrElse("li", "0").toInt, attributes.getOrElse("w", "0").toInt,
       attributes("c").toInt, attributes.getOrElse("t", "").split(",").toList.filterNot(_ == ""),
-      TurnEffect.parse("Dungeon", attributes.getOrElse("de", "")).asInstanceOf[List[DungeonEffect]],
+      TurnEffect.parse("Dungeon", attributes.getOrElse("de", "")),
       attributes.getOrElse("gv", "0").toInt, attributes.getOrElse("vp", "0").toInt,
       attributes.getOrElse("f", "8").toInt)
   }
@@ -404,8 +401,8 @@ case class MonsterCard(
                         health: Int,
                         traits: List[String],
                         breachEffect:  Option[BreachEffect],
-                        battleEffects: List[BattleEffect],
-                        dungeonEffects: List[DungeonEffect],
+                        battleEffects: List[TurnEffect],
+                        dungeonEffects: List[TurnEffect],
                         goldValue: Int,
                         victoryPoints: Int,
                         experiencePoints: Int,
@@ -435,12 +432,14 @@ case class MonsterCard(
 
 object MonsterCard {
   implicit val monsterFormat: Format[MonsterCard] = Json.format[MonsterCard]
-  def apply(cardRow: Tables.CardRow, monsterRow: Tables.MonsterRow, battleEffects: Seq[Tables.BattleEffectRow],
-            dungeonEffects: Seq[Tables.DungeonEffectRow], breachEffects: Seq[Tables.BreachEffectRow]): MonsterCard = {
+  def apply(cardRow: Tables.CardRow, monsterRow: Tables.MonsterRow, turnEffects: Seq[Tables.TurnEffectRow],
+            breachEffects: Seq[Tables.BreachEffectRow]): MonsterCard = {
     val breachEffect: Option[BreachEffect] = getBreachEffect(breachEffects.headOption.map(_.effect))
+    val clashEffects: List[TurnEffect] = turnEffects.map(TurnEffect(_)).toList
     new MonsterCard(cardRow.cardId, cardRow.name, cardRow.image, monsterRow.light, monsterRow.health,
-      monsterRow.monsterTypes.split(",").toList, breachEffect, battleEffects.map(BattleEffect(_)).toList,
-      dungeonEffects.map(DungeonEffect(_)).toList, monsterRow.goldValue, monsterRow.victoryPoints,
+      monsterRow.monsterTypes.split(",").toList, breachEffect,
+      clashEffects.filter(_.effectType == "Battle"), clashEffects.filter(_.effectType == "Dungeon"),
+      monsterRow.goldValue, monsterRow.victoryPoints,
       monsterRow.experience, cardRow.frequency)
   }
 
@@ -459,8 +458,8 @@ object MonsterCard {
     new MonsterCard(0, name, image, attributes.getOrElse("li", "0").toInt, attributes("health").toInt,
       attributes.getOrElse("t", "").split(",").toList.filterNot(_ == ""),
       getBreachEffect(attributes.get("breach")),
-      TurnEffect.parse("Battle", attributes.getOrElse("be", "")).asInstanceOf[List[BattleEffect]],
-      TurnEffect.parse("Dungeon", attributes.getOrElse("de", "")).asInstanceOf[List[DungeonEffect]],
+      TurnEffect.parse("Battle", attributes.getOrElse("be", "")),
+      TurnEffect.parse("Dungeon", attributes.getOrElse("de", "")),
       attributes("gv").toInt, attributes("vp").toInt, attributes("xp").toInt, attributes.getOrElse("f", "2").toInt)
   }
 }

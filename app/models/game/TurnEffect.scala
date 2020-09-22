@@ -2,14 +2,57 @@ package models.game
 
 import java.sql.{Connection, Types}
 
-import play.api.libs.json.{Format, Json}
 import models.schema.Tables
+import play.api.libs.json.{Format, Json}
 
-trait TurnEffect {
-  def activate(state: State): State
+case class TurnEffect(
+                       effectType: String,
+                       effect: Option[String],
+                       requiredType: Option[String],
+                       repeatable: Boolean,
+                       adjustment: Option[AttributeAdjustment]
+                     ) {
+  def activate(state: State): State = state
+  def write(connection: Connection, id: Int): Unit = {
+    val statement = connection.prepareStatement(
+      """
+        |INSERT INTO TurnEffect (card_id, effect_type, effect, need_type, repeatable, operation, modifier_amount, attribute_modified)
+        |     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        |""".stripMargin)
+    statement.setInt(1, id)
+    statement.setString(2, effectType)
+    if (effect.nonEmpty) {
+      statement.setString(3, effect.get)
+    } else {
+      statement.setNull(3, Types.VARCHAR)
+    }
+    if (requiredType.nonEmpty) {
+      statement.setString(4, requiredType.get)
+    } else {
+      statement.setNull(4, Types.VARCHAR)
+    }
+    statement.setBoolean(5, repeatable)
+    if (adjustment.nonEmpty) {
+      statement.setString(6, adjustment.get.operation.getString)
+      statement.setInt(7, adjustment.get.amount)
+      statement.setString(8, adjustment.get.attribute)
+    } else {
+      statement.setNull(6, Types.VARCHAR)
+      statement.setNull(7, Types.INTEGER)
+      statement.setNull(8, Types.VARCHAR)
+    }
+    statement.execute()
+  }
 }
 
 object TurnEffect {
+  implicit val turnEffectFormat: Format[TurnEffect] = Json.format[TurnEffect]
+  def apply(row: Tables.TurnEffectRow): TurnEffect = {
+    val adjustment = row.operation.map(op =>
+      AttributeAdjustment(Operation(op), row.modifierAmount.get, row.attributeModified.get)
+    )
+    new TurnEffect(row.effectType, row.effect, row.needType, row.repeatable, adjustment)
+  }
   def parse(effectType: String, data: String): List[TurnEffect] = {
     val effects = data.split(",")
     if (data.nonEmpty) {
@@ -30,158 +73,10 @@ object TurnEffect {
             }
             None
           }
-        effectType match {
-          case "Battle" => BattleEffect(description, required, repeated, adjustment)
-          case "Dungeon" => DungeonEffect(description, required, repeated, adjustment)
-          case "Village" => VillageEffect(description, required, repeated, adjustment)
-        }
+        new TurnEffect(effectType, description, required, repeated, adjustment)
       }).toList
     } else {
       Nil
     }
   }
 }
-
-case class VillageEffect(
-                     effect: Option[String],
-                     requiredType: Option[String],
-                     repeatable: Boolean,
-                     adjustment: Option[AttributeAdjustment]
-                   ) extends TurnEffect {
-  override def activate(state: State): State = state
-  def write(connection: Connection, id: Int): Unit = {
-    val statement = connection.prepareStatement(
-      """
-        |INSERT INTO VillageEffect (card_id, effect, need_type, repeatable, operation, modifier_amount, attribute_modified)
-        |     VALUES (?, ?, ?, ?, ?, ?, ?)
-        |""".stripMargin)
-    statement.setInt(1, id)
-    if (effect.nonEmpty) {
-      statement.setString(2, effect.get)
-    } else {
-      statement.setNull(2, Types.VARCHAR)
-    }
-    if (requiredType.nonEmpty) {
-      statement.setString(3, requiredType.get)
-    } else {
-      statement.setNull(3, Types.VARCHAR)
-    }
-    statement.setBoolean(4, repeatable)
-    if (adjustment.nonEmpty) {
-      statement.setString(5, adjustment.get.operation.getString)
-      statement.setInt(6, adjustment.get.amount)
-      statement.setString(7, adjustment.get.attribute)
-    } else {
-      statement.setNull(5, Types.VARCHAR)
-      statement.setNull(6, Types.INTEGER)
-      statement.setNull(7, Types.VARCHAR)
-    }
-    statement.execute()
-  }
-}
-
-object VillageEffect {
-  implicit val villageEffectFormat: Format[VillageEffect] = Json.format[VillageEffect]
-  def apply(row: Tables.VillageEffectRow): VillageEffect = {
-    val adjustment = row.operation.map(op =>
-      AttributeAdjustment(Operation(op), row.modifierAmount.get, row.attributeModified.get)
-    )
-    new VillageEffect(row.effect, row.needType, row.repeatable, adjustment)
-  }
-}
-
-case class BattleEffect (
-                     effect: Option[String],
-                     requiredType: Option[String],
-                     repeatable: Boolean,
-                     adjustment: Option[AttributeAdjustment]
-                   ) extends TurnEffect {
-  override def activate(state: State): State = state
-  def write(connection: Connection, id: Int): Unit = {
-    val statement = connection.prepareStatement(
-      """
-        |INSERT INTO BattleEffect (card_id, effect, need_type, repeatable, operation, modifier_amount, attribute_modified)
-        |     VALUES (?, ?, ?, ?, ?, ?, ?)
-        |""".stripMargin)
-    statement.setInt(1, id)
-    if (effect.nonEmpty) {
-      statement.setString(2, effect.get)
-    } else {
-      statement.setNull(2, Types.VARCHAR)
-    }
-    if (requiredType.nonEmpty) {
-      statement.setString(3, requiredType.get)
-    } else {
-      statement.setNull(3, Types.VARCHAR)
-    }
-    statement.setBoolean(4, repeatable)
-    if (adjustment.nonEmpty) {
-      statement.setString(5, adjustment.get.operation.getString)
-      statement.setInt(6, adjustment.get.amount)
-      statement.setString(7, adjustment.get.attribute)
-    } else {
-      statement.setNull(5, Types.VARCHAR)
-      statement.setNull(6, Types.INTEGER)
-      statement.setNull(7, Types.VARCHAR)
-    }
-    statement.execute()
-  }
-}
-
-object BattleEffect {
-  implicit val battleEffectFormat: Format[BattleEffect] = Json.format[BattleEffect]
-  def apply(row: Tables.BattleEffectRow): BattleEffect = {
-    val adjustment = row.operation.map(op =>
-      AttributeAdjustment(Operation(op), row.modifierAmount.get, row.attributeModified.get)
-    )
-    new BattleEffect(row.effect, row.needType, row.repeatable, adjustment)
-  }
-}
-
-case class DungeonEffect (
-                      effect: Option[String],
-                      requiredType: Option[String],
-                      repeatable: Boolean,
-                      adjustment: Option[AttributeAdjustment]
-                    ) extends TurnEffect {
-  override def activate(state: State): State = state
-  def write(connection: Connection, id: Int): Unit = {
-    val statement = connection.prepareStatement(
-      """
-        |INSERT INTO DungeonEffect (card_id, effect, need_type, repeatable, operation, modifier_amount, attribute_modified)
-        |     VALUES (?, ?, ?, ?, ?, ?, ?)
-        |""".stripMargin)
-    statement.setInt(1, id)
-    if (effect.nonEmpty) {
-      statement.setString(2, effect.get)
-    } else {
-      statement.setNull(2, Types.VARCHAR)
-    }
-    if (requiredType.nonEmpty) {
-      statement.setString(3, requiredType.get)
-    } else {
-      statement.setNull(3, Types.VARCHAR)
-    }
-    statement.setBoolean(4, repeatable)
-    if (adjustment.nonEmpty) {
-      statement.setString(5, adjustment.get.operation.getString)
-      statement.setInt(6, adjustment.get.amount)
-      statement.setString(7, adjustment.get.attribute)
-    } else {
-      statement.setNull(5, Types.VARCHAR)
-      statement.setNull(6, Types.INTEGER)
-      statement.setNull(7, Types.VARCHAR)
-    }
-    statement.execute()
-  }
-}
-object DungeonEffect {
-  implicit val dungeonEffectFormat: Format[DungeonEffect] = Json.format[DungeonEffect]
-  def apply(row: Tables.DungeonEffectRow): DungeonEffect = {
-    val adjustment = row.operation.map(op =>
-      AttributeAdjustment(Operation(op), row.modifierAmount.get, row.attributeModified.get)
-    )
-    new DungeonEffect(row.effect, row.needType, row.repeatable, adjustment)
-  }
-}
-

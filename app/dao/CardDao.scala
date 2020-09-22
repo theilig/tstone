@@ -20,10 +20,8 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   private val villagers = TableQuery[Tables.Villager]
   private val weapons = TableQuery[Tables.Weapon]
   private val monsters = TableQuery[Tables.Monster]
-  private val battleEffects = TableQuery[Tables.BattleEffect]
   private val breachEffects = TableQuery[Tables.BreachEffect]
-  private val dungeonEffects = TableQuery[Tables.DungeonEffect]
-  private val villageEffects = TableQuery[Tables.VillageEffect]
+  private val turnEffects = TableQuery[Tables.TurnEffect]
   private val thunderstoneQuery = TableQuery[Tables.Thunderstone]
 
 
@@ -64,25 +62,19 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
       val monsterCardIds = monsterPairs.map(pair => pair._1.cardId)
       db.run(breachEffects.filter(_.cardId.inSet(monsterCardIds)).result)
     })
-    val eventualDungeonEffectRows = eventualMonsterPairs.flatMap(monsterPairs => {
+    val eventualTurnEffectRows = eventualMonsterPairs.flatMap(monsterPairs => {
       val monsterCardIds = monsterPairs.map(pair => pair._1.cardId)
-      db.run(dungeonEffects.filter(_.cardId.inSet(monsterCardIds)).result)
-    })
-    val eventualBattleEffectRows = eventualMonsterPairs.flatMap(monsterPairs => {
-      val monsterCardIds = monsterPairs.map(pair => pair._1.cardId)
-      db.run(battleEffects.filter(_.cardId.inSet(monsterCardIds)).result)
+      db.run(turnEffects.filter(_.cardId.inSet(monsterCardIds)).result)
     })
     for {
       monsterPairs <- eventualMonsterPairs
       breachEffectRows <- eventualBreachEffectRows
-      battleEffectRows <- eventualBattleEffectRows
-      dungeonEffectRows <- eventualDungeonEffectRows
+      turnEffectRows <- eventualTurnEffectRows
     } yield monsterPairs.map {
       case (card, monster) => MonsterCard(
         card,
         monster,
-        battleEffectRows.filter(_.cardId == card.cardId),
-        dungeonEffectRows.filter(_.cardId == card.cardId),
+        turnEffectRows.filter(_.cardId == card.cardId),
         breachEffectRows.filter(_.cardId == card.cardId)
       )
     }.groupBy(m => m.traits.mkString(" "))
@@ -95,11 +87,9 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     val spellRows = db.run(spells.filter(_.cardId.inSet(cardIds)).result)
     val villagerRows = db.run(villagers.filter(_.cardId.inSet(cardIds)).result)
     val weaponsRows = db.run(weapons.filter(_.cardId.inSet(cardIds)).result)
-    val battleEffectRows = db.run(battleEffects.filter(_.cardId.inSet(cardIds)).result)
+    val turnEffectRows = db.run(turnEffects.filter(_.cardId.inSet(cardIds)).result)
     val breachEffectRows = db.run(breachEffects.filter(_.cardId.inSet(cardIds)).result)
-    val dungeonEffectRows = db.run(dungeonEffects.filter(_.cardId.inSet(cardIds)).result)
     val monsterRows = db.run(monsters.filter(_.cardId.inSet(cardIds)).result)
-    val villageEffectRows = db.run(villageEffects.filter(_.cardId.inSet(cardIds)).result)
     val thunderstoneRows = db.run(thunderstoneQuery.filter(_.cardId.inSet(cardIds)).result)
     for {
       cards <- cardRows
@@ -108,11 +98,9 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
       spells <- spellRows
       villagers <- villagerRows
       weapons <- weaponsRows
-      battleEffects <- battleEffectRows
+      turnEffects <- turnEffectRows
       breachEffects <- breachEffectRows
-      dungeonEffects <- dungeonEffectRows
       monsters <- monsterRows
-      villageEffects <- villageEffectRows
       thunderstones <- thunderstoneRows
     } yield cardIds.map(cardId => {
       cardId -> CardInfo(
@@ -123,10 +111,8 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
         spells.find(_.cardId == cardId),
         villagers.find(_.cardId == cardId),
         weapons.find(_.cardId == cardId),
-        battleEffects.filter(_.cardId == cardId),
+        turnEffects.filter(_.cardId == cardId),
         breachEffects.filter(_.cardId == cardId),
-        dungeonEffects.filter(_.cardId == cardId),
-        villageEffects.filter(_.cardId == cardId),
         thunderstones.filter(_.cardId == cardId)
       )
     }).toMap

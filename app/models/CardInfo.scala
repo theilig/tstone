@@ -8,9 +8,7 @@ case class CardInfo(
                      spellRow: Option[SpellRow],
                      villagerRow: Option[VillagerRow],
                      weaponRow: Option[WeaponRow],
-                     battleEffects: Seq[BattleEffectRow],
+                     turnEffects: Seq[TurnEffectRow],
                      breachEffects: Seq[BreachEffectRow],
-                     dungeonEffects: Seq[DungeonEffectRow],
-                     villageEffects: Seq[VillageEffectRow],
                      thunderstones: Seq[ThunderstoneRow]
                    )
