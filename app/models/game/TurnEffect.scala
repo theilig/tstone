@@ -1,5 +1,7 @@
 package models.game
 
+import java.sql.{Connection, Types}
+
 import play.api.libs.json.{Format, Json}
 import models.schema.Tables
 
@@ -47,6 +49,35 @@ case class VillageEffect(
                      adjustment: Option[AttributeAdjustment]
                    ) extends TurnEffect {
   override def activate(state: State): State = state
+  def write(connection: Connection, id: Int): Unit = {
+    val statement = connection.prepareStatement(
+      """
+        |INSERT INTO VillageEffect (card_id, effect, need_type, repeatable, operation, modifier_amount, attribute_modified)
+        |     VALUES (?, ?, ?, ?, ?, ?, ?)
+        |""".stripMargin)
+    statement.setInt(1, id)
+    if (effect.nonEmpty) {
+      statement.setString(2, effect.get)
+    } else {
+      statement.setNull(2, Types.VARCHAR)
+    }
+    if (requiredType.nonEmpty) {
+      statement.setString(3, requiredType.get)
+    } else {
+      statement.setNull(3, Types.VARCHAR)
+    }
+    statement.setBoolean(4, repeatable)
+    if (adjustment.nonEmpty) {
+      statement.setString(5, adjustment.get.operation.getString)
+      statement.setInt(6, adjustment.get.amount)
+      statement.setString(7, adjustment.get.attribute)
+    } else {
+      statement.setNull(5, Types.VARCHAR)
+      statement.setNull(6, Types.INTEGER)
+      statement.setNull(7, Types.VARCHAR)
+    }
+    statement.execute()
+  }
 }
 
 object VillageEffect {
@@ -66,6 +97,35 @@ case class BattleEffect (
                      adjustment: Option[AttributeAdjustment]
                    ) extends TurnEffect {
   override def activate(state: State): State = state
+  def write(connection: Connection, id: Int): Unit = {
+    val statement = connection.prepareStatement(
+      """
+        |INSERT INTO BattleEffect (card_id, effect, need_type, repeatable, operation, modifier_amount, attribute_modified)
+        |     VALUES (?, ?, ?, ?, ?, ?, ?)
+        |""".stripMargin)
+    statement.setInt(1, id)
+    if (effect.nonEmpty) {
+      statement.setString(2, effect.get)
+    } else {
+      statement.setNull(2, Types.VARCHAR)
+    }
+    if (requiredType.nonEmpty) {
+      statement.setString(3, requiredType.get)
+    } else {
+      statement.setNull(3, Types.VARCHAR)
+    }
+    statement.setBoolean(4, repeatable)
+    if (adjustment.nonEmpty) {
+      statement.setString(5, adjustment.get.operation.getString)
+      statement.setInt(6, adjustment.get.amount)
+      statement.setString(7, adjustment.get.attribute)
+    } else {
+      statement.setNull(5, Types.VARCHAR)
+      statement.setNull(6, Types.INTEGER)
+      statement.setNull(7, Types.VARCHAR)
+    }
+    statement.execute()
+  }
 }
 
 object BattleEffect {
@@ -85,6 +145,35 @@ case class DungeonEffect (
                       adjustment: Option[AttributeAdjustment]
                     ) extends TurnEffect {
   override def activate(state: State): State = state
+  def write(connection: Connection, id: Int): Unit = {
+    val statement = connection.prepareStatement(
+      """
+        |INSERT INTO DungeonEffect (card_id, effect, need_type, repeatable, operation, modifier_amount, attribute_modified)
+        |     VALUES (?, ?, ?, ?, ?, ?, ?)
+        |""".stripMargin)
+    statement.setInt(1, id)
+    if (effect.nonEmpty) {
+      statement.setString(2, effect.get)
+    } else {
+      statement.setNull(2, Types.VARCHAR)
+    }
+    if (requiredType.nonEmpty) {
+      statement.setString(3, requiredType.get)
+    } else {
+      statement.setNull(3, Types.VARCHAR)
+    }
+    statement.setBoolean(4, repeatable)
+    if (adjustment.nonEmpty) {
+      statement.setString(5, adjustment.get.operation.getString)
+      statement.setInt(6, adjustment.get.amount)
+      statement.setString(7, adjustment.get.attribute)
+    } else {
+      statement.setNull(5, Types.VARCHAR)
+      statement.setNull(6, Types.INTEGER)
+      statement.setNull(7, Types.VARCHAR)
+    }
+    statement.execute()
+  }
 }
 object DungeonEffect {
   implicit val dungeonEffectFormat: Format[DungeonEffect] = Json.format[DungeonEffect]

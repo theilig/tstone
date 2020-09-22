@@ -11,9 +11,6 @@ case class CardInfo(
                      battleEffects: Seq[BattleEffectRow],
                      breachEffects: Seq[BreachEffectRow],
                      dungeonEffects: Seq[DungeonEffectRow],
-                     heroClasses: Seq[HeroClassRow],
-                     itemTraits: Seq[ItemTraitRow],
-                     monsterType: Seq[MonsterTypeRow],
                      villageEffects: Seq[VillageEffectRow],
                      thunderstones: Seq[ThunderstoneRow]
                    )

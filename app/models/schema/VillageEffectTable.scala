@@ -16,7 +16,7 @@ trait VillageEffectTable {
    *  @param repeatable Database column repeatable SqlType(BIT)
    *  @param operation Database column operation SqlType(ENUM), Length(4,false), Default(None)
    *  @param modifierAmount Database column modifier_amount SqlType(INT), Default(None)
-   *  @param attributeModified Database column attribute_modified SqlType(ENUM), Length(8,false), Default(None) */
+   *  @param attributeModified Database column attribute_modified SqlType(ENUM), Length(10,false), Default(None) */
   case class VillageEffectRow(effectId: Int, cardId: Int, effect: Option[String] = None, needType: Option[String] = None, repeatable: Boolean, operation: Option[String] = None, modifierAmount: Option[Int] = None, attributeModified: Option[String] = None)
   /** GetResult implicit for fetching VillageEffectRow objects using plain SQL queries */
   implicit def GetResultVillageEffectRow(implicit e0: GR[Int], e1: GR[Option[String]], e2: GR[Boolean], e3: GR[Option[Int]]): GR[VillageEffectRow] = GR{
@@ -43,8 +43,8 @@ trait VillageEffectTable {
     val operation: Rep[Option[String]] = column[Option[String]]("operation", O.Length(4,varying=false), O.Default(None))
     /** Database column modifier_amount SqlType(INT), Default(None) */
     val modifierAmount: Rep[Option[Int]] = column[Option[Int]]("modifier_amount", O.Default(None))
-    /** Database column attribute_modified SqlType(ENUM), Length(8,false), Default(None) */
-    val attributeModified: Rep[Option[String]] = column[Option[String]]("attribute_modified", O.Length(8,varying=false), O.Default(None))
+    /** Database column attribute_modified SqlType(ENUM), Length(10,false), Default(None) */
+    val attributeModified: Rep[Option[String]] = column[Option[String]]("attribute_modified", O.Length(10,varying=false), O.Default(None))
 
     /** Index over (cardId) (database name card_id) */
     val index1 = index("card_id", cardId)

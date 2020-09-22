@@ -14,14 +14,14 @@ case class Dungeon(monsterPile: List[Card]) {
 object Dungeon {
   implicit val dungeonFormat: Format[Dungeon] = Json.format[Dungeon]
 
-  def getMonstersFromTypes(chosenTypes: Seq[(MonsterCard, Int)]): List[MonsterCard] = {
+  def getMonstersFromTypes(chosenTypes: Seq[MonsterCard]): List[MonsterCard] = {
     chosenTypes.flatMap({
-      case (monster, frequency) => List.fill(frequency)(monster)
+      case monster => List.fill(monster.frequency)(monster)
     }).toList
   }
 
   def build(cardDao: CardDao)(implicit ec: ExecutionContext): Future[Dungeon] = {
-    val eventualMonsterTypes: Future[Map[String, Seq[(MonsterCard, Int)]]] = cardDao.getMonstersByType
+    val eventualMonsterTypes: Future[Map[String, Seq[MonsterCard]]] = cardDao.getMonstersByType
     val eventualThunderstoneRow = cardDao.findByNames(List("Stone Of Mystery"))
     val random = new Random
     for {

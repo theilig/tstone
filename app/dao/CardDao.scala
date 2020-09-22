@@ -23,9 +23,6 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   private val battleEffects = TableQuery[Tables.BattleEffect]
   private val breachEffects = TableQuery[Tables.BreachEffect]
   private val dungeonEffects = TableQuery[Tables.DungeonEffect]
-  private val heroClasses = TableQuery[Tables.HeroClass]
-  private val itemTraits = TableQuery[Tables.ItemTrait]
-  private val monsterTypes = TableQuery[Tables.MonsterType]
   private val villageEffects = TableQuery[Tables.VillageEffect]
   private val thunderstoneQuery = TableQuery[Tables.Thunderstone]
 
@@ -58,14 +55,11 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     db.run(cards.filter(_.name.inSet(names)).result)
   }
 
-  def getMonstersByType: Future[Map[String, Seq[(MonsterCard, Int)]]] = {
+  def getMonstersByType: Future[Map[String, Seq[MonsterCard]]] = {
     val monsterQuery = for {
       (card, monster) <- cards join monsters on (_.cardId === _.cardId)
     } yield (card, monster)
     val eventualMonsterPairs = db.run(monsterQuery.result)
-    val eventualMonsterTypesByCardId = db.run(monsterTypes.result).map(results =>
-      results.groupBy(_.cardId))
-
     val eventualBreachEffectRows = eventualMonsterPairs.flatMap(monsterPairs => {
       val monsterCardIds = monsterPairs.map(pair => pair._1.cardId)
       db.run(breachEffects.filter(_.cardId.inSet(monsterCardIds)).result)
@@ -80,20 +74,18 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     })
     for {
       monsterPairs <- eventualMonsterPairs
-      monsterTypesByCardId <- eventualMonsterTypesByCardId
       breachEffectRows <- eventualBreachEffectRows
       battleEffectRows <- eventualBattleEffectRows
       dungeonEffectRows <- eventualDungeonEffectRows
     } yield monsterPairs.map {
-      case (card, monster) => (MonsterCard(
+      case (card, monster) => MonsterCard(
         card,
         monster,
-        monsterTypesByCardId(card.cardId),
         battleEffectRows.filter(_.cardId == card.cardId),
         dungeonEffectRows.filter(_.cardId == card.cardId),
         breachEffectRows.filter(_.cardId == card.cardId)
-      ), monster.frequency)
-    }.groupBy(m => m._1.traits.mkString(" "))
+      )
+    }.groupBy(m => m.traits.mkString(" "))
   }
 
   private def getCardInfoByIds(cardIds: List[Int]): Future[Map[Int, CardInfo]] = {
@@ -106,10 +98,7 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     val battleEffectRows = db.run(battleEffects.filter(_.cardId.inSet(cardIds)).result)
     val breachEffectRows = db.run(breachEffects.filter(_.cardId.inSet(cardIds)).result)
     val dungeonEffectRows = db.run(dungeonEffects.filter(_.cardId.inSet(cardIds)).result)
-    val heroClassRows = db.run(heroClasses.filter(_.cardId.inSet(cardIds)).result)
-    val itemTraitRows = db.run(itemTraits.filter(_.cardId.inSet(cardIds)).result)
     val monsterRows = db.run(monsters.filter(_.cardId.inSet(cardIds)).result)
-    val monsterTypeRows = db.run(monsterTypes.filter(_.cardId.inSet(cardIds)).result)
     val villageEffectRows = db.run(villageEffects.filter(_.cardId.inSet(cardIds)).result)
     val thunderstoneRows = db.run(thunderstoneQuery.filter(_.cardId.inSet(cardIds)).result)
     for {
@@ -122,10 +111,7 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
       battleEffects <- battleEffectRows
       breachEffects <- breachEffectRows
       dungeonEffects <- dungeonEffectRows
-      heroClasses <- heroClassRows
-      itemTraits <- itemTraitRows
       monsters <- monsterRows
-      monsterTypes <- monsterTypeRows
       villageEffects <- villageEffectRows
       thunderstones <- thunderstoneRows
     } yield cardIds.map(cardId => {
@@ -140,9 +126,6 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
         battleEffects.filter(_.cardId == cardId),
         breachEffects.filter(_.cardId == cardId),
         dungeonEffects.filter(_.cardId == cardId),
-        heroClasses.filter(_.cardId == cardId),
-        itemTraits.filter(_.cardId == cardId),
-        monsterTypes.filter(_.cardId == cardId),
         villageEffects.filter(_.cardId == cardId),
         thunderstones.filter(_.cardId == cardId)
       )

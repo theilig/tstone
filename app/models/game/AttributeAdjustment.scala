@@ -2,12 +2,24 @@ package models.game
 
 import play.api.libs.json.{Format, JsError, JsObject, JsPath, JsString, JsSuccess, Json, Reads, Writes}
 
-sealed trait Operation
-case object Add extends Operation
-case object Subtract extends Operation
-case object Multiply extends Operation
-case object Divide extends Operation
-case object Net extends Operation
+sealed trait Operation {
+  def getString: String
+}
+case object Add extends Operation {
+  override def getString: String = "ADD"
+}
+case object Subtract extends Operation {
+  override def getString: String = "SUBTRACT"
+}
+case object Multiply extends Operation {
+  override def getString: String = "MULTIPLY"
+}
+case object Divide extends Operation {
+  override def getString: String = "DIVIDE"
+}
+case object Net extends Operation {
+  override def getString: String = "NET"
+}
 
 object Operation {
   def apply(text: String): Operation = {

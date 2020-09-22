@@ -15,5 +15,5 @@ object CreateCards extends App {
   cardsResultSet.close()
   statement.close()
   val cards = Source.fromResource("manifest.txt").getLines().map(line => Card(line))
-  cards.foreach(println(_))
+  cards.foreach(c => c.write(connection))
 }

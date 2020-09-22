@@ -1,8 +1,23 @@
 package models.game
 
+import java.sql.Connection
+
 import play.api.libs.json.{Format, JsError, JsObject, JsPath, JsString, JsSuccess, Reads, Writes}
 
-trait BreachEffect
+trait BreachEffect {
+  def getString: String
+  def write(connection: Connection, id: Int): Unit = {
+    val statement = connection.prepareStatement(
+      """
+        |INSERT INTO BreachEffect (card_id, effect)
+        |     VALUES (?, ?)
+        |""".stripMargin)
+    statement.setInt(1, id)
+    statement.setString(2, getString)
+    statement.execute()
+    statement.close()
+  }
+}
 
 object BreachEffect {
   implicit val breachFormat: Format[BreachEffect] = Format[BreachEffect](
@@ -26,6 +41,10 @@ object BreachEffect {
   )
 }
 
-case object DestroyTwoHeroesFromVillagePiles extends BreachEffect
+case object DestroyTwoHeroesFromVillagePiles extends BreachEffect {
+  override def getString: String = "DestroyTwoHeroesFromVillagePiles"
+}
 
-case object DiscardTwoCards extends BreachEffect
+case object DiscardTwoCards extends BreachEffect {
+  override def getString: String = "DiscardTwoCards"
+}
