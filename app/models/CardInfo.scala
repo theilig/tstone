@@ -14,5 +14,6 @@ case class CardInfo(
                      heroClasses: Seq[HeroClassRow],
                      itemTraits: Seq[ItemTraitRow],
                      monsterType: Seq[MonsterTypeRow],
-                     villageEffects: Seq[VillageEffectRow]
+                     villageEffects: Seq[VillageEffectRow],
+                     thunderstones: Seq[ThunderstoneRow]
                    )

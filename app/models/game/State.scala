@@ -3,7 +3,6 @@ package models.game
 import controllers.game.stage.{GameStage, WaitingForPlayers}
 import models.schema.Tables.GameRow
 import play.api.libs.json._
-import play.api.libs.functional.syntax._
 
 case class State(players: List[Player], village: Option[Village], dungeon: Option[Dungeon], currentStage: GameStage) {
   def ownerId: Int = players.filterNot(_.pending).headOption.map(_.userId).getOrElse(0)

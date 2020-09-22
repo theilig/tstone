@@ -27,6 +27,7 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
   private val itemTraits = TableQuery[Tables.ItemTrait]
   private val monsterTypes = TableQuery[Tables.MonsterType]
   private val villageEffects = TableQuery[Tables.VillageEffect]
+  private val thunderstoneQuery = TableQuery[Tables.Thunderstone]
 
 
   private val heroQuery = for {
@@ -110,6 +111,7 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
     val monsterRows = db.run(monsters.filter(_.cardId.inSet(cardIds)).result)
     val monsterTypeRows = db.run(monsterTypes.filter(_.cardId.inSet(cardIds)).result)
     val villageEffectRows = db.run(villageEffects.filter(_.cardId.inSet(cardIds)).result)
+    val thunderstoneRows = db.run(thunderstoneQuery.filter(_.cardId.inSet(cardIds)).result)
     for {
       cards <- cardRows
       heroes <- heroRows
@@ -125,6 +127,7 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
       monsters <- monsterRows
       monsterTypes <- monsterTypeRows
       villageEffects <- villageEffectRows
+      thunderstones <- thunderstoneRows
     } yield cardIds.map(cardId => {
       cardId -> CardInfo(
         cards.find(_.cardId == cardId).get,
@@ -141,6 +144,7 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
         itemTraits.filter(_.cardId == cardId),
         monsterTypes.filter(_.cardId == cardId),
         villageEffects.filter(_.cardId == cardId),
+        thunderstones.filter(_.cardId == cardId)
       )
     }).toMap
   }

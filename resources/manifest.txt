@@ -1,10 +1,10 @@
 001 Grudgebeast gv:1 health:4 t:Abyssal xp:1 vp:2
 002 Succubus gv:2 health:6 t:Abyssal be:;NMATT;0;DIVIDE;2;ATT xp:2 vp:4
-003 Archduke of Pain gv:3 health:10 ;;0;ADD;3;MATTt:Abyssal f:1 be:;NMATT;0;MULTIPLY;0;ATT,Destroy;Cleric;1;;;,Destroy;Wizard;1;;; breach:ReduceHeros
-004 The Unchained gv:1 health:5 t:Abyssal f:3 be:Spoils;Disease;0;;1; de:;;0;ADD;1;MATT xp:1 vp:3
+003 Archduke of Pain gv:3 health:10 t:Abyssal ;;0;ADD;3;MATTt:Abyssal f:1 be:;NMATT;0;MULTIPLY;0;ATT,Destroy;Cleric;1;;;,Destroy;Wizard;1;;; breach:ReduceHeroes xp:3 vp:10
+004 The Unchained gv:1 health:5 t:Abyssal f:3 be:Spoils;Disease;0;;; de:;;0;ADD;1;MATT xp:1 vp:3
 005 Judgement gv:1 health:5 t:Doomknight,Humanoid be:;Hero;1;SUBTRACT;2;Strength,;Hero;1;SUBTRACT;1;ATT xp:1 vp:3
-006 Darkness gv:1 health:6 t:Doomknight,Humanoid be:No Attack;Unequipped;1;;;,;;0;SUBTRACT;1;Light xp:2 vp:4
-007 Tormentor gv:2 health:8 t:Abyssal be:Destroy;Cleric;0;;;,;Unequipped;1;DIVIDE;2;ATT
+006 Darkness gv:1 health:6 t:Doomknight,Humanoid be:NoAttack;Unequipped;1;;;,;;0;SUBTRACT;1;Light xp:2 vp:4
+007 Tormentor gv:2 health:8 t:Abyssal be:Destroy;Cleric;0;;;,;Unequipped;1;DIVIDE;2;ATT xp:3 vp:6
 008 Knightmare gv:1 health:8 t:Doomknight,Humanoid be:;;0;SUBTRACT;2;Light,Destroy;Fighter;0;;; xp:3 vp:6
 009 The Prince gv:1 health:7 t:Doomknight,Humanoid be:;Hero;1;SUBTRACT;2;Strength,Destroy;Fighter;0;;; xp:2 vp:5
 010 Lord Mortis gv:1 health:4 t:Doomknight,Humanoid be:;;0;SUBTRACT;1;Light xp:1 vp:2
@@ -13,24 +13,24 @@
 013 Mythlurian gv:3 health:8 t:Dragon,Green be:Destroy;Hero;0;;; xp:2 vp:4
 014 Skaladak gv:3 f:3 health:7 t:Dragon,White be:Destroy;Weapon;0;;; xp:2 vp:3
 015 Pegasus gv:2 f:3 health:6 t:Enchanted de:;;0;ADD;1;ATT xp:1 vp:2
-016 Tyxr The Old gv:2 health:10 t:Dragon,Red breach:Discard2 be:Destroy;Hero;0;;;,Spoils;Disease;0;;1; de:M;;0;ADD;2;MATT xp:3 vp:6
+016 Tyxr The Old gv:2 health:10 t:Dragon,Red breach:Discard2 be:Destroy;Hero;0;;;,Spoils;Disease;0;;; de:M;;0;ADD;2;MATT xp:3 vp:6
 017 Blink Dog gv:1 health:3 t:Enchanted be:;;0;SUBTRACT;1;Light,NoAttack;LightPenalty;0;;; xp:1 vp:2
 018 Nixie gv:4 health:5 t:Enchanted xp:1 vp:1
 019 Noxious Slag gv:1 health:7 t:Ooze be:NoAttack;EdgedWeapon;1;;;,;;0;DIVIDE;2;MATT xp:3 vp:6
-020 Suffering gv:2 health:6 t:Undead,Doom be:;Hero;1;SUBTRACT;2;Strength,disease+1 xp:2 vp:4
+020 Suffering gv:2 health:6 t:Undead,Doom be:;Hero;1;SUBTRACT;2;Strength,Spoils;Disease;0;;; xp:2 vp:4
 021 Harbinger gv:2 health:3 t:Undead,Doom be:Destroy;Spell;0;;; xp:1 vp:1
 022 Green Blob gv:1 health:5 t:Ooze be:Destroy;Food;0;;; xp:1 vp:2
-023 Kingdom gv:2 f:3 health:5 t:Undead,Doom be:Spoils;Disease;0;;1; xp:1 vp:3
-024 Famine gv:1 health:4 t:Undead,Doom be:Spoils;Disease;0;;1; xp:1 vp:2
+023 Kingdom gv:2 f:3 health:5 t:Undead,Doom be:Spoils;Disease;0;;; xp:1 vp:3
+024 Famine gv:1 health:4 t:Undead,Doom be:Spoils;Disease;0;;; xp:1 vp:2
 025 Gray Ooze gv:1 health:6 t:Ooze be:Destroy;HeroIfNoneEquipped;0;;;,Spoils;Food;0;;; xp:2 vp:3
-026 Lord of Death f:1 gv:2 health:9 t:Undead,Doom be:Spoils;Disease;0;;2; xp:3 vp:7
+026 Lord of Death f:1 gv:2 health:9 t:Undead,Doom be:Spoils;Disease;0;;;,Spoils;Disease;0;;; xp:3 vp:7
 027 Ghost gv:1 health:6 t:Undead,Spirit be:;NMATT;0;DIVIDE;2;ATT,;Hero;1;SUBTRACT;2;Strength xp:1 vp:4
 028 Black Slime gv:1 health:5 t:Ooze be:Destroy;Militia;0;;; xp:1 vp:2
 029 Griffon gv:1 health:7 t:Enchanted de:;;0;ADD;1;MATT xp:2 vp:4
-030 Sphinx gv:2 f:1 health:8 t:Enchanted be:NoAttack;NonMagic;1;;;,Spoils;DiscardOrDestroy;0;;6; de:;;0;ADD;2;MATT xp:3 vp:7
-031 Deadbone Troll gv:2 health:7 t:Humanoid be:disease+1 xp:2 vp:5
+030 Sphinx gv:2 f:1 health:8 t:Enchanted be:NoAttack;NonMagic;1;;;,Spoils;DiscardOrDestroy;0;;; de:;;0;ADD;2;MATT xp:3 vp:7
+031 Deadbone Troll gv:2 health:7 t:Humanoid be:Spoils;Disease;0;;; xp:2 vp:5
 032 Grayskin Lizard gv:2 health:6 t:Humanoid be:;Weapon;1;ADD;1;ATT xp:1 vp:3
-033 Firebrand Cyclops gv:1 health:6 xp:2 vp:4
+033 Firebrand Cyclops t:Humanoid gv:1 health:6 xp:2 vp:4
 034 Griknack Goblin gv:1 health:4 t:Humanoid xp:1 vp:1
 035 Bloodskull Orc gv:3 health:5 t:Humanoid xp:1 vp:0
 036 Red Jelly gv:2 health:6 li:1 t:Ooze be:Destroy;Weapon;0;;; xp:2 vp:2
@@ -49,10 +49,10 @@
 049 Elf Archmage str:4 lv:3 c:10 li:2 t:Wizard de:;;0;ADD;4;MATT,SendToBottom;;0;;;
 050 Feayn Archer str:4 lv:1 c:7 li:1 t:Fighter,Archer de:NoAttack;Rank1;0;;;,;;0;ADD;2;ATT
 051 Feayn Marksman str:5 lv:2 c:10 li:1 t:Fighter,Archer de:NoAttack;Rank1;0;;;,;;0;ADD;3;ATT
-052 Lorigg Rogue gv:3 str:4 lv:2 li:1 c:8 t:Thief de:;;0;ADD;2;ATT,Discard;OtherPlayer;0;;1;Card
-053 Lorigg Outlaw gv:4 str:5 lv:3 li:2 c:10 t:Thief de:;;0;ADD;2;ATT,Discard;OtherPlayer;0;;1;Card vp:1
+052 Lorigg Rogue gv:3 str:4 lv:2 li:1 c:8 t:Thief de:;;0;ADD;2;ATT,Discard;OtherPlayer;0;SUBTRACT;1;Card
+053 Lorigg Outlaw gv:4 str:5 lv:3 li:2 c:10 t:Thief de:;;0;ADD;2;ATT,Discard;OtherPlayer;0;SUBTRACT;1;Card vp:1
 054 Lorigg Thief gv:2 str:4 lv:1 li:1 c:5 t:Thief de:;;0;ADD;1;ATT
-055 Warhammer gv:2 w:5 c:4 t:WEAPON,BLUNT de:;;0;ADD;3;ATT,;ClericVDoomknight;0;ADD;3;ATT,;ClericVUndead;0;ADD;3;ATT
+055 Warhammer gv:2 w:5 c:4 t:Weapon,Blunt de:;;0;ADD;3;ATT,;ClericVDoomknight;0;ADD;3;ATT,;ClericVUndead;0;ADD;3;ATT
 056 Trainer c:4 t:Villager ve:Destroy;Militia;0;ADD;2;Experience,Destroy;Self;0;ADD;2;Gold
 057 Town Guard c:3 t:Villager ve:;;0;ADD;2;Card,Destroy;Self;0;ADD;3;Card
 058 Spear gv:2 w:4 c:4 t:Weapon,Edged de:;;0;ADD;2;ATT,Destroy;Self;0;ADD;3;ATT
@@ -61,33 +61,33 @@
 061 Pawnbroker c:3 t:Villager ve:Destroy;GoldValue;0;NET;3;Gold,Destroy;Self;0;ADD;2;Gold
 062 Magical Aura c:4 t:Spell gv:2 de:;Weapon;1;MULTIPLY;0;Weight,;;0;ADD;1;Card
 063 Lightstone Gem gv:3 li:3 c:6 t:Item,Light,Magic
-064 Wraith gv:2 health:6 be:Destroy;Militia;0;;; xp:2 vp:4
+064 Wraith t:Undead gv:2 health:6 be:Destroy;Militia;0;;; xp:2 vp:4
 065 Haunt gv:1 health:4 t:Undead,Spirit be:NoAttack;Hero;0;;; xp:1 vp:2
 066 Spectre gv:1 health:5 t:Undead,Spirit be:Destroy;Militia;0;;; xp:1 vp:3
 067 Revenant gv:2 health:7 t:Undead,Spirit be:NoAttack;MATT;0;;;,;Hero;1;SUBTRACT;4;Strength xp:2 vp:5
 068 Stone Of Mystery vp:3 t:Thunderstone
-069 Iron Rations gv:2 c:2 t:ITEM,FOOD de:;Hero;0;ADD;2;Strength
+069 Iron Rations gv:2 c:2 t:Item,Food de:;Hero;0;ADD;2;Strength
 070 Torch gv:2 c:3 li:1 t:Item,Light
 071 Dagger gv:1 w:2 c:3 t:Weapon,Edged de:;;0;ADD;1;ATT
 072 Disease de:;;0;SUBTRACT;1;ATT
 073 Outlands Slayer str:8 lv:2 c:11 t:Fighter de:;;0;ADD;5;ATT,Destroy;Food;1;ADD;3;ATT,;Monster;1;ADD;1;ATT
 074 Feayn Sniper str:6 lv:3 li:2 c:12 t:Fighter,Archer de:NoAttack;Rank1;0;;;,;;0;ADD;4;ATT,;Rank3;0;ADD;1;Experience vp:2
-075 Regian Priest str:4 lv:2 c:8 t:Cleric de:;;0;ADD;2;MATT,;;0;ADD;1;Card,DestDis|card+1(R)
-076 Regian Bishop str:5 lv:3 c:11 t:Cleric de:MATT+3,card+2,DestDis|card+2(R) vp:2
-077 Regian Cleric bad str:4 lv:1 c:5 t:Cleric de:MATT+1,Destroy;Disease;1;ADD;1;Card
+075 Regian Priest str:4 lv:2 c:8 t:Cleric de:;;0;ADD;2;MATT,;;0;ADD;1;Card,Destroy;Disease;1;ADD;1;Card
+076 Regian Bishop str:5 lv:3 c:11 t:Cleric de:;;0;ADD;3;MATT,;;0;ADD;2;Card,Destroy;Disease;1;ADD;2;Card vp:2
+077 Regian Cleric str:4 lv:1 c:5 t:Cleric de:;;0;ADD;1;MATT,Destroy;Disease;1;ADD;1;Card
 078 Selurin Magician str:2 lv:1 c:8 t:Wizard de:;;0;ADD;2;MATT,;MASpell;1;ADD;1;MATT,;Magic+Item;1;ADD;1;MATT
 079 Selurin Warlock str:2 lv:2 c:10 t:Wizard de:;;0;ADD;2;MATT,;;0;MULTIPLY;2;MATT
 080 Selurin Theurge str:3 lv:3 c:13 t:Wizard de:;;0;ADD;2;MATT,;;0;MULTIPLY;2;MATT,Borrow;Hero;1;;;
 081 Thyrian Squire str:6 lv:1 c:7 t:Fighter de:;;0;ADD;2;ATT,Destroy;Food;0;ADD;2;ATT
 082 Thyrian Knight str:8 lv:2 c:9 t:Fighter de:;;0;ADD;4;ATT,;Militia;1;ADD;1;ATT,Destroy;Food;0;ADD;2;ATT
-083 Thyrian Lord str:9 lv:3 c:11 t:Fighter de:;;0;ADD;4;ATT,Trade;FoodXMonsterVp2-;2;;;,;!Fighter;1;ADD;2;ATT vp:2
+083 Thyrian Lord str:9 lv:3 c:11 t:Fighter de:;;0;ADD;4;ATT,Trade;FoodXMonsterVp2-;0;;;,;!Fighter;1;ADD;2;ATT vp:2
 084 Arcane Energies c:2 t:Spell de:MakeMagic;Equipped;1;;;,;;0;ADD;1;Card
 085 Banish c:4 t:Spell de:Banish;;0;;;
 086 Redblade Assassin gv:2 str:6 lv:3 c:9 t:Fighter,Thief de:;;0;ADD;4;ATT,DiscardHero|2Cards;OtherPlayer;1;;;
 087 Redblade Killer gv:1 str:5 lv:1 c:5 t:Fighter,Thief de:;;0;ADD;2;ATT
-088 Outlands Warrior str:7 lv:1 c:8 de:;;0;ADD;3;ATT,Destroy;Food;0;ADD;3;ATT
+088 Outlands Warrior str:7 t:Fighter lv:1 c:8 de:;;0;ADD;3;ATT,Destroy;Food;0;ADD;3;ATT
 089 Redblade Poisoner gv:2 str:5 l:2 c:8 t:Fighter,Thief de:;;0;ADD;3;ATT,;OtherPlayer;1;SUBTRACT;1;Card
-090 Outlands Khan str:8 lv:3 c:13 de:;;0;ADD;7;ATT,;Monster;1;ADD;2;ATT vp:3
+090 Outlands Khan str:8 t:Fighter lv:3 c:13 de:;;0;ADD;7;ATT,;Monster;1;ADD;2;ATT vp:3
 091 Barkeep gv:1 c:2 t:Villager ve:;;0;ADD;1;Buy,Destroy;Self;0;ADD;2;Gold
 092 Battle Fury c:3 t:Spell de:;Hero;1;ADD;1;ATT
 093 Feast gv:3 c:5 t:Item,Food de:;Hero;1;ADD;1;ATT,;Hero;1;ADD;3;Strength

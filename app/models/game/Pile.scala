@@ -14,6 +14,16 @@ abstract class Pile[T <: Card](cards: ListBuffer[T]) {
   }
 }
 
+case class DiseasePile(cards: ListBuffer[DiseaseCard]) extends Pile[DiseaseCard](cards)
+
+object DiseasePile {
+  implicit val diseasePileFormat: Format[DiseasePile] = Json.format[DiseasePile]
+
+  def apply(card: DiseaseCard): DiseasePile = {
+    new DiseasePile(ListBuffer.fill(45)(card))
+  }
+}
+
 case class HeroPile(cards: ListBuffer[HeroCard]) extends Pile[HeroCard](cards) {
   override def counts: List[Int] = {
     val groups = cards.groupBy(c => c.level)
