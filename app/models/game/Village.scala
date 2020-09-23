@@ -13,7 +13,8 @@ case class Village(
                weapons: List[WeaponPile],
                items: List[ItemPile],
                spells: List[SpellPile],
-               villagers: List[VillagerPile]
+               villagers: List[VillagerPile],
+               diseasePile: DiseasePile
              ) {
   def findPile(name: String): Pile[Card] = {
     List(heroes, weapons, items, spells, villagers).foldLeft[Option[Pile[Card]]](None)((found, nextList) => {
@@ -22,7 +23,7 @@ case class Village(
       } else {
         nextList.find(_.topCard.getName == name).map(p => p.asInstanceOf[Pile[Card]])
       }
-    }).get
+    }).getOrElse(diseasePile.asInstanceOf[Pile[Card]])
   }
 }
 
@@ -30,26 +31,27 @@ object Village {
   implicit val villageFormat: OFormat[Village] = Json.format[Village]
   def apply(startingCardIds: Seq[Int], cardIds: Seq[Int], cardDao: CardDao)
            (implicit ec: ExecutionContext): Future[Village] = {
-    def isStartingCard(id: Int) = startingCardIds.contains(id)
     val eventualCards: Future[Map[Int, Card]] = cardDao.findByIds((startingCardIds ++ cardIds).toList)
     eventualCards.map(cards => {
       val heroesByType = cards.collect({
         case (_, h: HeroCard) => h
       }).groupBy(h => h.heroType)
 
-      val piles = cards.map {
-        case (id, h: HeroCard) => id -> HeroPile(heroesByType(h.heroType), isStartingCard(h.id))
-        case (id, i: ItemCard) => id -> ItemPile(i, isStartingCard(i.id))
-        case (id, s: SpellCard) => id -> SpellPile(s)
-        case (id, v: VillagerCard) => id -> VillagerPile(v)
-        case (id, w: WeaponCard) => id -> WeaponPile(w, isStartingCard(w.id))
-      }
+      val piles = (startingCardIds ++ cardIds).map(id => cards(id) match {
+        case h: HeroCard => HeroPile(heroesByType(h.heroType))
+        case i: ItemCard => ItemPile(i)
+        case s: SpellCard => SpellPile(s)
+        case v: VillagerCard => VillagerPile(v)
+        case w: WeaponCard => WeaponPile(w)
+        case d: DiseaseCard => DiseasePile(d)
+      })
       new Village(
-        piles.collect{case (_, h: HeroPile) => h}.toList,
-        piles.collect{case (_, w: WeaponPile) => w}.toList,
-        piles.collect{case (_, i: ItemPile) => i}.toList,
-        piles.collect{case (_, s: SpellPile) => s}.toList,
-        piles.collect{case (_, v: VillagerPile) => v}.toList
+        piles.collect{case h: HeroPile => h}.toList,
+        piles.collect{case w: WeaponPile => w}.toList,
+        piles.collect{case i: ItemPile => i}.toList,
+        piles.collect{case s: SpellPile => s}.toList,
+        piles.collect{case v: VillagerPile => v}.toList,
+        piles.collect{case d: DiseasePile => d}.head
       )
     })
   }
@@ -59,53 +61,6 @@ object Village {
   }
 
   private def isHero(s: String) = s == "Hero"
-
-  def pickVilliageCards(
-                         randomIds: List[Int],
-                         cardTypes: Map[Int, String],
-                         remainingSlots: Map[String, Int],
-                         heroCards: Int,
-                         villageCards: Int
-                       ): List[Int] = {
-    @tailrec
-    def pickVillageInternal(
-                             randomIds: List[Int],
-                             remainingSlots: Map[String, Int],
-                             heroCards: Int,
-                             villageCards: Int,
-                             idsSoFar: List[Int]
-                           ): List[Int] = {
-
-      (villageCards, heroCards, cardTypes(randomIds.head)) match {
-        case (0, 0, _) => idsSoFar
-        case (x, _, t) if x > 0 && isVilliage(t) && remainingSlots(t) > 0 =>
-          pickVillageInternal(
-            randomIds.tail,
-            remainingSlots + (t -> (remainingSlots(t) - 1)),
-            heroCards,
-            villageCards - 1,
-            randomIds.head :: idsSoFar
-          )
-        case (_, x, t) if x > 0 && isHero(t) && remainingSlots(t) > 0 =>
-          pickVillageInternal(
-            randomIds.tail,
-            remainingSlots + (t -> (remainingSlots(t) - 1)),
-            heroCards - 1,
-            villageCards,
-            randomIds.head :: idsSoFar
-          )
-        case _ => pickVillageInternal(
-          randomIds.tail,
-          remainingSlots,
-          heroCards,
-          villageCards,
-          idsSoFar
-        )
-      }
-    }
-
-    pickVillageInternal(randomIds, remainingSlots, heroCards, villageCards, Nil)
-  }
 
   def drawRandomCardIds(
                          heroes: Map[Int, HeroRow],
@@ -140,7 +95,7 @@ object Village {
     }
     randomIdsInternal(
       randomIds,
-      Map("Hero" -> 4, "Weapon" -> 3, "Item" -> 2, "Spell" -> 3, "Villager" -> 3, "Village" -> 12),
+      Map("Hero" -> 4, "Weapon" -> 3, "Item" -> 2, "Spell" -> 3, "Villager" -> 3, "Village" -> 8),
       Nil)
   }
 
@@ -150,23 +105,26 @@ object Village {
     val eventualWeaponRows = cardDao.getWeapons
     val eventualItemRows = cardDao.getItems
     val eventualVillagerRows = cardDao.getVilliagers
-
+    val eventualStartingCardIds: Future[Seq[Int]] = cardDao.findByNames(startingCardNames).map(list => {
+      list.map(_.cardId)
+    })
     val eventualCardIds: Future[List[Int]] = for {
       heroRows <- eventualHeroRows
       spellRows <- eventualSpellRows
       weaponRows <- eventualWeaponRows
       itemRows <- eventualItemRows
       villagerRows <- eventualVillagerRows
-    } yield drawRandomCardIds(
-      heroRows.map(h => h.cardId -> h).toMap,
-      spellRows.map(s => s.cardId -> s).toMap,
-      weaponRows.map(w => w.cardId -> w).toMap,
-      itemRows.map(i => i.cardId -> i).toMap,
-      villagerRows.map(v => v.cardId -> v).toMap
-    )
-    val eventualStartingCardIds: Future[Seq[Int]] = cardDao.findByNames(startingCardNames).map(list => {
-      list.map(_.cardId)
-    })
+      startingCardIds <- eventualStartingCardIds
+    } yield {
+      val startingCardIdSet =startingCardIds.toSet
+      drawRandomCardIds(
+        heroRows.filterNot(h => startingCardIdSet.contains(h.cardId)).map(h => h.cardId -> h).toMap,
+        spellRows.map(s => s.cardId -> s).toMap,
+        weaponRows.filterNot(w => startingCardIdSet.contains(w.cardId)).map(w => w.cardId -> w).toMap,
+        itemRows.filterNot(i => startingCardIdSet.contains(i.cardId)).map(i => i.cardId -> i).toMap,
+        villagerRows.map(v => v.cardId -> v).toMap
+      )
+    }
     for {
       startingCardIds <- eventualStartingCardIds
       cardIds <- eventualCardIds

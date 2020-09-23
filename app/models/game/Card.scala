@@ -408,6 +408,13 @@ case class MonsterCard(
                         experiencePoints: Int,
                         override val frequency: Int
                       ) extends Card(id, name, imageName, frequency) {
+  def monsterType: String = {
+    if (traits.head == "Dragon") {
+      "Dragon"
+    } else {
+      traits.mkString(" ")
+    }
+  }
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
     val statement = connection.prepareStatement(
@@ -447,7 +454,11 @@ object MonsterCard {
     val breachEffect = breachEffects match {
       case Some(effect) if effect == "ReduceHeroes" =>
         Some(DestroyTwoHeroesFromVillagePiles)
+      case Some(effect) if effect == "DestroyTwoHeroesFromVillagePiles" =>
+        Some(DestroyTwoHeroesFromVillagePiles)
       case Some(effect) if effect == "Discard2" =>
+        Some(DiscardTwoCards)
+      case Some(effect) if effect == "DiscardTwoCards" =>
         Some(DiscardTwoCards)
       case None => None
     }

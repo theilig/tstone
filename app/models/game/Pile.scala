@@ -37,19 +37,11 @@ case class HeroPile(cards: ListBuffer[HeroCard]) extends Pile[HeroCard](cards) {
 
 object HeroPile {
   implicit val heroPileFormat: Format[HeroPile] = Json.format[HeroPile]
-  def apply(cards: Iterable[HeroCard], isStartingCard: Boolean): HeroPile = {
-    if (isStartingCard) {
-      new HeroPile(ListBuffer.fill(cards.head.frequency)(cards.head))
-    } else {
-      val l1Card = cards.find(c => c.level == 1)
-      val l2Card = cards.find(c => c.level == 2)
-      val l3Card = cards.find(c => c.level == 3)
-      new HeroPile(
-        ListBuffer.fill(l1Card.get.frequency)(l1Card.get) ++
-          ListBuffer.fill(l2Card.get.frequency)(l2Card.get) ++
-          ListBuffer.fill(l3Card.get.frequency)(l3Card.get)
-      )
-    }
+  def apply(cards: Iterable[HeroCard]): HeroPile = {
+    val orderedCards: List[HeroCard] = cards.toList.sortBy(_.level)
+    val pileCards = orderedCards.foldLeft(ListBuffer[HeroCard]())((l, card) =>
+      l ++ ListBuffer.fill(card.frequency)(card))
+    new HeroPile(pileCards)
   }
 }
 
@@ -58,7 +50,7 @@ case class ItemPile(cards: ListBuffer[ItemCard]) extends Pile(cards)
 object ItemPile {
   implicit val itemPileFormat: Format[ItemPile] = Json.format[ItemPile]
 
-  def apply(card: ItemCard, isStartingCard: Boolean): ItemPile = {
+  def apply(card: ItemCard): ItemPile = {
     new ItemPile(ListBuffer.fill(card.frequency)(card))
   }
 }
@@ -76,7 +68,7 @@ case class WeaponPile(cards: ListBuffer[WeaponCard]) extends Pile(cards)
 
 object WeaponPile {
   implicit val weaponPileFormat: Format[WeaponPile] = Json.format[WeaponPile]
-  def apply(card: WeaponCard, isStartingCard: Boolean): WeaponPile = {
+  def apply(card: WeaponCard): WeaponPile = {
     new WeaponPile(ListBuffer.fill(card.frequency)(card))
   }
 }

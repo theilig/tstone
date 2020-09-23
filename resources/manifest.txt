@@ -1,6 +1,6 @@
 001 Grudgebeast gv:1 health:4 t:Abyssal xp:1 vp:2
 002 Succubus gv:2 health:6 t:Abyssal be:;NMATT;0;DIVIDE;2;ATT xp:2 vp:4
-003 Archduke of Pain gv:3 health:10 t:Abyssal ;;0;ADD;3;MATTt:Abyssal f:1 be:;NMATT;0;MULTIPLY;0;ATT,Destroy;Cleric;1;;;,Destroy;Wizard;1;;; breach:ReduceHeroes xp:3 vp:10
+003 Archduke of Pain gv:3 health:10 t:Abyssal ;;0;ADD;3;MATT f:1 be:;NMATT;0;MULTIPLY;0;ATT,Destroy;Cleric;1;;;,Destroy;Wizard;1;;; breach:ReduceHeroes xp:3 vp:10
 004 The Unchained gv:1 health:5 t:Abyssal f:3 be:Spoils;Disease;0;;; de:;;0;ADD;1;MATT xp:1 vp:3
 005 Judgement gv:1 health:5 t:Doomknight,Humanoid be:;Hero;1;SUBTRACT;2;Strength,;Hero;1;SUBTRACT;1;ATT xp:1 vp:3
 006 Darkness gv:1 health:6 t:Doomknight,Humanoid be:NoAttack;Unequipped;1;;;,;;0;SUBTRACT;1;Light xp:2 vp:4
@@ -61,7 +61,7 @@
 061 Pawnbroker c:3 t:Villager ve:Destroy;GoldValue;0;NET;3;Gold,Destroy;Self;0;ADD;2;Gold
 062 Magical Aura c:4 t:Spell gv:2 de:;Weapon;1;MULTIPLY;0;Weight,;;0;ADD;1;Card
 063 Lightstone Gem gv:3 li:3 c:6 t:Item,Light,Magic
-064 Wraith t:Undead gv:2 health:6 be:Destroy;Militia;0;;; xp:2 vp:4
+064 Wraith t:Undead,Spirit gv:2 health:6 be:Destroy;Militia;0;;; xp:2 vp:4
 065 Haunt gv:1 health:4 t:Undead,Spirit be:NoAttack;Hero;0;;; xp:1 vp:2
 066 Spectre gv:1 health:5 t:Undead,Spirit be:Destroy;Militia;0;;; xp:1 vp:3
 067 Revenant gv:2 health:7 t:Undead,Spirit be:NoAttack;MATT;0;;;,;Hero;1;SUBTRACT;4;Strength xp:2 vp:5

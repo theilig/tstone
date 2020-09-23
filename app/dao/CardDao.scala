@@ -77,45 +77,54 @@ class CardDao @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)
         turnEffectRows.filter(_.cardId == card.cardId),
         breachEffectRows.filter(_.cardId == card.cardId)
       )
-    }.groupBy(m => m.traits.mkString(" "))
+    }.groupBy(m => m.monsterType)
   }
 
   private def getCardInfoByIds(cardIds: List[Int]): Future[Map[Int, CardInfo]] = {
-    val cardRows = db.run(cards.filter(_.cardId.inSet(cardIds)).result)
-    val heroRows = db.run(heroes.filter(_.cardId.inSet(cardIds)).result)
-    val itemRows = db.run(items.filter(_.cardId.inSet(cardIds)).result)
-    val spellRows = db.run(spells.filter(_.cardId.inSet(cardIds)).result)
-    val villagerRows = db.run(villagers.filter(_.cardId.inSet(cardIds)).result)
-    val weaponsRows = db.run(weapons.filter(_.cardId.inSet(cardIds)).result)
-    val turnEffectRows = db.run(turnEffects.filter(_.cardId.inSet(cardIds)).result)
-    val breachEffectRows = db.run(breachEffects.filter(_.cardId.inSet(cardIds)).result)
-    val monsterRows = db.run(monsters.filter(_.cardId.inSet(cardIds)).result)
-    val thunderstoneRows = db.run(thunderstoneQuery.filter(_.cardId.inSet(cardIds)).result)
-    for {
-      cards <- cardRows
-      heroes <- heroRows
-      items <- itemRows
-      spells <- spellRows
-      villagers <- villagerRows
-      weapons <- weaponsRows
-      turnEffects <- turnEffectRows
-      breachEffects <- breachEffectRows
-      monsters <- monsterRows
-      thunderstones <- thunderstoneRows
-    } yield cardIds.map(cardId => {
-      cardId -> CardInfo(
-        cards.find(_.cardId == cardId).get,
-        heroes.find(_.cardId == cardId),
-        items.find(_.cardId == cardId),
-        monsters.find(_.cardId == cardId),
-        spells.find(_.cardId == cardId),
-        villagers.find(_.cardId == cardId),
-        weapons.find(_.cardId == cardId),
-        turnEffects.filter(_.cardId == cardId),
-        breachEffects.filter(_.cardId == cardId),
-        thunderstones.filter(_.cardId == cardId)
-      )
-    }).toMap
+    val higherLevelHeroIds = for {
+      l1 <- heroes
+      h <- heroes if l1.cardId.inSet(cardIds) && l1.heroType === h.heroType && h.level > 1
+    } yield h.cardId
+    db.run(higherLevelHeroIds.result).flatMap(extraIds => {
+      val allCardIds = cardIds ::: extraIds.toList
+      val cardRows = db.run(cards.filter(_.cardId.inSet(allCardIds)).result)
+      val heroRows = db.run(heroes.filter(_.cardId.inSet(allCardIds)).result)
+      val itemRows = db.run(items.filter(_.cardId.inSet(allCardIds)).result)
+      val spellRows = db.run(spells.filter(_.cardId.inSet(allCardIds)).result)
+      val villagerRows = db.run(villagers.filter(_.cardId.inSet(allCardIds)).result)
+      val weaponsRows = db.run(weapons.filter(_.cardId.inSet(allCardIds)).result)
+      val turnEffectRows = db.run(turnEffects.filter(_.cardId.inSet(allCardIds)).result)
+      val breachEffectRows = db.run(breachEffects.filter(_.cardId.inSet(allCardIds)).result)
+      val monsterRows = db.run(monsters.filter(_.cardId.inSet(allCardIds)).result)
+      val thunderstoneRows = db.run(thunderstoneQuery.filter(_.cardId.inSet(allCardIds)).result)
+      for {
+        cards <- cardRows
+        heroes <- heroRows
+        items <- itemRows
+        spells <- spellRows
+        villagers <- villagerRows
+        weapons <- weaponsRows
+        turnEffects <- turnEffectRows
+        breachEffects <- breachEffectRows
+        monsters <- monsterRows
+        thunderstones <- thunderstoneRows
+      } yield {
+        allCardIds.map(cardId => {
+          cardId -> CardInfo(
+            cards.find(_.cardId == cardId).get,
+            heroes.find(_.cardId == cardId),
+            items.find(_.cardId == cardId),
+            monsters.find(_.cardId == cardId),
+            spells.find(_.cardId == cardId),
+            villagers.find(_.cardId == cardId),
+            weapons.find(_.cardId == cardId),
+            turnEffects.filter(_.cardId == cardId),
+            breachEffects.filter(_.cardId == cardId),
+            thunderstones.filter(_.cardId == cardId)
+          )
+        }).toMap
+      }
+    })
   }
 
   def findByIds(cardIds: List[Int]): Future[Map[Int,Card]] = {

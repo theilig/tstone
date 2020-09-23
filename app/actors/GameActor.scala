@@ -61,7 +61,9 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
         state = state.copy(currentStage = PickDestination(0))
         setUpGame(state).map(newState => {
           updateGameState(newState)
-        })
+        }).recover {
+          case t: Throwable => log.error(t.getMessage)
+        }
       case m =>
         val result = state.currentStage.receive(m, user, state)
         result match {
@@ -83,9 +85,12 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
   }
 
   private def updateGameState(newState: State): Unit = {
-    gameDao.updateGame(gameId, newState)
-    state = newState
-    notifyWatchers(GameState(state))
+    gameDao.updateGame(gameId, newState).map(rowsChanged => {
+      if (rowsChanged == 1) {
+        state = newState
+        notifyWatchers(GameState(state))
+      }
+    })
   }
 
   def notifyWatchers(message: Message): Unit = {

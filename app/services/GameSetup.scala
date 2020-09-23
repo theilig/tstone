@@ -11,7 +11,7 @@ import scala.util.Random
 class GameSetup @Inject() (cardDao: CardDao)(implicit ec: ExecutionContext) {
   def setupGame(state: State): Future[State] = {
     val random = new Random
-    val startingCards: List[String] = List("Militia", "Iron Rations", "Dagger", "Torch")
+    val startingCards: List[String] = List("Militia", "Iron Rations", "Dagger", "Torch", "Disease")
     val randomizedState = for {
       village <- Village.build(startingCards, cardDao)
       dungeon <- Dungeon.build(cardDao)
@@ -37,7 +37,7 @@ class GameSetup @Inject() (cardDao: CardDao)(implicit ec: ExecutionContext) {
         List.fill(2)("Iron Rations") :::
         List.fill(2)("Dagger")
     startingDeck.foreach(cardName => {
-      newState = giveEachPlayer(state, cardName)
+      newState = giveEachPlayer(newState, cardName)
     })
     newState
   }
