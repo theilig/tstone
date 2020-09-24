@@ -4,6 +4,7 @@ import { GameStateContext } from "../context/GameState";
 import {useParams} from "react-router";
 import Startup from "./Startup";
 import {Redirect} from "react-router";
+import DisplayGame from "./DisplayGame";
 
 function Game(props) {
     const [ gameState, setGameState ] = useState()
@@ -64,7 +65,7 @@ function Game(props) {
             case "WaitingForPlayers":
                 return <Startup gameSocket={gameSocket} />
             default:
-                return ""
+                return <DisplayGame gameSocket={gameSocket} />
         }
     }
 

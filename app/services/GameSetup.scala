@@ -3,12 +3,12 @@ package services
 import com.google.inject.Inject
 import controllers.game.stage.PickDestination
 import dao.CardDao
-import models.game.{Dungeon, State, Village}
+import models.game.{Dungeon, Player, State, Village}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
-class GameSetup @Inject() (cardDao: CardDao)(implicit ec: ExecutionContext) {
+class GameSetup @Inject() (cardDao: CardDao, cardManager: CardManager)(implicit ec: ExecutionContext) {
   def setupGame(state: State): Future[State] = {
     val random = new Random
     val startingCards: List[String] = List("Militia", "Iron Rations", "Dagger", "Torch", "Disease")
@@ -17,29 +17,28 @@ class GameSetup @Inject() (cardDao: CardDao)(implicit ec: ExecutionContext) {
       dungeon <- Dungeon.build(cardDao)
     } yield state.copy(village = Some(village), dungeon = Some(dungeon))
     randomizedState.map(state => {
-      dealStartingCards(state).copy(currentStage = PickDestination(random.between(0, state.players.length)))
-    })
-  }
+      val startingPlayerIndex = random.between(0, state.players.length)
+      dealStartingCards(state).copy(currentStage = PickDestination(state.players.drop(startingPlayerIndex).head.userId))
 
-  def giveEachPlayer(state: State, cardName: String): State = {
-    val pile = state.village.get.findPile(cardName)
-    val newPlayers = state.players.map(p => {
-      p.copy(discard = pile.takeTopCard :: p.discard)
     })
-    state.copy(players = newPlayers)
   }
 
   def dealStartingCards(state: State): State = {
-    var newState = state
+    def dealPlayers(players: List[Player], cards: List[String], state: State): State = {
+      def dealCardsToPlayer(player: Player, cards: List[String], state: State): State = {
+        cards.foldLeft(state)((s, c) => cardManager.takeCard(player, c, s))
+      }
+      players.foldLeft(state)((s, p) => dealCardsToPlayer(p, cards, s))
+    }
+    def fillPlayersHands(state: State): State = {
+      state.players.foldLeft(state)((s, p) => cardManager.fillPlayerHand(p, s))
+    }
     val startingDeck =
       List.fill(6)("Militia") :::
         List.fill(2)("Torch") :::
         List.fill(2)("Iron Rations") :::
         List.fill(2)("Dagger")
-    startingDeck.foreach(cardName => {
-      newState = giveEachPlayer(newState, cardName)
-    })
-    newState
+    fillPlayersHands(dealPlayers(state.players, startingDeck, state))
   }
 }
 

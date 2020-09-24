@@ -2,29 +2,22 @@ package models.game
 
 import play.api.libs.json.{Format, Json}
 
-import scala.collection.mutable.ListBuffer
-
-abstract class Pile[T <: Card](cards: ListBuffer[T]) {
+abstract class Pile[T <: Card](cards: List[T]) {
   def topCard: Card = cards.head
   def counts: List[Int] = List(cards.length)
-  def takeTopCard: Card = {
-    val card = cards.head
-    cards -= card
-    card
-  }
 }
 
-case class DiseasePile(cards: ListBuffer[DiseaseCard]) extends Pile[DiseaseCard](cards)
+case class DiseasePile(cards: List[DiseaseCard]) extends Pile[DiseaseCard](cards)
 
 object DiseasePile {
   implicit val diseasePileFormat: Format[DiseasePile] = Json.format[DiseasePile]
 
   def apply(card: DiseaseCard): DiseasePile = {
-    new DiseasePile(ListBuffer.fill(card.frequency)(card))
+    new DiseasePile(List.fill(card.frequency)(card))
   }
 }
 
-case class HeroPile(cards: ListBuffer[HeroCard]) extends Pile[HeroCard](cards) {
+case class HeroPile(cards: List[HeroCard]) extends Pile[HeroCard](cards) {
   override def counts: List[Int] = {
     val groups = cards.groupBy(c => c.level)
     List(
@@ -39,45 +32,45 @@ object HeroPile {
   implicit val heroPileFormat: Format[HeroPile] = Json.format[HeroPile]
   def apply(cards: Iterable[HeroCard]): HeroPile = {
     val orderedCards: List[HeroCard] = cards.toList.sortBy(_.level)
-    val pileCards = orderedCards.foldLeft(ListBuffer[HeroCard]())((l, card) =>
-      l ++ ListBuffer.fill(card.frequency)(card))
+    val pileCards = orderedCards.foldLeft(List[HeroCard]())((l, card) =>
+      l ++ List.fill(card.frequency)(card))
     new HeroPile(pileCards)
   }
 }
 
-case class ItemPile(cards: ListBuffer[ItemCard]) extends Pile(cards)
+case class ItemPile(cards: List[ItemCard]) extends Pile(cards)
 
 object ItemPile {
   implicit val itemPileFormat: Format[ItemPile] = Json.format[ItemPile]
 
   def apply(card: ItemCard): ItemPile = {
-    new ItemPile(ListBuffer.fill(card.frequency)(card))
+    new ItemPile(List.fill(card.frequency)(card))
   }
 }
 
-case class SpellPile(cards: ListBuffer[SpellCard]) extends Pile(cards)
+case class SpellPile(cards: List[SpellCard]) extends Pile(cards)
 
 object SpellPile {
   implicit val spellPileFormat: Format[SpellPile] = Json.format[SpellPile]
   def apply(card: SpellCard): SpellPile = {
-    new SpellPile(ListBuffer.fill(card.frequency)(card))
+    new SpellPile(List.fill(card.frequency)(card))
   }
 }
 
-case class WeaponPile(cards: ListBuffer[WeaponCard]) extends Pile(cards)
+case class WeaponPile(cards: List[WeaponCard]) extends Pile(cards)
 
 object WeaponPile {
   implicit val weaponPileFormat: Format[WeaponPile] = Json.format[WeaponPile]
   def apply(card: WeaponCard): WeaponPile = {
-    new WeaponPile(ListBuffer.fill(card.frequency)(card))
+    new WeaponPile(List.fill(card.frequency)(card))
   }
 }
 
-case class VillagerPile(cards: ListBuffer[VillagerCard]) extends Pile(cards)
+case class VillagerPile(cards: List[VillagerCard]) extends Pile(cards)
 
 object VillagerPile {
   implicit val villagerPileFormat: Format[VillagerPile] = Json.format[VillagerPile]
   def apply(card: VillagerCard): VillagerPile = {
-    new VillagerPile(ListBuffer.fill(card.frequency)(card))
+    new VillagerPile(List.fill(card.frequency)(card))
   }
 }

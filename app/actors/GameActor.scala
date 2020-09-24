@@ -5,13 +5,13 @@ import controllers.game.stage.{PickDestination, WaitingForPlayers}
 import dao.{CardDao, GameDao}
 import models.User
 import models.game.{ConnectToGame, GameError, GameOver, GameState, LeaveGame, Message, StartGame, State, UserMessage}
-import services.GameSetup
+import services.{CardManager, GameSetup}
 
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Random
 
-class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
+class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao, cardManager: CardManager)
                (implicit ec: ExecutionContext) extends Actor with ActorLogging {
   // Placeholder state while we look up the actual state
   var state: State = State(Nil, None, None, WaitingForPlayers)
@@ -29,7 +29,7 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
   private def setUpGame(state: State)(implicit ec: ExecutionContext): Future[State] = {
     val random = new Random
     val newPlayers = random.shuffle(state.players.filterNot(_.pending))
-    val setup = new GameSetup(cardDao)
+    val setup = new GameSetup(cardDao, cardManager)
     setup.setupGame(state.copy(players = newPlayers))
   }
 
@@ -38,7 +38,7 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
     message match {
       case ConnectToGame(desiredGameId) if desiredGameId == gameId =>
         watchers += (user.userId -> sender())
-        sender() ! GameState(state)
+        sender() ! GameState(state.projection(user.userId))
       case LeaveGame =>
         val result = state.currentStage.receive(LeaveGame, user, state)
         result match {
@@ -46,7 +46,7 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
             if (newState.players.isEmpty) {
               updateGameState(newState)
               gameDao.completeGame(gameId)
-              notifyWatchers(GameOver)
+              notifyWatchers(_ => GameOver)
               context.stop(self)
             } else {
               updateGameState(newState)
@@ -88,21 +88,21 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
     gameDao.updateGame(gameId, newState).map(rowsChanged => {
       if (rowsChanged == 1) {
         state = newState
-        notifyWatchers(GameState(state))
+        notifyWatchers(userId => GameState(state.projection(userId)))
       }
     })
   }
 
-  def notifyWatchers(message: Message): Unit = {
-    watchers.values.foreach(ref => {
-      ref ! message
+  def notifyWatchers(getMessage: Int => Message): Unit = {
+    watchers.foreach({
+      case (userId, ref) => ref ! getMessage(userId)
     })
   }
 }
 
 object GameActor {
   val LookupTimeout: FiniteDuration = FiniteDuration(30, SECONDS)
-  def props(gameId: Int, gameDao: GameDao, cardDao: CardDao)(implicit ec: ExecutionContext): Props = {
-    Props(new GameActor(gameId, gameDao, cardDao))
+  def props(gameId: Int, gameDao: GameDao, cardDao: CardDao, cardManager: CardManager)(implicit ec: ExecutionContext): Props = {
+    Props(new GameActor(gameId, gameDao, cardDao, cardManager))
   }
 }

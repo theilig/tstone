@@ -5,6 +5,9 @@ import models.game.{AcceptPlayer, GameError, JoinGame, LeaveGame, Message, Playe
 
 case object WaitingForPlayers extends GameStage {
   val MaxPlayers = 5
+
+  override def currentPlayer: Int = 0
+
   def receive(message: Message, user: User, state: State): Either[State, GameError] = {
     message match {
       case JoinGame if state.players.exists(p => p.userId == user.userId) =>

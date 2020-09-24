@@ -4,10 +4,11 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 import akka.pattern.pipe
 import dao.{CardDao, GameDao}
 import models.game.ConnectToGame
+import services.CardManager
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class GameManager(gameDao: GameDao, cardDao: CardDao)
+class GameManager(gameDao: GameDao, cardDao: CardDao, cardManager: CardManager)
                  (implicit ec: ExecutionContext) extends Actor with ActorLogging {
   var gameActors: Map[Int, ActorRef] = Map()
   override def receive: Receive = {
@@ -16,7 +17,7 @@ class GameManager(gameDao: GameDao, cardDao: CardDao)
     case ConnectToGame(gameId) =>
       val response: Future[Product] = gameDao.findById(gameId).map {
         case Some(gameRow) if !gameRow.completed =>
-          val gameActor = context.actorOf(GameActor.props(gameId, gameDao, cardDao), s"Game$gameId")
+          val gameActor = context.actorOf(GameActor.props(gameId, gameDao, cardDao, cardManager), s"Game$gameId")
           context.watch(gameActor)
           gameActors += (gameId -> gameActor)
           GameManager.GameActorRef(gameActor)
@@ -34,6 +35,6 @@ class GameManager(gameDao: GameDao, cardDao: CardDao)
 object GameManager {
   case class GameActorRef(gameActor: ActorRef)
   case object GameNotFound
-  def props(gameDao: GameDao, cardDao: CardDao)(implicit ec: ExecutionContext): Props =
-    Props(new GameManager(gameDao, cardDao))
+  def props(gameDao: GameDao, cardDao: CardDao, cardManager: CardManager)(implicit ec: ExecutionContext): Props =
+    Props(new GameManager(gameDao, cardDao, cardManager))
 }

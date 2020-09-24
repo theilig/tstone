@@ -45,7 +45,7 @@ object Operation {
       )
     },
     Writes ( operation =>
-      JsObject(Seq("operationType" -> (operation match {
+      JsObject(Seq("operation" -> (operation match {
         case Add => JsString("Add")
         case Net => JsString("Net")
         case Subtract => JsString("Subtract")

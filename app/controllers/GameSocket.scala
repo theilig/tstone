@@ -7,15 +7,16 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.Materializer
 import dao.{CardDao, GameDao}
 import play.api.libs.json.JsValue
-import services.Authenticator
+import services.{Authenticator, CardManager}
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class GameSocket @Inject()(cc: ControllerComponents, authenticator: Authenticator, gameDao: GameDao, cardDao: CardDao)
+class GameSocket @Inject()(cc: ControllerComponents, authenticator: Authenticator, gameDao: GameDao, cardDao: CardDao,
+                           cardManager: CardManager)
                           (implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext)
   extends AbstractController(cc) {
-  val gameManager: ActorRef = system.actorOf(GameManager.props(gameDao, cardDao))
+  val gameManager: ActorRef = system.actorOf(GameManager.props(gameDao, cardDao, cardManager))
   def socket: WebSocket = WebSocket.accept[JsValue, JsValue] { _ =>
     ActorFlow.actorRef { out =>
         SocketActor.props(out, authenticator, gameManager)

@@ -7,6 +7,7 @@ import play.api.libs.json.{Format, JsError, JsObject, JsPath, JsString, JsSucces
 abstract class GameStage {
   def receive(message: Message, user: User, state: State): Either[State, GameError]
   def canAddPlayers: Boolean = false
+  def currentPlayer: Int
 }
 
 object GameStage {

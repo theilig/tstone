@@ -9,21 +9,70 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
 case class Village(
-               heroes: List[HeroPile],
-               weapons: List[WeaponPile],
-               items: List[ItemPile],
-               spells: List[SpellPile],
-               villagers: List[VillagerPile],
-               diseasePile: DiseasePile
+                    heroes: List[HeroPile],
+                    weapons: List[WeaponPile],
+                    items: List[ItemPile],
+                    spells: List[SpellPile],
+                    villagers: List[VillagerPile],
+                    diseases: DiseasePile
              ) {
-  def findPile(name: String): Pile[Card] = {
-    List(heroes, weapons, items, spells, villagers).foldLeft[Option[Pile[Card]]](None)((found, nextList) => {
-      if (found.nonEmpty) {
-        found
-      } else {
-        nextList.find(_.topCard.getName == name).map(p => p.asInstanceOf[Pile[Card]])
+  def removeOneInstanceFromCards[T <: Card](cards: List[T], targetCard: Card): List[T] = {
+    cards match {
+      case card :: restOfCards if card.getName == targetCard.getName => restOfCards
+      case card :: restOfCards => card :: removeOneInstanceFromCards(restOfCards, targetCard)
+      case Nil => Nil
+    }
+  }
+
+  def takeCard(cardName: String): (Village, Option[Card]) = {
+    var foundCard: Option[Card] = None
+    val newHeroes = heroes.map(hp => {
+      hp.cards.find(p => p.name == cardName) match {
+        case Some(card) =>
+          foundCard = Some(card)
+          new HeroPile(removeOneInstanceFromCards(hp.cards, card))
+        case None => hp
       }
-    }).getOrElse(diseasePile.asInstanceOf[Pile[Card]])
+    })
+    val newWeapons = weapons.map(wp => {
+      wp.cards.find(p => p.name == cardName) match {
+        case Some(card) =>
+          foundCard = Some(card)
+          new WeaponPile(removeOneInstanceFromCards(wp.cards, card))
+        case None => wp
+      }
+    })
+    val newItems = items.map(ip => {
+      ip.cards.find(p => p.name == cardName) match {
+        case Some(card) =>
+          foundCard = Some(card)
+          new ItemPile(removeOneInstanceFromCards(ip.cards, card))
+        case None => ip
+      }
+    })
+    val newSpells = spells.map(sp => {
+      sp.cards.find(p => p.name == cardName) match {
+        case Some(card) =>
+          foundCard = Some(card)
+          new SpellPile(removeOneInstanceFromCards(sp.cards, card))
+        case None => sp
+      }
+    })
+    val newVillagers = villagers.map(vp => {
+      vp.cards.find(p => p.name == cardName) match {
+        case Some(card) =>
+          foundCard = Some(card)
+          new VillagerPile(removeOneInstanceFromCards(vp.cards, card))
+        case None => vp
+      }
+    })
+    val newDiseases = diseases.cards.find(p => p.name == cardName) match {
+      case Some(card) =>
+        foundCard = Some(card)
+        new DiseasePile(removeOneInstanceFromCards(diseases.cards, card))
+      case None => diseases
+    }
+    (new Village(newHeroes, newWeapons, newItems, newSpells, newVillagers, newDiseases), foundCard)
   }
 }
 
@@ -56,7 +105,7 @@ object Village {
     })
   }
 
-  private def isVilliage(s: String) = {
+  private def isVillage(s: String) = {
     Set("Villager", "Item", "Spell", "Weapon").contains(s)
   }
 
@@ -84,7 +133,7 @@ object Village {
         case _ if cardLimits("Hero") + cardLimits("Village") == 0 => ids
         case t if isHero(t) && cardLimits(t) > 0 =>
           randomIdsInternal(allIds.tail, cardLimits + (t -> (cardLimits(t) - 1)), allIds.head :: ids)
-        case t if isVilliage(t) && cardLimits(t) > 0 && cardLimits("Village") > 0 =>
+        case t if isVillage(t) && cardLimits(t) > 0 && cardLimits("Village") > 0 =>
           randomIdsInternal(
             allIds.tail,
             cardLimits + (t -> (cardLimits(t) - 1)) + ("Village" -> (cardLimits("Village") - 1)),

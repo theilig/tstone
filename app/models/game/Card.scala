@@ -41,6 +41,7 @@ object Card {
           case "WeaponCard" => (JsPath \ "data").read[WeaponCard].reads(js)
           case "VillagerCard" => (JsPath \ "data").read[VillagerCard].reads(js)
           case "DiseaseCard" => (JsPath \ "data").read[DiseaseCard].reads(js)
+          case "CardBack" => JsSuccess(CardBack)
         }
       )
     },
@@ -53,6 +54,17 @@ object Card {
       case w: WeaponCard => JsObject(Seq("cardType" -> JsString("WeaponCard"), "data" -> WeaponCard.weaponFormat.writes(w)))
       case v: VillagerCard => JsObject(Seq("cardType" -> JsString("VillagerCard"), "data" -> VillagerCard.villagerFormat.writes(v)))
       case d: DiseaseCard => JsObject(Seq("cardType" -> JsString("DiseaseCard"), "data" -> DiseaseCard.diseaseFormat.writes(d)))
+      case CardBack => JsObject(
+        Seq(
+          "cardType" -> JsString("CardBack"),
+          "data" -> JsObject(Seq(
+            "id" -> JsNumber(0),
+            "name" -> JsString("CardBack"),
+           "imageName" -> JsString(CardBack.getImageName),
+           "frequency" -> JsNumber(0)
+          ))
+        )
+      )
     }
   )
   def apply(line: String): Card = {
@@ -117,6 +129,8 @@ object Card {
     }
   }
 }
+
+case object CardBack extends Card(0, "Back", "card000.png", 0)
 
 case class DiseaseCard(
                          id: Int,
