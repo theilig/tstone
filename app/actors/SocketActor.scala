@@ -5,7 +5,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import models.User
-import models.game.{Authentication, ConnectToGame, GameError, GameState, Message, UserMessage}
+import models.game.{Authentication, ConnectToGame, GameError, Message, UserMessage}
 import play.api.libs.json.{JsValue, Json}
 import services.Authenticator
 
@@ -28,7 +28,7 @@ class SocketActor(out: ActorRef, authenticator: Authenticator, gameManager: Acto
           Await.result(possibleUser, SocketActor.UserLookupTimeout)
           possibleUser.map(user => authenticatedUser = user)
         case _ if authenticatedUser.isEmpty =>
-          out ! GameError("Not Authenticated")
+          out ! Json.toJson(GameError("Not Authenticated"))
         case c : ConnectToGame =>
           implicit val timeout: Timeout = FiniteDuration(5, SECONDS)
           (gameManager ? c).map {
@@ -37,7 +37,7 @@ class SocketActor(out: ActorRef, authenticator: Authenticator, gameManager: Acto
               gameActor ! UserMessage(authenticatedUser.get, c)
           }
         case _ if gameRef.isEmpty =>
-          out ! GameError("Not Connected to Game")
+          out ! Json.toJson(GameError("Not Connected to Game"))
         case m => gameRef.get ! UserMessage(authenticatedUser.get, m)
       }
     case m => log.warning("Throwing away " + m)

@@ -1,6 +1,6 @@
 package models.game
 
-import play.api.libs.json.{Format, JsError, JsObject, JsPath, JsString, JsSuccess, Json, Reads, Writes}
+import play.api.libs.json.{Format, JsError, JsString, JsSuccess, Json, Reads, Writes}
 
 sealed trait Operation {
   def getString: String
@@ -32,27 +32,21 @@ object Operation {
     }
   }
   implicit val operationFormat: Format[Operation] = Format[Operation](
-    Reads { js =>
-      val operationType = (JsPath \ "operation").read[String].reads(js)
-      operationType.fold(
-        _ => JsError("operationType undefined or incorrect"), {
-          case "Add" => JsSuccess(Add)
-          case "Net" => JsSuccess(Net)
-          case "Subtract" => JsSuccess(Subtract)
-          case "Multiply" => JsSuccess(Multiply)
-          case "Divide" => JsSuccess(Divide)
-        }
-      )
+    Reads {
+      case JsString(s) if s == "Add" => JsSuccess(Add)
+      case JsString(s) if s == "Net" => JsSuccess(Net)
+      case JsString(s) if s == "Subtract" => JsSuccess(Subtract)
+      case JsString(s) if s == "Multiply" => JsSuccess(Multiply)
+      case JsString(s) if s == "Divide" => JsSuccess(Divide)
+      case _ => JsError("operationType undefined or incorrect")
     },
-    Writes ( operation =>
-      JsObject(Seq("operation" -> (operation match {
-        case Add => JsString("Add")
-        case Net => JsString("Net")
-        case Subtract => JsString("Subtract")
-        case Multiply => JsString("Multiply")
-        case Divide => JsString("Divide")
-      })))
-    )
+    Writes {
+      case Add => JsString("Add")
+      case Net => JsString("Net")
+      case Subtract => JsString("Subtract")
+      case Multiply => JsString("Multiply")
+      case Divide => JsString("Divide")
+    }
   )
 }
 
