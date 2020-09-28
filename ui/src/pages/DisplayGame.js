@@ -9,6 +9,7 @@ import Village from "../components/Village";
 import PlayerHand from "../components/PlayerHand"
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
+import {HandCard} from "../components/HandCard";
 
 const Options = styled.div`
     display: flex;
@@ -20,6 +21,7 @@ const Options = styled.div`
 function DisplayGame(props) {
     const { gameState } = useGameState()
     const { authTokens } = useAuth()
+    const [ hovered, setHovered] = useState(null)
     const renderChoices = (stage) => {
         if (parseInt(authTokens.user.userId) === stage.data.currentPlayerId) {
             return (
@@ -31,13 +33,32 @@ function DisplayGame(props) {
             )
         }
     }
+    const registerHovered = (card, location) => {
+        setHovered({card:card, location:location})
+    }
+
+    const renderHovered = () => {
+        if (hovered) {
+            const imgStyle = {
+                width: '300px',
+                height: '375px',
+                position: 'absolute',
+                top: hovered.location.top,
+                left: hovered.location.left,
+                'pointer-events' : 'none'
+            };
+            return (<img style={imgStyle} src={cardImages[hovered.card.name]} title={hovered.card.name} alt={hovered.card.name} />)
+        }
+    }
+
     return (
         <DndProvider backend={HTML5Backend}>
             <div>
-                <Dungeon />
-                <Village />
-                <PlayerHand />
+                <Dungeon registerHovered={registerHovered} />
+                <Village registerHovered={registerHovered} />
+                <PlayerHand registerHovered={registerHovered} />
                 {renderChoices(gameState.currentStage)}
+                {renderHovered()}
             </div>
         </DndProvider>
     )

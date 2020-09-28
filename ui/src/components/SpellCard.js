@@ -1,4 +1,4 @@
-import HandCard from "./HandCard";
+import {HandCard} from "./HandCard";
 import cardImages from "../img/cards/cards";
 import React from "react";
 

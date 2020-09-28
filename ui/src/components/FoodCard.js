@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import cardImages from "../img/cards/cards"
-import HandCard from "./HandCard";
+import {HandCard} from "./HandCard";
 function FoodCard(props) {
     const goldValue = () => {return props.card.data.goldValue}
     const light = () => {return props.card.data.light}
