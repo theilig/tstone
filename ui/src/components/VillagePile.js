@@ -1,7 +1,6 @@
 import React, { useRef } from "react";
 import cardImages from "../img/cards/cards"
 import styled from "styled-components";
-import {findDOMNode} from "react-dom";
 
 const VillageCard = styled.img`
     width: 70px;
@@ -18,12 +17,13 @@ function VillagePile(props) {
         }
     }
     if (card) {
-        return (<VillageCard id={card.id} src={cardImages[card.name]} title={card.name}
+        return (<VillageCard key={card.id} id={card.id} src={cardImages[card.name]} title={card.name}
                              ref={refContainer}
-                             onMouseOver={() => handleHovered()} />)
+                             onMouseOver={() => handleHovered()}
+                             onMouseOut={() => props.registerHovered(null, null)}/>)
     }
     return (
-        <VillageCard id={0} src={cardImages['CardBack']} title={'CardBack'} />
+        <VillageCard key={0} id={0} src={cardImages['CardBack']} title={'CardBack'} />
     )
 }
 

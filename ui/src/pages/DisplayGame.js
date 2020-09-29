@@ -34,7 +34,11 @@ function DisplayGame(props) {
         }
     }
     const registerHovered = (card, location) => {
-        setHovered({card:card, location:location})
+        if (card && card.name !== "CardBack") {
+            setHovered({card:card, location:location})
+        } else {
+            setHovered(null)
+        }
     }
 
     const renderHovered = () => {
@@ -45,7 +49,7 @@ function DisplayGame(props) {
                 position: 'absolute',
                 top: hovered.location.top,
                 left: hovered.location.left,
-                'pointer-events' : 'none'
+                pointerEvents: 'none'
             };
             return (<img style={imgStyle} src={cardImages[hovered.card.name]} title={hovered.card.name} alt={hovered.card.name} />)
         }

@@ -18,23 +18,23 @@ function Village(props) {
     const { gameState } = useGameState()
     return (
         <VillageContainer>
-            <VillageRow>
-                {gameState.village.heroes.map((pile) => (
-                    <VillagePile pile={pile} registerHovered={props.registerHovered} />
+            <VillageRow key={1}>
+                {gameState.village.heroes.map((pile, index) => (
+                    <VillagePile key={index + 10} pile={pile} registerHovered={props.registerHovered} />
                 ))}
-                {gameState.village.weapons.map((pile) => (
-                    <VillagePile pile={pile} registerHovered={props.registerHovered} />
+                {gameState.village.weapons.map((pile,index) => (
+                    <VillagePile key={index + 20} pile={pile} registerHovered={props.registerHovered} />
                 ))}
             </VillageRow>
-            <VillageRow>
-                {gameState.village.spells.map((pile) => (
-                    <VillagePile pile={pile} registerHovered={props.registerHovered} />
+            <VillageRow key={2}>
+                {gameState.village.spells.map((pile, index) => (
+                    <VillagePile key={index + 30} pile={pile} registerHovered={props.registerHovered} />
                 ))}
-                {gameState.village.items.map((pile) => (
-                    <VillagePile pile={pile} registerHovered={props.registerHovered} />
+                {gameState.village.items.map((pile, index) => (
+                    <VillagePile key={index + 40} pile={pile} registerHovered={props.registerHovered} />
                 ))}
-                {gameState.village.villagers.map((pile) => (
-                    <VillagePile pile={pile} registerHovered={props.registerHovered} />
+                {gameState.village.villagers.map((pile, index) => (
+                    <VillagePile key={index + 50} pile={pile} registerHovered={props.registerHovered} />
                 ))}
             </VillageRow>
         </VillageContainer>
