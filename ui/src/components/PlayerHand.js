@@ -4,12 +4,12 @@ import { useAuth } from "../context/auth";
 import styled from "styled-components";
 import WeaponCard from "./WeaponCard";
 
-import {isGeneralEffect, executeEffect, isEarlyEffect, isLateEffect} from "../services/effects"
-import {getCardInfo} from "./HandCard";
+import {isGeneralEffect, executeEffect, isLateEffect} from "../services/effects"
 import HandSlot from "./HandSlot";
+import {getAttributes} from "./HandCard";
 
 const StatusContainer = styled.div`
-    display: flex;ƒ
+    display: flex;
     flex-direction: column;
 `;
 
@@ -17,12 +17,6 @@ const HandContainer = styled.div`
     display: flex;
     flex-direction: row;
     margin-bottom: 20px;
-`;
-
-const HandCard = styled.img`
-    width: 126px;
-    height: 180px;
-    margin-left: 10px;
 `;
 
 
@@ -55,24 +49,32 @@ function PlayerHand(props) {
     }
 
     const addLateEffects = (card, index, currentAttributes) => {
-        let newAttributes = [...currentAttributes]
-        let newCardAttributes = newAttributes[index]
+        let newAttributes = {...currentAttributes}
         if (card.data.dungeonEffects) {
             card.data.dungeonEffects.forEach((effect) => {
                 if (isLateEffect(effect)) {
-                    newCardAttributes = executeEffect(effect, newCardAttributes)
+                    newAttributes = executeEffect(effect, newAttributes)
                 }
             })
         }
         if (card.data.villageEffects) {
             card.data.villageEffects.forEach((effect) => {
                 if (isLateEffect(effect)) {
-                    newCardAttributes = executeEffect(effect, newCardAttributes)
+                    newAttributes = executeEffect(effect, newAttributes)
                 }
             })
         }
-        newAttributes[index] = newCardAttributes
         return newAttributes
+    }
+    const mergeObjects = (dest, source) => {
+        let newDest = {...dest}
+        Object.keys(source).forEach((key) => {
+            let value = source[key]
+            if (key in newDest) {
+                newDest[key] += value;
+            }
+        })
+        return newDest
     }
 
     const sumAttributes = () => {
@@ -96,46 +98,19 @@ function PlayerHand(props) {
         return starting
     }
 
-    const setAttributesForSlot = (cardAttributes, index) => {
-        let newAttributes = {...attributes}
-        newAttributes[index] = cardAttributes
-        setAttributes(newAttributes)
-    }
-
     useEffect(() => {
         const getHand = (player) => {
             let handSlots = [];
-            let generalEffects = []
             if (player) {
-                player.hand.forEach((card, index) => {
-                    generalEffects.concat(addGeneralEffects(card, index))
-                })
                 player.hand.forEach((card, index) => {
                     if (!attached[index]) {
                         handSlots.push((<HandSlot
-                            card={card} attached={using[index] ?? []} index={index} generalEffects={generalEffects}
-                            setAttributes={(attributes, index) => setAttributesForSlot(attributes, index)}
+                            card={card} attached={using[index]} index={index}
                         registerHovered={props.registerHovered} />))
                     }
                 })
-                setCardSlots(handSlots)
             }
             return handSlots
-        }
-
-        const getHandValues = (hand, currentAttributes) => {
-            let newAttributes = [...currentAttributes]
-            hand.forEach((card, index) => {
-                if (!attached[index] && card.props.card.cardType !== "WeaponCard") {
-                    addLateEffects(card.props.card, index, newAttributes)
-                    if (using[index]) {
-                        for (let i=0; i<using[index]; i++) {
-                            addLateEffects(using[index][i].props.card, index, newAttributes)
-                        }
-                    }
-                }
-            })
-            setAttributes(newAttributes)
         }
 
         let userPlayer = null
@@ -145,14 +120,36 @@ function PlayerHand(props) {
             }
         })
         setPlayer(userPlayer)
-        const { hand, attributes } = getHand(userPlayer)
-        if (hand) {
-            getHandValues(hand, attributes)
-        }
+        const hand = getHand(userPlayer)
+        setCardSlots(hand)
     }, [gameState.players, authTokens.user.userId, props.registerHovered, attached, using])
 
+    const getHandValues = () => {
+        let attributes = {
+            goldValue: 0,
+            light: 0,
+            attack: 0,
+            magicAttack: 0,
+            buys: 0
+        }
+        if (player) {
+            let generalEffects = []
+            player.hand.forEach((card, index) => {
+                generalEffects = generalEffects.concat(addGeneralEffects(card, index))
+            })
+            player.hand.forEach((card, index) => {
+                let newAttributes = getAttributes(card, attached[index], generalEffects)
+                attributes = mergeObjects(attributes, newAttributes)
+            })
+        }
+        player.hand.forEach((card, index) => {
+            addLateEffects(card, index, attributes)
+        })
+        return attributes
+    }
+
     if (player && player.hand.length > 0) {
-        const { goldValue, light, attack, magicAttack } = sumAttributes()
+        const { goldValue, light, attack, magicAttack } = getHandValues()
         return (
             <StatusContainer>
                 <div>gold: {goldValue}, light: {light} attack: {attack}, magicAttack: {magicAttack}</div>

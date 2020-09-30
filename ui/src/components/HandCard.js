@@ -7,6 +7,7 @@ import SpellCard from "./SpellCard";
 import VillagerCard from "./VillagerCard";
 import WeaponCard from "./WeaponCard";
 import MonsterCard from "./MonsterCard";
+import {executeEffect, isEarlyEffect} from "../services/effects";
 
 export const HandCard = styled.img`
     width: 126px;
@@ -37,36 +38,43 @@ const initialAttributes = (card) => {
     return starting
 }
 
-export const getCardInfo = (card, index, registerHovered) => {
-    let attributes = initialAttributes(card)
-    let cardElement = null
-    switch (card.cardType) {
-        case "HeroCard":
-            cardElement = (<HeroCard key={index + 1} index={index} registerHovered={registerHovered} card={card}/>)
-            break;
-        case "ItemCard":
-            if (card.data.traits.includes("Food")) {
-                cardElement = (<FoodCard key={index + 1} index={index} registerHovered={registerHovered} card={card}/>)
-            } else {
-                cardElement = (<ItemCard key={index + 1} index={index} registerHovered={registerHovered} card={card}/>)
-            }
-            break;
-        case "SpellCard":
-            cardElement = (<SpellCard key={index + 1} index={index} registerHovered={registerHovered} card={card}/>)
-            break;
-        case "VillagerCard":
-            cardElement = (<VillagerCard key={index + 1} index={index} registerHovered={registerHovered} card={card}/>)
-            break
-        case "WeaponCard":
-            cardElement = (<WeaponCard key={index + 1} index={index} registerHovered={registerHovered} card={card}/>)
-            break;
-        case "MonsterCard":
-            cardElement = (<MonsterCard key={index + 1} index={index} registerHovered={registerHovered} card={card}/>)
+export const getAttributes = (card, attached, generalEffects) => {
+    let attributes = {}
+    if (card.cardType !== "WeaponCard") {
+        attributes = initialAttributes(card)
+        attributes = addInitialEffects(card, generalEffects, attributes)
+        if (attached) {
+            attached.forEach((attachedCard) => {
+                attributes = addInitialEffects(attachedCard, generalEffects, attributes)
+            })
+        }
+    } else {
+        attributes = {goldValue: card.data.goldValue}
     }
-    return {
-        cardElement: cardElement,
-        attributes: attributes
-    }
+    return attributes
 }
+
+const addInitialEffects = (card, generalEffects, currentAttributes) => {
+    let newCardAttributes = currentAttributes
+    generalEffects.forEach((effect) => {
+        newCardAttributes = executeEffect(effect, newCardAttributes)
+    })
+    if (card.data.dungeonEffects) {
+        card.data.dungeonEffects.forEach((effect) => {
+            if (isEarlyEffect(effect)) {
+                newCardAttributes = executeEffect(effect, newCardAttributes)
+            }
+        })
+    }
+    if (card.data.villageEffects) {
+        card.data.villageEffects.forEach((effect) => {
+            if (isEarlyEffect(effect)) {
+                newCardAttributes = executeEffect(effect, newCardAttributes)
+            }
+        })
+    }
+    return newCardAttributes
+}
+
 
 

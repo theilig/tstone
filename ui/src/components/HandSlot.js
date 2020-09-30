@@ -4,20 +4,17 @@ import {HandCard} from "./HandCard";
 import {executeEffect, isEarlyEffect} from "../services/effects";
 function HandSlot(props) {
     const [cardRefs, setCardRefs] = useState([]);
-    const {attached, generalEffects, card, index, setAttributes} = props
+    const [attributes, setAttributes] = useState([{}])
+    const {attached, card} = props
     useEffect(() => {
-        setCardRefs(cardRefs => (
-                Array(attached.length + 1).fill().map((_, i) => cardRefs[i] || createRef())
-            ))
-        let newAttributes = {}
-        if (card.cardType !== "WeaponCard") {
-            newAttributes = addInitialEffects(card, index, generalEffects, newAttributes)
-            attached.forEach((attachedCard) => {
-                newAttributes = addInitialEffects(attachedCard, index, generalEffects, newAttributes)
-            })
+        let refsRequired = 1
+        if (attached) {
+            refsRequired += attached.length
         }
-        setAttributes(newAttributes, index)
-    }, [attached, generalEffects, card, index, setAttributes]);
+        setCardRefs(cardRefs => (
+                Array(refsRequired).fill().map((_, i) => cardRefs[i] || createRef())
+            ))
+    }, [attached])
 
     const handleHovered = (index) => {
         if (cardRefs[index] && cardRefs[index].current) {
@@ -29,32 +26,10 @@ function HandSlot(props) {
         }
     }
 
-    const addInitialEffects = (card, index, generalEffects, currentAttributes) => {
-        let newCardAttributes = currentAttributes[index]
-        generalEffects.forEach((effect) => {
-            newCardAttributes = executeEffect(effect, newCardAttributes)
-        })
-        if (card.data.dungeonEffects) {
-            card.data.dungeonEffects.forEach((effect) => {
-                if (isEarlyEffect(effect)) {
-                    newCardAttributes = executeEffect(effect, newCardAttributes)
-                }
-            })
-        }
-        if (card.data.villageEffects) {
-            card.data.villageEffects.forEach((effect) => {
-                if (isEarlyEffect(effect)) {
-                    newCardAttributes = executeEffect(effect, newCardAttributes)
-                }
-            })
-        }
-        let newAttributes = currentAttributes
-        newAttributes[index] = newCardAttributes
-        return newAttributes
+    let allCards = [props.card]
+    if (props.attached) {
+        allCards = [props.card, ...props.attached]
     }
-
-
-    let allCards = [props.card, ...props.attached]
     return (
         <div>
             {allCards.map((c, index) => (
