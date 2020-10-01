@@ -1,8 +1,11 @@
-import React from "react";
+import React, {useRef} from "react";
 import styled from "styled-components";
 import {executeEffect, isEarlyEffect} from "../services/effects";
+import cardImages from "../img/cards/cards";
+import {useDrag} from "react-dnd";
+import {getDragType} from "./CardTypes";
 
-export const HandCard = styled.img`
+const Card = styled.img`
     width: 126px;
     height: 180px;
     margin-left: 10px;
@@ -68,6 +71,34 @@ const addInitialEffects = (card, generalEffects, currentAttributes) => {
     }
     return newCardAttributes
 }
+
+export function HandCard(props) {
+    const [{isDragging}, drag, preview] = useDrag({
+        item: {type: props.cardType, index: props.index},
+        begin: (_) => console.warn("Drop begins")
+    })
+
+    const refContainer = useRef(null)
+
+    const handleHovered = () => {
+        if (refContainer && refContainer.current) {
+            props.registerHovered(props.name, refContainer.current.getBoundingClientRect())
+        }
+    }
+
+    return <div ref={drag}>
+        <Card key={props.id} id={props.id}
+              src={cardImages[props.name]} title={props.name} alt={props.name}
+              ref={refContainer}
+              onMouseOver={() => handleHovered()}
+              onMouseDown={() => props.registerHovered(null, null)}
+              onMouseOut={() => props.registerHovered(null, null)}
+        />
+
+    </div>
+
+}
+
 
 
 

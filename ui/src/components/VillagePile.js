@@ -13,7 +13,7 @@ function VillagePile(props) {
     const refContainer = useRef(null)
     const handleHovered = () => {
         if (refContainer && refContainer.current) {
-            props.registerHovered(props.pile.cards[0], refContainer.current.getBoundingClientRect())
+            props.registerHovered(props.pile.cards[0].name, refContainer.current.getBoundingClientRect())
         }
     }
     if (card) {

@@ -22,7 +22,7 @@ function Dungeon(props) {
     const [monsterRefs, setMonsterRefs] = useState([]);
     const handleHovered = (index) => {
         if (monsterRefs[index] && monsterRefs[index].current) {
-            props.registerHovered(gameState.dungeon.monsterPile[index].data,
+            props.registerHovered(gameState.dungeon.monsterPile[index].data.name,
                 monsterRefs[index].current.getBoundingClientRect())
         }
     }

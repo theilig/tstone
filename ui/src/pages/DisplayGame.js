@@ -33,9 +33,9 @@ function DisplayGame(props) {
             )
         }
     }
-    const registerHovered = (card, location) => {
-        if (card && card.name !== "CardBack") {
-            setHovered({card:card, location:location})
+    const registerHovered = (name, location) => {
+        if (name && name !== "CardBack") {
+            setHovered({name:name, location:location})
         } else {
             setHovered(null)
         }
@@ -51,7 +51,7 @@ function DisplayGame(props) {
                 left: hovered.location.left,
                 pointerEvents: 'none'
             };
-            return (<img style={imgStyle} src={cardImages[hovered.card.name]} title={hovered.card.name} alt={hovered.card.name} />)
+            return (<img style={imgStyle} src={cardImages[hovered.name]} title={hovered.name} alt={hovered.name} />)
         }
     }
 
