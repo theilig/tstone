@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {useGameState} from "../context/GameState";
 import { useAuth } from "../context/auth";
 import styled from "styled-components";
-import WeaponCard from "./WeaponCard";
 
 import {isGeneralEffect, executeEffect, isLateEffect} from "../services/effects"
 import HandSlot from "./HandSlot";

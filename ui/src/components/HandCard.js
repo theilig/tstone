@@ -1,12 +1,5 @@
 import React from "react";
 import styled from "styled-components";
-import HeroCard from "./HeroCard";
-import FoodCard from "./FoodCard";
-import ItemCard from "./ItemCard";
-import SpellCard from "./SpellCard";
-import VillagerCard from "./VillagerCard";
-import WeaponCard from "./WeaponCard";
-import MonsterCard from "./MonsterCard";
 import {executeEffect, isEarlyEffect} from "../services/effects";
 
 export const HandCard = styled.img`
