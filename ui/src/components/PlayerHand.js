@@ -23,11 +23,26 @@ function PlayerHand(props) {
     const { gameState } = useGameState()
     const { authTokens } = useAuth()
     const [ player, setPlayer ] = useState(null)
-    const [ attached, setAttached ] = useState([])
+    const [ isAttached, setIsAttached ] = useState([])
     const [ using, setUsing ] = useState([])
     const [ cardSlots, setCardSlots ] = useState([])
     const [ attributes, setAttributes ] = useState({})
 
+    const registerDrop = (source, target) => {
+        let newAttached = [...isAttached]
+        if (newAttached[source]) {
+            newAttached[source] = null
+        }
+        if (target) {
+            let newUsing = [...using]
+            newAttached[source] = target
+            let usingList = newUsing[target] ?? []
+            usingList.push(player.hand[source])
+            newUsing[target] = usingList
+            setUsing(newUsing)
+        }
+        setIsAttached(newAttached)
+    }
     const addGeneralEffects = (card) => {
         let generalEffects = []
         if (card.data.dungeonEffects) {
@@ -100,12 +115,17 @@ function PlayerHand(props) {
     useEffect(() => {
         const getHand = (player) => {
             let handSlots = [];
+            let style = {
+
+            }
             if (player) {
                 player.hand.forEach((card, index) => {
-                    if (!attached[index]) {
+                    let indexedCard = {...card}
+                    indexedCard['index'] = index
+                    if (isAttached[index] === null || isAttached[index] === undefined) {
                         handSlots.push((<HandSlot
-                            card={card} attached={using[index]} index={index}
-                        registerHovered={props.registerHovered} />))
+                            card={indexedCard} attached={using[index]} index={index} registerDrop={registerDrop}
+                            registerHovered={props.registerHovered} />))
                     }
                 })
             }
@@ -121,7 +141,7 @@ function PlayerHand(props) {
         setPlayer(userPlayer)
         const hand = getHand(userPlayer)
         setCardSlots(hand)
-    }, [gameState.players, authTokens.user.userId, props.registerHovered, attached, using])
+    }, [gameState.players, authTokens.user.userId, props.registerHovered, isAttached, using])
 
     const getHandValues = () => {
         let attributes = {
@@ -137,7 +157,7 @@ function PlayerHand(props) {
                 generalEffects = generalEffects.concat(addGeneralEffects(card, index))
             })
             player.hand.forEach((card, index) => {
-                let newAttributes = getAttributes(card, attached[index], generalEffects)
+                let newAttributes = getAttributes(card, using[index], generalEffects)
                 attributes = mergeObjects(attributes, newAttributes)
             })
         }
@@ -153,7 +173,7 @@ function PlayerHand(props) {
             <StatusContainer>
                 <div>gold: {goldValue}, light: {light} attack: {attack}, magicAttack: {magicAttack}</div>
                 <HandContainer>
-                    {cardSlots.map((c, index) => <div key={index + 1}>{attached[index] || c}</div>)}
+                    {cardSlots.map((c, index) => <div key={index + 1}>{c}</div>)}
                 </HandContainer>
             </StatusContainer>
         )

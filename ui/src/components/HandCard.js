@@ -87,7 +87,8 @@ export function HandCard(props) {
     }
 
     return <div ref={drag}>
-        <Card key={props.id} id={props.id}
+        <img style={{ position: 'relative', width: '126px', height: '180px', marginLeft: '10px', top:-140 * props.position + 'px'}}
+              key={props.id} id={props.id}
               src={cardImages[props.name]} title={props.name} alt={props.name}
               ref={refContainer}
               onMouseOver={() => handleHovered()}

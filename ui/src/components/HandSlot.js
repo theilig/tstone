@@ -9,7 +9,8 @@ function HandSlot(props) {
     const [collectedProps, drop] = useDrop({
         accept: getDropTypes(card),
         drop: (c) => {
-            console.warn("got a drop of " + c.index)
+            props.registerDrop(props.index, c.index)
+            console.warn(props.index + "got a drop of " + c.index)
         }
     })
 
@@ -30,15 +31,15 @@ function HandSlot(props) {
     return (
         <div ref={drop}>
             {allCards.map((c, index) => (
-                <HandCard key={c.data.id + props.index * 200}
-                          id={c.data.id + props.index * 200}
+                <HandCard key={c.data.id + c.index * 200}
+                          id={c.data.id + c.index * 200}
+                          index={c.index}
+                          position={index}
                           name={c.data.name}
                           registerHovered={props.registerHovered}
                           cardType={getDragType(card)}
                           style={{
-                              position: 'relative',
-                              top: index * 20 + 'px',
-                              left: 0,
+                              zIndex: index
                          }}
                 />
             ))}
