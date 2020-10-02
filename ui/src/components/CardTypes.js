@@ -33,6 +33,6 @@ export const getDropTypes = (card) => {
         case "HeroCard":
             return [CardTypes.FOOD, CardTypes.WEAPON]
             default:
-                return []
+                return [CardTypes.FOOD, CardTypes.WEAPON, CardTypes.ITEM]
     }
 }

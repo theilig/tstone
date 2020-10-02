@@ -33,11 +33,13 @@ function PlayerHand(props) {
         if (newAttached[source]) {
             newAttached[source] = null
         }
-        if (target) {
+        if (target === 0 || target) {
             let newUsing = [...using]
             newAttached[source] = target
             let usingList = newUsing[target] ?? []
-            usingList.push(player.hand[source])
+            let indexedCard = {...player.hand[source]}
+            indexedCard['index'] = source
+            usingList.push(indexedCard)
             newUsing[target] = usingList
             setUsing(newUsing)
         }
@@ -124,7 +126,7 @@ function PlayerHand(props) {
                     indexedCard['index'] = index
                     if (isAttached[index] === null || isAttached[index] === undefined) {
                         handSlots.push((<HandSlot
-                            card={indexedCard} attached={using[index]} index={index} registerDrop={registerDrop}
+                            card={indexedCard} attached={using[index]} index={handSlots.length} registerDrop={registerDrop}
                             registerHovered={props.registerHovered} />))
                     }
                 })

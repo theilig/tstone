@@ -75,7 +75,7 @@ const addInitialEffects = (card, generalEffects, currentAttributes) => {
 export function HandCard(props) {
     const [{isDragging}, drag, preview] = useDrag({
         item: {type: props.cardType, index: props.index},
-        begin: (_) => console.warn("Drop begins")
+        begin: (_) => console.warn("Drop begins " + props.index + " " + props.cardType)
     })
 
     const refContainer = useRef(null)
@@ -86,13 +86,13 @@ export function HandCard(props) {
         }
     }
 
-    let marginTop = -140
+    let marginTop = '-140px'
     if (props.position === 0) {
-        marginTop = 0
+        marginTop = '0px'
     }
 
     return <div ref={drag}>
-        <img style={{width: '126px', height: '180px', marginLeft: '10px', marginTop:-140 * props.position + 'px'}}
+        <img style={{width: '126px', height: '180px', marginLeft: '10px', marginTop:marginTop}}
               key={props.id} id={props.id}
               src={cardImages[props.name]} title={props.name} alt={props.name}
               ref={refContainer}
