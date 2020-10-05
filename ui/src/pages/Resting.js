@@ -11,7 +11,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 function Resting(props) {
     const { gameState } = useGameState()
     const { authTokens } = useAuth()
-    const { destroyed, setDestroyed } = useState(null)
+    const [ destroyed, setDestroyed ] = useState(null)
 
     const endTurn = () => {
         props.gameSocket.send(JSON.stringify(
@@ -19,7 +19,7 @@ function Resting(props) {
                 messageType: "Destroy",
                 data: {
                     gameId: gameState.gameId,
-                    cardName: destroyed.data.cardName
+                    cardName: destroyed
                 }
             }
         ))
@@ -44,7 +44,6 @@ function Resting(props) {
                 return (
                     <Options>
                         <Button onClick={endTurn}>Done</Button>
-                        <Button>Undo Destroy</Button>
                     </Options>
                 )
             }

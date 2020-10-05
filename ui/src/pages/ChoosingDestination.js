@@ -5,8 +5,6 @@ import {useGameState} from "../context/GameState";
 import Dungeon from "../components/Dungeon";
 import Village from "../components/Village";
 import PlayerHand from "../components/PlayerHand"
-import { DndProvider } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
 
 function ChoosingDestination(props) {
     const { gameState } = useGameState()
@@ -36,17 +34,19 @@ function ChoosingDestination(props) {
     }
 
     return (
-        <DndProvider backend={HTML5Backend}>
-            <div>
-                <Dungeon registerHovered={props.registerHovered} />
-                <Village registerHovered={props.registerHovered} />
-                <PlayerHand registerHovered={props.registerHovered} show={{
-                    gold: "goldValue"
-                }} />
-                {renderChoices()}
-                {props.renderHovered()}
-            </div>
-        </DndProvider>
+        <div>
+            <Dungeon registerHovered={props.registerHovered} />
+            <Village registerHovered={props.registerHovered} />
+            <PlayerHand registerHovered={props.registerHovered} show={{
+                goldValue: "Gold",
+                buys: "Buys",
+                light: "Light",
+                attack: "Attack",
+                magicAttack: "Magic Attack",
+            }} />
+            {renderChoices()}
+            {props.renderHovered()}
+        </div>
     )
 }
 

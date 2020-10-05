@@ -4,10 +4,9 @@ import {getDragType, getDropTypes} from "./CardTypes";
 import trash from "../img/trash.png"
 import {HandCard} from "./HandCard";
 function DestroySlot(props) {
-    const [collectedProps, drop] = useDrop({
+    const [, drop] = useDrop({
         accept: getDropTypes({cardType: "TakeAny"}),
         drop: (c) => {
-            console.warn("yo")
             props.registerDrop(c.index, props.index)
         }
     })

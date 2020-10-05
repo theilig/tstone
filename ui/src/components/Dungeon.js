@@ -2,7 +2,6 @@ import React, {useEffect, createRef, useState} from "react";
 import {useGameState} from "../context/GameState";
 import cardImages from "../img/cards/cards"
 import styled from "styled-components";
-import {HandCard} from "./HandCard";
 
 const DungeonContainer = styled.div`
     display: flex;
@@ -31,7 +30,7 @@ function Dungeon(props) {
         if (gameState.dungeon.monsterPile) {
             let pile = gameState.dungeon.monsterPile
             setMonsterRefs(monsterRefs => (
-                Array(pile.length).fill().map((_, i) => monsterRefs[i] || createRef())
+                Array(pile.length).map((_, i) => monsterRefs[i] || createRef())
             ))
         }
     }, [gameState.dungeon.monsterPile]);

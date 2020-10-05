@@ -7,6 +7,8 @@ import {Redirect} from "react-router";
 import ChoosingDestination from "./ChoosingDestination";
 import cardImages from "../img/cards/cards";
 import Resting from "./Resting";
+import {DndProvider} from "react-dnd";
+import {HTML5Backend} from "react-dnd-html5-backend";
 
 function Game(props) {
     const [ gameState, setGameState ] = useState()
@@ -110,7 +112,9 @@ function Game(props) {
     }
     return (
         <GameStateContext.Provider value={{ gameState, setGameState: setState  }}>
-            {renderGameStage()}
+            <DndProvider backend={HTML5Backend}>
+                {renderGameStage()}
+            </DndProvider>
         </GameStateContext.Provider>
     )
 }

@@ -8,11 +8,15 @@ import services.CardManager
 case class Resting(currentPlayerId: Int) extends PlayerStage {
   def receive(message: Message, user: User, state: State): Either[GameError, State] = {
     message match {
-      case Destroy(cardName: String) =>
+      case Destroy(Some(cardName)) =>
         CardManager.destroy(currentPlayer(state).get, cardName, state) match {
-          case Right(s) => Right(CardManager.discardHand(currentPlayer(s).get, s))
+          case Right(s) =>
+            Right(
+              endTurn(s)
+            )
           case left => left
         }
+      case Destroy(None) => Right(endTurn(state))
       case m => Left(GameError("Unexpected message " + m.getClass.getSimpleName))
     }
   }

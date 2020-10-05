@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {useGameState} from "../context/GameState";
 import styled from "styled-components";
 import VillagePile from "./VillagePile";

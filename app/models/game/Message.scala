@@ -117,7 +117,7 @@ object Message {
 
 case object ChooseVillage extends CurrentPlayerMessage
 case object ChooseRest extends CurrentPlayerMessage
-case class Destroy(cardName: String) extends CurrentPlayerMessage
+case class Destroy(cardName: Option[String]) extends CurrentPlayerMessage
 object Destroy {
   implicit val destroyFormat: Format[Destroy] = Json.format
 }

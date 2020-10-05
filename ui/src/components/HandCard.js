@@ -1,20 +1,7 @@
 import React, {useRef} from "react";
-import styled from "styled-components";
 import {executeEffect, isEarlyEffect} from "../services/effects";
 import cardImages from "../img/cards/cards";
 import {useDrag} from "react-dnd";
-import {getDragType} from "./CardTypes";
-
-const Card = styled.img`
-    width: 126px;
-    height: 180px;
-    margin-left: 10px;
-`;
-
-export const HoveredCard = styled.img`
-    width: 200px;
-    height: 285px;
-`;
 
 const initialAttributes = (card) => {
     let starting = {
@@ -73,7 +60,7 @@ const addInitialEffects = (card, generalEffects, currentAttributes) => {
 }
 
 export function HandCard(props) {
-    const [{isDragging}, drag, preview] = useDrag({
+    const [,drag, preview] = useDrag({
         item: {type: props.cardType, index: props.index},
         end: (item, monitor) => {
             if (!monitor.didDrop()) {

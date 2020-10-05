@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useAuth } from "../context/auth";
 import styled from "styled-components";
 import {useGameState} from "../context/GameState";

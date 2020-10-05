@@ -22,6 +22,8 @@ export const executeEffect = (effect, attributes) => {
             case "Add":
                 newAttributes[affected] = newAttributes[affected] + effect.adjustment.amount
                 break
+            default:
+                break
         }
         return newAttributes;
     }

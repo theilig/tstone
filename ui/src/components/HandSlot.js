@@ -1,10 +1,9 @@
-import React, {useEffect, useState} from "react";
+import React from "react";
 import {HandCard} from "./HandCard";
 import {useDrop} from 'react-dnd'
 import {CardTypes, getDragType, getDropTypes} from "./CardTypes";
 function HandSlot(props) {
-    const [dropTypes, setDropTypes] = useState([])
-    const [collectedProps, drop] = useDrop({
+    const [, drop] = useDrop({
         accept: [CardTypes.FOOD, CardTypes.WEAPON],
         canDrop: ((item) => {
             return getDropTypes(props.cards[0]).includes(item.type)
@@ -13,10 +12,6 @@ function HandSlot(props) {
             props.registerDrop(c.index, props.cards[0].index)
         }
     })
-
-    useEffect(() => {
-        setDropTypes(getDropTypes(props.cards[0]))
-    }, [props.cards])
 
     return (
         <div ref={drop}>
