@@ -5,7 +5,9 @@ export const CardTypes = {
     VILLAGER: 'Villager',
     MONSTER: 'Monster',
     FOOD: 'Food',
-    ITEM: 'Item'
+    ITEM: 'Item',
+    DISCARD: 'Discard',
+    DESTROY: 'Destroy'
 }
 
 export const getDragType = (card) => {
@@ -26,13 +28,19 @@ export const getDragType = (card) => {
             } else {
                 return CardTypes.ITEM
             }
+        default:
+            return CardTypes.DISCARD
     }
 }
 export const getDropTypes = (card) => {
     switch (card.cardType) {
         case "HeroCard":
             return [CardTypes.FOOD, CardTypes.WEAPON]
-            default:
-                return [CardTypes.FOOD, CardTypes.WEAPON, CardTypes.ITEM]
+        case "TakeAny":
+            return [
+                CardTypes.HERO, CardTypes.ITEM, CardTypes.WEAPON, CardTypes.FOOD, CardTypes.MONSTER,
+                CardTypes.VILLAGER, CardTypes.SPELL]
+        default:
+                return []
     }
 }

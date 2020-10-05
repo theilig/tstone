@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/auth";
 import styled from "styled-components";
-import {Button, Error} from "../components/AuthForm"
 import {useGameState} from "../context/GameState";
+import { Button } from "../components/inputElements"
 
 const PlayerList = styled.div`
     display: flex;
@@ -20,7 +20,6 @@ const Options = styled.div`
 function Startup(props) {
     const { authTokens } = useAuth()
     const { gameState } = useGameState()
-    const [ lastError, setLastError ] = useState("")
     const MAX_PLAYERS = 5
     function leaveGame() {
         props.gameSocket.send(
@@ -144,7 +143,6 @@ function Startup(props) {
                 )}
             </PlayerList>
             {renderOptions(isGameOwner)}
-            { lastError && <div><Error>{lastError}</Error></div> }
         </div>
     )
 }

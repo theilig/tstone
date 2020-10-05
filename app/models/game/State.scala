@@ -15,11 +15,18 @@ case class State(players: List[Player], village: Option[Village], dungeon: Optio
     copy(
       players = players.map {
         case p if p.userId == userId => p.copy(discard = p.discard.take(1), deck = List(CardBack))
-        case p if currentStage.currentPlayer == userId => p.copy(discard = p.discard.take(1), deck = List(CardBack))
+        case p if currentStage.currentPlayer(this).exists(_.userId == p.userId) =>
+          p.copy(discard = p.discard.take(1), deck = List(CardBack))
         case p => p.copy(discard = p.discard.take(1), hand = p.hand.map(_ => CardBack), deck = List(CardBack))
       },
       dungeon = dungeonProjection
     )
+  }
+  def updatePlayer(userId: Int)(transform: Player => Player): State = {
+    copy(players = players.map {
+      case p if p.userId == userId => transform(p)
+      case p => p
+    })
   }
 }
 

@@ -6,11 +6,8 @@ import styled from "styled-components";
 import {isGeneralEffect, executeEffect, isLateEffect} from "../services/effects"
 import HandSlot from "./HandSlot";
 import {getAttributes} from "./HandCard";
-
-const StatusContainer = styled.div`
-    display: flex;
-    flex-direction: column;
-`;
+import DestroySlot from "./DestroySlot";
+import AttributeValues from "./AttributeValues";
 
 const HandContainer = styled.div`
     display: flex;
@@ -18,6 +15,13 @@ const HandContainer = styled.div`
     margin-bottom: 20px;
 `;
 
+const StatusContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+`;
+
+export const DISCARD_INDEX = "DISCARD";
+export const DESTROY_INDEX = "DESTROY";
 
 function PlayerHand(props) {
     const { gameState } = useGameState()
@@ -25,24 +29,35 @@ function PlayerHand(props) {
     const [ player, setPlayer ] = useState(null)
     const [ isAttached, setIsAttached ] = useState([])
     const [ using, setUsing ] = useState([])
-    const [ cardSlots, setCardSlots ] = useState([])
-    const [ attributes, setAttributes ] = useState({})
+    const [ arrangement, setArrangement ] = useState([])
 
     const registerDrop = (source, target) => {
         let newAttached = [...isAttached]
-        if (newAttached[source]) {
+        let newUsing = {...using}
+        if (newAttached[source] != null) {
+            let removeUsing = [...using[newAttached[source]]]
+            removeUsing = removeUsing.filter((c) => {
+                return c.index !== source
+            })
+            newUsing[newAttached[source]] = removeUsing
             newAttached[source] = null
         }
-        if (target === 0 || target) {
-            let newUsing = [...using]
+        // Only allow one card in discard or destroy slot by freeing up any existing card in there
+        if (newUsing[target] && (target === DISCARD_INDEX || target === DESTROY_INDEX)) {
+            newUsing[target].forEach(c => {
+                newAttached[c.index] = null
+            })
+            newUsing[target] = []
+        }
+        if (target != null) {
             newAttached[source] = target
             let usingList = newUsing[target] ?? []
             let indexedCard = {...player.hand[source]}
             indexedCard['index'] = source
             usingList.push(indexedCard)
             newUsing[target] = usingList
-            setUsing(newUsing)
         }
+        setUsing(newUsing)
         setIsAttached(newAttached)
     }
     const addGeneralEffects = (card) => {
@@ -93,45 +108,31 @@ function PlayerHand(props) {
         return newDest
     }
 
-    const sumAttributes = () => {
-        let starting = {
-            goldValue: 0,
-            light: 0,
-            attack: 0,
-            magicAttack: 0,
-            strength: 0,
-            weight: 0,
-        }
-        Object.keys(attributes).forEach((index) => {
-            let cardAttributes = attributes[index]
-            Object.keys(cardAttributes).forEach((key) => {
-                let value = cardAttributes[key]
-                if (key in starting) {
-                    starting[key] += value
-                }
-            })
-        })
-        return starting
-    }
-
     useEffect(() => {
         const getHand = (player) => {
-            let handSlots = [];
-            let style = {
-
-            }
+            let cardArrangement = []
             if (player) {
                 player.hand.forEach((card, index) => {
                     let indexedCard = {...card}
                     indexedCard['index'] = index
-                    if (isAttached[index] === null || isAttached[index] === undefined) {
-                        handSlots.push((<HandSlot
-                            card={indexedCard} attached={using[index]} index={handSlots.length} registerDrop={registerDrop}
-                            registerHovered={props.registerHovered} />))
+                    if (isAttached[index] == null) {
+                        let arrangementIndex = cardArrangement.length
+                        cardArrangement.push([indexedCard])
+                        if (using[index] != null) {
+                            using[index].forEach((card) => {
+                                cardArrangement[arrangementIndex].push(card)
+                            })
+                        }
                     }
                 })
+                if (using[DISCARD_INDEX]) {
+                    cardArrangement[DISCARD_INDEX] = using[DISCARD_INDEX]
+                }
+                if (using[DESTROY_INDEX]) {
+                    cardArrangement[DESTROY_INDEX] = using[DESTROY_INDEX]
+                }
+                setArrangement(cardArrangement)
             }
-            return handSlots
         }
 
         let userPlayer = null
@@ -141,8 +142,7 @@ function PlayerHand(props) {
             }
         })
         setPlayer(userPlayer)
-        const hand = getHand(userPlayer)
-        setCardSlots(hand)
+        getHand(userPlayer)
     }, [gameState.players, authTokens.user.userId, props.registerHovered, isAttached, using])
 
     const getHandValues = () => {
@@ -151,7 +151,7 @@ function PlayerHand(props) {
             light: 0,
             attack: 0,
             magicAttack: 0,
-            buys: 0
+            buys: 1
         }
         if (player) {
             let generalEffects = []
@@ -170,12 +170,19 @@ function PlayerHand(props) {
     }
 
     if (player && player.hand.length > 0) {
-        const { goldValue, light, attack, magicAttack } = getHandValues()
+        getHandValues()
         return (
             <StatusContainer>
-                <div>gold: {goldValue}, light: {light} attack: {attack}, magicAttack: {magicAttack}</div>
+                <AttributeValues show={props.show} values={getHandValues()} />
                 <HandContainer>
-                    {cardSlots.map((c, index) => <div key={index + 1}>{c}</div>)}
+                    {props.registerDestroy && <DestroySlot registerDrop={registerDrop}
+                                                           registerHovered={props.registerHovered}
+                                                           cards={arrangement[DESTROY_INDEX] ?? []}
+                                                           key={DESTROY_INDEX} index={DESTROY_INDEX}/>}
+                    {arrangement.map((cardList, index) => {
+                        return (<HandSlot cards={cardList} index={index} key={index} registerDrop={registerDrop}
+                            registerHovered={props.registerHovered} />)
+                    })}
                 </HandContainer>
             </StatusContainer>
         )

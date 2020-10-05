@@ -1,17 +1,17 @@
 package actors
 
-import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
-import controllers.game.stage.{PickDestination, WaitingForPlayers}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import controllers.game.stage.{ChoosingDestination, WaitingForPlayers}
 import dao.{CardDao, GameDao}
 import models.User
-import models.game.{ConnectToGame, GameError, GameOver, GameState, LeaveGame, Message, StartGame, State, UserMessage}
-import services.{CardManager, GameSetup}
+import models.game.{ConnectToGame, GameOver, GameState, LeaveGame, Message, StartGame, State, UserMessage}
+import services.GameSetup
 
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Random
 
-class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao, cardManager: CardManager)
+class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
                (implicit ec: ExecutionContext) extends Actor with ActorLogging {
   // Placeholder state while we look up the actual state
   var state: State = State(Nil, None, None, WaitingForPlayers)
@@ -29,12 +29,20 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao, cardManager: Ca
   private def setUpGame(state: State)(implicit ec: ExecutionContext): Future[State] = {
     val random = new Random
     val newPlayers = random.shuffle(state.players.filterNot(_.pending))
-    val setup = new GameSetup(cardDao, cardManager)
+    val setup = new GameSetup(cardDao)
     setup.setupGame(state.copy(players = newPlayers))
   }
 
 
   def processUserMessage(user: User, message: Message): Unit = {
+    def sendToStage(m: Message): Unit = {
+      val result = state.currentStage.receive(m, user, state)
+      result match {
+        case Right(newState) => updateGameState(newState)
+        case Left(e) => sender() ! e
+      }
+    }
+
     message match {
       case ConnectToGame(desiredGameId) if desiredGameId == gameId =>
         watchers += (user.userId -> sender())
@@ -42,7 +50,7 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao, cardManager: Ca
       case LeaveGame =>
         val result = state.currentStage.receive(LeaveGame, user, state)
         result match {
-          case Left(newState) =>
+          case Right(newState) =>
             if (newState.players.isEmpty) {
               updateGameState(newState)
               gameDao.completeGame(gameId)
@@ -53,23 +61,19 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao, cardManager: Ca
               watchers -= user.userId
               sender() ! GameOver
             }
-          case Right(e: GameError) => sender() ! e
+          case Left(e) => sender() ! e
         }
       case StartGame =>
         // Quickly shift into frozen state, we don't use updateGameState
         // because we want to avoid notifying anyone
-        state = state.copy(currentStage = PickDestination(0))
+        state = state.copy(currentStage = ChoosingDestination(0))
         setUpGame(state).map(newState => {
           updateGameState(newState)
         }).recover {
           case t: Throwable => log.error(t.getMessage)
         }
       case m =>
-        val result = state.currentStage.receive(m, user, state)
-        result match {
-          case Left(newState) => updateGameState(newState)
-          case Right(e : GameError) => sender() ! e
-        }
+        sendToStage(m)
     }
   }
 
@@ -102,7 +106,7 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao, cardManager: Ca
 
 object GameActor {
   val LookupTimeout: FiniteDuration = FiniteDuration(30, SECONDS)
-  def props(gameId: Int, gameDao: GameDao, cardDao: CardDao, cardManager: CardManager)(implicit ec: ExecutionContext): Props = {
-    Props(new GameActor(gameId, gameDao, cardDao, cardManager))
+  def props(gameId: Int, gameDao: GameDao, cardDao: CardDao)(implicit ec: ExecutionContext): Props = {
+    Props(new GameActor(gameId, gameDao, cardDao))
   }
 }

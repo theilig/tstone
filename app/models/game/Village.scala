@@ -1,8 +1,9 @@
 package models.game
 
 import dao.CardDao
-import models.schema.Tables.{HeroRow, ItemRow, WeaponRow, VillagerRow, SpellRow}
+import models.schema.Tables.{HeroRow, ItemRow, SpellRow, VillagerRow, WeaponRow}
 import play.api.libs.json.{Json, OFormat}
+import services.CardManager.removeOneInstanceFromCards
 
 import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,14 +17,6 @@ case class Village(
                     villagers: List[VillagerPile],
                     diseases: DiseasePile
              ) {
-  def removeOneInstanceFromCards[T <: Card](cards: List[T], targetCard: Card): List[T] = {
-    cards match {
-      case card :: restOfCards if card.getName == targetCard.getName => restOfCards
-      case card :: restOfCards => card :: removeOneInstanceFromCards(restOfCards, targetCard)
-      case Nil => Nil
-    }
-  }
-
   def takeCard(cardName: String): (Village, Option[Card]) = {
     var foundCard: Option[Card] = None
     val newHeroes = heroes.map(hp => {

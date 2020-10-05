@@ -1,13 +1,13 @@
 package controllers.game.stage
 
 import models.User
-import models.game.{GameError, Message, State}
+import models.game.{GameError, Message, Player, State}
 import play.api.libs.json.{Format, JsError, JsObject, JsPath, JsString, JsSuccess, Reads, Writes}
 
 abstract class GameStage {
-  def receive(message: Message, user: User, state: State): Either[State, GameError]
+  def receive(message: Message, user: User, state: State): Either[GameError, State]
   def canAddPlayers: Boolean = false
-  def currentPlayer: Int
+  def currentPlayer(state: State): Option[Player]
 }
 
 object GameStage {
@@ -18,17 +18,25 @@ object GameStage {
         _ => JsError("stage undefined or incorrect"), {
           case "WaitingForPlayers" =>
             JsSuccess(WaitingForPlayers)
-          case "ChoosingDestination"  =>
-            (JsPath \ "data").read[PickDestination].reads(js)
+          case "ChoosingDestination" =>
+            (JsPath \ "data").read[ChoosingDestination].reads(js)
+          case "Resting" =>
+            (JsPath \ "data").read[Resting].reads(js)
         }
       )
     },
     Writes {
       case WaitingForPlayers => JsObject(Seq("stage" -> JsString("WaitingForPlayers")))
-      case p: PickDestination => JsObject(
+      case p: ChoosingDestination => JsObject(
         Seq(
           "stage" -> JsString("ChoosingDestination"),
-          "data" -> PickDestination.format.writes(p)
+          "data" -> ChoosingDestination.format.writes(p)
+        )
+      )
+      case p: Resting => JsObject(
+        Seq(
+          "stage" -> JsString("Resting"),
+          "data" -> Resting.format.writes(p)
         )
       )
     }

@@ -19,8 +19,9 @@ function VillagePile(props) {
     if (card) {
         return (<VillageCard key={card.id} id={card.id} src={cardImages[card.name]} title={card.name}
                              ref={refContainer}
-                             onMouseOver={() => handleHovered()}
-                             onMouseOut={() => props.registerHovered(null, null)}/>)
+                             onMouseOver={() => handleHovered(true)}
+                             onMouseOut={() => props.registerHovered(null, null)} />
+             )
     }
     return (
         <VillageCard key={0} id={0} src={cardImages['CardBack']} title={'CardBack'} />

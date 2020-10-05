@@ -1,42 +1,33 @@
-import React, {useState, useEffect, useRef, createRef} from "react";
-import cardImages from "../img/cards/cards";
+import React, {useEffect, useState} from "react";
 import {HandCard} from "./HandCard";
-import {DragPreviewImage, useDrag, useDrop} from 'react-dnd'
+import {useDrop} from 'react-dnd'
 import {CardTypes, getDragType, getDropTypes} from "./CardTypes";
 function HandSlot(props) {
-    const [attributes, setAttributes] = useState([{}])
-    const {attached, card} = props
+    const [dropTypes, setDropTypes] = useState([])
     const [collectedProps, drop] = useDrop({
-        accept: getDropTypes(card),
+        accept: [CardTypes.FOOD, CardTypes.WEAPON],
+        canDrop: ((item) => {
+            return getDropTypes(props.cards[0]).includes(item.type)
+        }),
         drop: (c) => {
-            props.registerDrop(c.index, props.index)
-            console.warn(props.index + "got a drop of " + c.index)
+            props.registerDrop(c.index, props.cards[0].index)
         }
     })
 
     useEffect(() => {
-        let refsRequired = 1
-        if (attached) {
-            refsRequired += attached.length
-        }
-//        setCardRefs(cardRefs => (
-//                Array(refsRequired).fill().map((_, i) => cardRefs[i] || createRef())
-//            ))
-    }, [attached])
+        setDropTypes(getDropTypes(props.cards[0]))
+    }, [props.cards])
 
-    let allCards = [props.card]
-    if (props.attached) {
-        allCards = [props.card, ...props.attached]
-    }
     return (
         <div ref={drop}>
-            {allCards.map((c, index) => (
+            {props.cards.map((c, index) => (
                 <HandCard key={c.index * 200}
                           index={c.index}
                           position={index}
                           name={c.data.name}
                           registerHovered={props.registerHovered}
-                          cardType={getDragType(card)}
+                          registerDrop={props.registerDrop}
+                          cardType={getDragType(c)}
                           style={{
                               zIndex: index
                          }}

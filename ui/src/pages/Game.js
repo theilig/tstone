@@ -4,13 +4,17 @@ import { GameStateContext } from "../context/GameState";
 import {useParams} from "react-router";
 import Startup from "./Startup";
 import {Redirect} from "react-router";
-import DisplayGame from "./DisplayGame";
+import ChoosingDestination from "./ChoosingDestination";
+import cardImages from "../img/cards/cards";
+import Resting from "./Resting";
 
 function Game(props) {
     const [ gameState, setGameState ] = useState()
     const [ gameSocket, setGameSocket ] = useState(null)
     const { authTokens } = useAuth()
     const [ gameOver, setGameOver] = useState(false)
+    const [ hovered, setHovered] = useState(null)
+
     let game = useParams()
     let gameId = parseInt(game.gameId)
 
@@ -64,8 +68,34 @@ function Game(props) {
         switch (gameState.currentStage.stage) {
             case "WaitingForPlayers":
                 return <Startup gameSocket={gameSocket} />
+            case "ChoosingDestination":
+                return <ChoosingDestination registerHovered={registerHovered} renderHovered={renderHovered}
+                                            gameSocket={gameSocket} />
             default:
-                return <DisplayGame gameSocket={gameSocket} />
+                return <Resting registerHovered={registerHovered} renderHovered={renderHovered}
+                                gameSocket={gameSocket} />
+        }
+    }
+
+    const registerHovered = (name, location) => {
+        if (name && name !== "CardBack") {
+            setHovered({name:name, location:location})
+        } else {
+            setHovered(null)
+        }
+    }
+
+    const renderHovered = () => {
+        if (hovered) {
+            const imgStyle = {
+                width: '300px',
+                height: '375px',
+                position: 'absolute',
+                top: hovered.location.top,
+                left: hovered.location.left,
+                pointerEvents: 'none'
+            };
+            return (<img style={imgStyle} src={cardImages[hovered.name]} title={hovered.name} alt={hovered.name} />)
         }
     }
 

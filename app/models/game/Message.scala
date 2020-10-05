@@ -84,6 +84,8 @@ object Message {
           case "StartGame" => JsSuccess(StartGame)
           case "AcceptPlayer" => (JsPath \ "data").read[AcceptPlayer].reads(js)
           case "RejectPlayer" => (JsPath \ "data").read[RejectPlayer].reads(js)
+          case "ChooseRest" => JsSuccess(ChooseRest)
+          case "Destroy" => (JsPath \ "data").read[Destroy].reads(js)
         }
       )
     },
@@ -113,4 +115,9 @@ object Message {
   )
 }
 
-case object EnterVillage extends CurrentPlayerMessage
+case object ChooseVillage extends CurrentPlayerMessage
+case object ChooseRest extends CurrentPlayerMessage
+case class Destroy(cardName: String) extends CurrentPlayerMessage
+object Destroy {
+  implicit val destroyFormat: Format[Destroy] = Json.format
+}

@@ -75,7 +75,11 @@ const addInitialEffects = (card, generalEffects, currentAttributes) => {
 export function HandCard(props) {
     const [{isDragging}, drag, preview] = useDrag({
         item: {type: props.cardType, index: props.index},
-        begin: (_) => console.warn("Drop begins " + props.index + " " + props.cardType)
+        end: (item, monitor) => {
+            if (!monitor.didDrop()) {
+                props.registerDrop(props.index, null)
+            }
+        }
     })
 
     const refContainer = useRef(null)

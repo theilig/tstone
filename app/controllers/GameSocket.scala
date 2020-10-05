@@ -12,11 +12,10 @@ import services.{Authenticator, CardManager}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class GameSocket @Inject()(cc: ControllerComponents, authenticator: Authenticator, gameDao: GameDao, cardDao: CardDao,
-                           cardManager: CardManager)
+class GameSocket @Inject()(cc: ControllerComponents, authenticator: Authenticator, gameDao: GameDao, cardDao: CardDao)
                           (implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext)
   extends AbstractController(cc) {
-  val gameManager: ActorRef = system.actorOf(GameManager.props(gameDao, cardDao, cardManager))
+  val gameManager: ActorRef = system.actorOf(GameManager.props(gameDao, cardDao))
   def socket: WebSocket = WebSocket.accept[JsValue, JsValue] { _ =>
     ActorFlow.actorRef { out =>
         SocketActor.props(out, authenticator, gameManager)

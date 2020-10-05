@@ -25,18 +25,6 @@ const Input = styled.input`
     width: 100%
 `;
 
-const Button = styled.button`
-    background: linear-gradient(to bottom, #6371c7, #5563c1);
-    border-color: #3f4eae;
-    border-radius: 3px;
-    padding: 1rem;
-    color: white;
-    font-weight: 700;
-    width: 100%;
-    margin-bottom: 1rem;
-    font-size: 0.8rem;
-`;
-
 const Logo = styled.img`
     width: 50%;
     margin-bottom: 1rem;
@@ -51,4 +39,4 @@ const Success = styled.div`
     background-color: green;
 `;
 
-export { Form, Input, Button, Logo, Card, Error, Success, EmailRegex };
+export { Form, Input, Logo, Card, Error, Success, EmailRegex };

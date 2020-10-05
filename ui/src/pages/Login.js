@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Link, Redirect } from 'react-router-dom';
 import axios from 'axios';
 import logoImg from '../img/logo.jpg';
-import { Card, Logo, Form, Input, Button, Error, EmailRegex } from '../components/AuthForm';
+import { Card, Logo, Form, Input, Error, EmailRegex } from '../components/AuthForm';
+import { Button } from "../components/inputElements"
 import { useAuth } from "../context/auth";
 
 function Login(props) {
