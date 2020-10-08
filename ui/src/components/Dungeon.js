@@ -30,7 +30,7 @@ function Dungeon(props) {
         if (gameState.dungeon.monsterPile) {
             let pile = gameState.dungeon.monsterPile
             setMonsterRefs(monsterRefs => (
-                Array(pile.length).map((_, i) => monsterRefs[i] || createRef())
+                Array(pile.length).fill(null).map((_, i) => monsterRefs[i] || createRef())
             ))
         }
     }, [gameState.dungeon.monsterPile]);
