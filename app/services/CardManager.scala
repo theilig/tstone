@@ -28,20 +28,20 @@ object CardManager {
     fillPlayerHand(player.copy(hand = Nil, discard = player.discard ::: player.hand), state)
   }
 
-  def takeCard(player: Player, cardName: String, state: State): State = {
-    val (newVillage, card) = state.village.get.takeCard(cardName)
+  def takeCard(player: Player, cardName: String, state: State, topOnly: Boolean): (State, Card) = {
+    val (newVillage, card) = state.village.get.takeCard(cardName, topOnly)
     if (card.isEmpty) {
       throw new GameException(s"Can't find card $cardName")
     }
-    state.copy(village = Some(newVillage)).updatePlayer(player.userId)(p => {
+    (state.copy(village = Some(newVillage)).updatePlayer(player.userId)(p => {
       p.copy(discard = card.get :: p.discard)
-    })
+    }), card.get)
   }
 
-  def removeOneInstanceFromCards[T <: Card](cards: List[T], targetCard: Card): List[T] = {
+  def removeOneInstanceFromCards[T <: Card](cards: List[T], targetCardName: String): List[T] = {
     cards match {
-      case card :: restOfCards if card.getName == targetCard.getName => restOfCards
-      case card :: restOfCards => card :: removeOneInstanceFromCards(restOfCards, targetCard)
+      case card :: restOfCards if card.getName == targetCardName => restOfCards
+      case card :: restOfCards => card :: removeOneInstanceFromCards(restOfCards, targetCardName)
       case Nil => Nil
     }
   }
@@ -50,7 +50,7 @@ object CardManager {
     val possibleCard = player.hand.find(_.getName == cardName)
     if (possibleCard.nonEmpty) {
       Right(state.updatePlayer(player.userId)(p => {
-        p.copy(hand = removeOneInstanceFromCards(player.hand, possibleCard.get))
+        p.copy(hand = removeOneInstanceFromCards(player.hand, possibleCard.get.getName))
       }))
     } else {
       Left(GameError(s"$cardName was not found in hand"))

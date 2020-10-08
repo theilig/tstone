@@ -10,8 +10,8 @@ const DungeonContainer = styled.div`
 `;
 
 const DungeonCard = styled.img`
-    width: 140px;
-    height: 200px;
+    width: 70px;
+    height: 100px;
     margin-left: 10px;
 `;
 

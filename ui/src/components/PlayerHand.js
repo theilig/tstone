@@ -58,7 +58,7 @@ function PlayerHand(props) {
             newUsing[target] = usingList
         }
         if (target === DESTROY_INDEX) {
-            props.registerDestroy(player.hand[source].data.name)
+            props.registerDestroy(target, player.hand[source].data.name)
         }
         setUsing(newUsing)
         setIsAttached(newAttached)

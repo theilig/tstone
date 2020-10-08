@@ -85,7 +85,9 @@ object Message {
           case "AcceptPlayer" => (JsPath \ "data").read[AcceptPlayer].reads(js)
           case "RejectPlayer" => (JsPath \ "data").read[RejectPlayer].reads(js)
           case "ChooseRest" => JsSuccess(ChooseRest)
+          case "ChooseVillage" => JsSuccess(ChooseVillage)
           case "Destroy" => (JsPath \ "data").read[Destroy].reads(js)
+          case "Purchase" => (JsPath \ "data").read[Purchase].reads(js)
         }
       )
     },
@@ -120,4 +122,8 @@ case object ChooseRest extends CurrentPlayerMessage
 case class Destroy(cardName: Option[String]) extends CurrentPlayerMessage
 object Destroy {
   implicit val destroyFormat: Format[Destroy] = Json.format
+}
+case class Purchase(bought: List[String], destroyed: Map[String, List[String]]) extends CurrentPlayerMessage
+object Purchase {
+  implicit val purchaseFormat: Format[Purchase] = Json.format
 }

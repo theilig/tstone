@@ -17,13 +17,13 @@ case class Village(
                     villagers: List[VillagerPile],
                     diseases: DiseasePile
              ) {
-  def takeCard(cardName: String): (Village, Option[Card]) = {
+  def takeCard(cardName: String, topOnly: Boolean = false): (Village, Option[Card]) = {
     var foundCard: Option[Card] = None
     val newHeroes = heroes.map(hp => {
       hp.cards.find(p => p.name == cardName) match {
-        case Some(card) =>
+        case Some(card) if !topOnly || hp.topCard.getName == cardName =>
           foundCard = Some(card)
-          new HeroPile(removeOneInstanceFromCards(hp.cards, card))
+          new HeroPile(removeOneInstanceFromCards(hp.cards, cardName))
         case None => hp
       }
     })
@@ -31,7 +31,7 @@ case class Village(
       wp.cards.find(p => p.name == cardName) match {
         case Some(card) =>
           foundCard = Some(card)
-          new WeaponPile(removeOneInstanceFromCards(wp.cards, card))
+          new WeaponPile(removeOneInstanceFromCards(wp.cards, cardName))
         case None => wp
       }
     })
@@ -39,7 +39,7 @@ case class Village(
       ip.cards.find(p => p.name == cardName) match {
         case Some(card) =>
           foundCard = Some(card)
-          new ItemPile(removeOneInstanceFromCards(ip.cards, card))
+          new ItemPile(removeOneInstanceFromCards(ip.cards, cardName))
         case None => ip
       }
     })
@@ -47,7 +47,7 @@ case class Village(
       sp.cards.find(p => p.name == cardName) match {
         case Some(card) =>
           foundCard = Some(card)
-          new SpellPile(removeOneInstanceFromCards(sp.cards, card))
+          new SpellPile(removeOneInstanceFromCards(sp.cards, cardName))
         case None => sp
       }
     })
@@ -55,14 +55,14 @@ case class Village(
       vp.cards.find(p => p.name == cardName) match {
         case Some(card) =>
           foundCard = Some(card)
-          new VillagerPile(removeOneInstanceFromCards(vp.cards, card))
+          new VillagerPile(removeOneInstanceFromCards(vp.cards, cardName))
         case None => vp
       }
     })
     val newDiseases = diseases.cards.find(p => p.name == cardName) match {
       case Some(card) =>
         foundCard = Some(card)
-        new DiseasePile(removeOneInstanceFromCards(diseases.cards, card))
+        new DiseasePile(removeOneInstanceFromCards(diseases.cards, cardName))
       case None => diseases
     }
     (new Village(newHeroes, newWeapons, newItems, newSpells, newVillagers, newDiseases), foundCard)

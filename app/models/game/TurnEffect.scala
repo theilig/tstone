@@ -12,7 +12,30 @@ case class TurnEffect(
                        repeatable: Boolean,
                        adjustment: Option[AttributeAdjustment]
                      ) {
-  def activate(state: State): State = state
+  private def combinedOperation(adjustment: AttributeAdjustment): Boolean = {
+    adjustment.operation match {
+      case Divide => true
+      case Multiply => true
+      case _ => false
+    }
+  }
+
+  def isCombined: Boolean = {
+    adjustment.exists(combinedOperation)
+  }
+  def isLate: Boolean = {
+    isCombined || effectType == "Battle"
+  }
+  def isMatchupEffect: Boolean = {
+    false
+  }
+  def isEquippedEffect: Boolean = {
+    false
+  }
+  def isIndividualCardEffect: Boolean = {
+    !isCombined && !isLate && !isMatchupEffect && !isEquippedEffect
+  }
+
   def write(connection: Connection, id: Int): Unit = {
     val statement = connection.prepareStatement(
       """
@@ -43,6 +66,45 @@ case class TurnEffect(
     }
     statement.execute()
   }
+
+  def isActive(destroyed: Option[List[Card]], destroyedSelf: Boolean): Boolean = {
+    (effect, requiredType) match {
+      case (_, None) => true
+      case (Some("Destroy"), Some("Self")) => destroyedSelf
+      case (Some("Destroy"), Some(cardType)) if destroyed.nonEmpty => destroyed.get.exists(_.getName == cardType)
+    }
+  }
+  def adjustAttributes(currentValues: Map[String, Int], oldCard: Option[Card] = None): Map[String, Int] = {
+    adjustment.map {
+      case AttributeAdjustment(op, amount, attribute) =>
+        (op, attribute) match {
+          case (Net, "Gold") => currentValues + ("Gold" ->
+            (currentValues.getOrElse("Gold", 0) + amount - oldCard.get.getGoldValue))
+          case (Add, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) + amount))
+          case (Subtract, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) - amount))
+          case (Multiply, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) * amount))
+          case (Divide, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) / amount))
+        }
+    }.getOrElse(currentValues)
+  }
+
+  def matchesRequiredCard(card: Card, isSelf: Boolean): Boolean = {
+    requiredType.forall(required => {
+      (required, card) match {
+        case ("Self", _) => isSelf
+        case ("GoldValue", c) => c.hasGoldValue
+        case ("Spell", _: SpellCard) => true
+        case ("Hero", _: HeroCard) => true
+        case ("Monster", _: MonsterCard) => true
+        case (name, c) if c.getName == name => true
+        case (itemTraits, f: ItemCard) if itemTraits.split("\\+").forall(t => f.traits.contains(t)) => true
+        case (heroTrait, h: HeroCard) if h.traits.contains(heroTrait) => true
+        case (notHeroTrait, h: HeroCard)
+          if notHeroTrait.startsWith("!") && !h.traits.contains(notHeroTrait.substring(1)) => true
+      }
+    })
+  }
+
 }
 
 object TurnEffect {

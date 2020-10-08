@@ -14,7 +14,7 @@ function ChoosingDestination(props) {
         if (parseInt(authTokens.user.userId) === stage.data.currentPlayerId) {
             return (
                 <Options>
-                    <Button>Go To Village</Button>
+                    <Button onClick={chooseVillage}>Go To Village</Button>
                     <Button>Go To Dungeon</Button>
                     <Button onClick={chooseRest}>Rest</Button>
                 </Options>
@@ -26,6 +26,17 @@ function ChoosingDestination(props) {
         props.gameSocket.send(JSON.stringify(
             {
                 messageType: "ChooseRest",
+                data: {
+                    gameId: gameState.gameId
+                }
+            }
+        ))
+    }
+
+    const chooseVillage = () => {
+        props.gameSocket.send(JSON.stringify(
+            {
+                messageType: "ChooseVillage",
                 data: {
                     gameId: gameState.gameId
                 }

@@ -1,10 +1,11 @@
 package actors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import controllers.GameException
 import controllers.game.stage.{ChoosingDestination, WaitingForPlayers}
 import dao.{CardDao, GameDao}
 import models.User
-import models.game.{ConnectToGame, GameOver, GameState, LeaveGame, Message, StartGame, State, UserMessage}
+import models.game.{ConnectToGame, GameError, GameOver, GameState, LeaveGame, Message, StartGame, State, UserMessage}
 import services.GameSetup
 
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
@@ -72,8 +73,7 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
         }).recover {
           case t: Throwable => log.error(t.getMessage)
         }
-      case m =>
-        sendToStage(m)
+      case m => sendToStage(m)
     }
   }
 

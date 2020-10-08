@@ -25,7 +25,7 @@ function Resting(props) {
         ))
     }
 
-    const registerDestroy = (name) => {
+    const registerDestroy = (destroyingIndex, name) => {
         setDestroyed(name)
     }
 

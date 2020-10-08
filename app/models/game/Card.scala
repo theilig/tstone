@@ -7,11 +7,13 @@ import models.CardInfo
 import play.api.libs.json._
 import models.schema.Tables
 
-class Card(id: Int, name: String, imageName: String, val frequency: Int) {
+class Card(name: String, imageName: String, val frequency: Int) {
   def getLight: Int = 0
   def getVictoryPoints: Int = 0
   def getGoldValue = 0
+  def hasGoldValue: Boolean = false
   def getName: String = name
+  def getCost: Option[Int] = None
   def getImageName: String = imageName
   def write(connection: Connection): Int = {
     val statement = connection.createStatement()
@@ -130,14 +132,14 @@ object Card {
   }
 }
 
-case object CardBack extends Card(0, "Back", "card000.png", 0)
+case object CardBack extends Card("Back", "card000.png", 0)
 
 case class DiseaseCard(
                          id: Int,
                          name: String,
                          imageName: String,
                          dungeonEffects: List[TurnEffect],
-                       ) extends Card(id, name, imageName, 45) {
+                       ) extends Card(name, imageName, 45) {
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
     dungeonEffects.foreach(d => d.write(connection, id))
@@ -172,7 +174,13 @@ case class HeroCard(
                      goldValue: Option[Int],
                      victoryPoints: Int,
                      override val frequency: Int
-                   ) extends Card(id, name, imageName, frequency) {
+                   ) extends Card(name, imageName, frequency) {
+  override def getGoldValue: Int = goldValue.getOrElse(0)
+
+  override def hasGoldValue: Boolean = goldValue.nonEmpty
+
+  override def getCost: Option[Int] = Some(cost)
+
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
     val statement = connection.prepareStatement(
@@ -231,7 +239,13 @@ case class ItemCard(
                      goldValue: Int,
                      victoryPoints: Int,
                      override val frequency: Int
-                   ) extends Card(id, name, imageName, frequency) {
+                   ) extends Card(name, imageName, frequency) {
+  override def getGoldValue: Int = goldValue
+
+  override def hasGoldValue: Boolean = true
+
+  override def getCost: Option[Int] = Some(cost)
+
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
     val statement = connection.prepareStatement(
@@ -275,7 +289,9 @@ case class SpellCard(
                       traits: List[String],
                       dungeonEffects: List[TurnEffect],
                       victoryPoints: Int
-                    ) extends Card(id, name, imageName, 8) {
+                    ) extends Card(name, imageName, 8) {
+  override def getCost: Option[Int] = Some(cost)
+
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
     val statement = connection.prepareStatement(
@@ -316,7 +332,13 @@ case class VillagerCard(
                          villageEffects: List[TurnEffect],
                          goldValue: Option[Int],
                          victoryPoints: Int
-                       ) extends Card(id, name, imageName, 8) {
+                       ) extends Card(name, imageName, 8) {
+  override def getCost: Option[Int] = Some(cost)
+
+  override def getGoldValue: Int = goldValue.getOrElse(0)
+
+  override def hasGoldValue: Boolean = goldValue.nonEmpty
+
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
     val statement = connection.prepareStatement(
@@ -368,7 +390,13 @@ case class WeaponCard(
                        goldValue: Int,
                        victoryPoints: Int,
                        override val frequency: Int
-                    ) extends Card(id, name, imageName, frequency) {
+                    ) extends Card(name, imageName, frequency) {
+  override def getCost: Option[Int] = Some(cost)
+
+  override def getGoldValue: Int = goldValue
+
+  override def hasGoldValue: Boolean = true
+
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
     val statement = connection.prepareStatement(
@@ -421,7 +449,11 @@ case class MonsterCard(
                         victoryPoints: Int,
                         experiencePoints: Int,
                         override val frequency: Int
-                      ) extends Card(id, name, imageName, frequency) {
+                      ) extends Card(name, imageName, frequency) {
+  override def getGoldValue: Int = goldValue
+
+  override def hasGoldValue: Boolean = true
+
   def monsterType: String = {
     if (traits.head == "Dragon") {
       "Dragon"
@@ -490,7 +522,7 @@ object MonsterCard {
 }
 
 case class ThunderstoneCard( id: Int, name: String, imageName: String, victoryPoints: Int)
-  extends Card(id, name, imageName, 1) {
+  extends Card(name, imageName, 1) {
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
     val statement = connection.prepareStatement(

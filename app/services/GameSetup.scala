@@ -26,7 +26,7 @@ class GameSetup @Inject() (cardDao: CardDao)(implicit ec: ExecutionContext) {
   def dealStartingCards(state: State): State = {
     def dealPlayers(players: List[Player], cards: List[String], state: State): State = {
       def dealCardsToPlayer(player: Player, cards: List[String], state: State): State = {
-        cards.foldLeft(state)((s, c) => CardManager.takeCard(player, c, s))
+        cards.foldLeft(state)((s, c) => CardManager.takeCard(player, c, s, topOnly = false)._1)
       }
       players.foldLeft(state)((s, p) => dealCardsToPlayer(p, cards, s))
     }
