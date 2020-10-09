@@ -1,5 +1,5 @@
 import React, {useRef} from "react";
-import {executeEffect, isEarlyEffect} from "../services/effects";
+import {cardMatches, executeEffect, isEarlyEffect} from "../services/effects";
 import cardImages from "../img/cards/cards";
 import {useDrag} from "react-dnd";
 
@@ -21,18 +21,21 @@ const initialAttributes = (card) => {
     return starting
 }
 
-export const getAttributes = (card, attached, generalEffects) => {
+export const getAttributes = (slots, generalEffects) => {
     let attributes = {}
-    if (card.cardType !== "WeaponCard") {
-        attributes = initialAttributes(card)
-        attributes = addInitialEffects(card, generalEffects, attributes)
-        if (attached) {
-            attached.forEach((attachedCard) => {
-                attributes = addInitialEffects(attachedCard, generalEffects, attributes)
+    const activeCard = slots[0][0]
+    if (activeCard && activeCard.cardType !== "WeaponCard") {
+        attributes = initialAttributes(activeCard)
+        slots[0].forEach((attachedCard) => {
+            attributes = addInitialEffects(attachedCard, generalEffects, attributes)
+        })
+        if (slots[1]) {
+            slots[1].forEach((destroyedCard) => {
+                attributes = addDestroyEffects(destroyedCard, activeCard, attributes)
             })
         }
-    } else {
-        attributes = {goldValue: card.data.goldValue}
+    } else if (activeCard) {
+        attributes = {goldValue: activeCard.data.goldValue}
     }
     return attributes
 }
@@ -57,6 +60,19 @@ const addInitialEffects = (card, generalEffects, currentAttributes) => {
         })
     }
     return newCardAttributes
+}
+
+const addDestroyEffects = (destroyedCard, activeCard, currentAttributes) => {
+    let newAttributes = {...currentAttributes}
+    if (activeCard.data.dungeonEffects) {
+        activeCard.data.dungeonEffects.forEach((effect) => {
+            if (effect.effect === "Destroy" &&
+                cardMatches(destroyedCard, effect, activeCard)) {
+                newAttributes = executeEffect(effect, newAttributes)
+            }
+        })
+    }
+    return newAttributes
 }
 
 export function HandCard(props) {

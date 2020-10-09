@@ -5,6 +5,7 @@ import {useGameState} from "../context/GameState";
 import Dungeon from "../components/Dungeon";
 import Village from "../components/Village";
 import PlayerHand from "../components/PlayerHand"
+import AttributeValues from "../components/AttributeValues";
 
 function ChoosingDestination(props) {
     const { gameState } = useGameState()
@@ -48,13 +49,15 @@ function ChoosingDestination(props) {
         <div>
             <Dungeon registerHovered={props.registerHovered} />
             <Village registerHovered={props.registerHovered} />
-            <PlayerHand registerHovered={props.registerHovered} show={{
+            <AttributeValues values={props.attributes} show={{
                 goldValue: "Gold",
                 buys: "Buys",
                 light: "Light",
                 attack: "Attack",
                 magicAttack: "Magic Attack",
-            }} />
+                }}
+            />
+            <PlayerHand registerHovered={props.registerHovered} arrangement={props.arrangement} />
             {renderChoices()}
             {props.renderHovered()}
         </div>
