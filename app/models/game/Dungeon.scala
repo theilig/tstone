@@ -3,21 +3,27 @@ package models.game
 import dao.CardDao
 import play.api.libs.json.{Format, Json}
 
-import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
 case class Dungeon(monsterPile: List[Card]) {
+  def fightOff(rank: Int): Dungeon = {
+    val newPile = monsterPile.take(rank - 1) ++ monsterPile.drop(rank) ++ (monsterPile.drop(rank - 1).head :: Nil)
+    copy(monsterPile = newPile)
+  }
 
+  def defeat(rank: Int): Dungeon = {
+    copy(monsterPile = monsterPile.take(rank - 1) ++ monsterPile.drop(rank))
+  }
+
+  def lightPenalty: Int = 2
 }
 
 object Dungeon {
   implicit val dungeonFormat: Format[Dungeon] = Json.format[Dungeon]
 
   def getMonstersFromTypes(chosenTypes: Seq[MonsterCard]): List[MonsterCard] = {
-    chosenTypes.flatMap({
-      case monster => List.fill(monster.frequency)(monster)
-    }).toList
+    chosenTypes.flatMap(monster => List.fill(monster.frequency)(monster)).toList
   }
 
   def build(cardDao: CardDao)(implicit ec: ExecutionContext): Future[Dungeon] = {

@@ -1,7 +1,6 @@
 package actors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import controllers.GameException
 import controllers.game.stage.{ChoosingDestination, WaitingForPlayers}
 import dao.{CardDao, GameDao}
 import models.User
@@ -73,7 +72,8 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
         }).recover {
           case t: Throwable => log.error(t.getMessage)
         }
-      case m => sendToStage(m)
+      case m if m.validate(state) => sendToStage(m)
+      case _ => sender() ! GameError("Invalid Message")
     }
   }
 

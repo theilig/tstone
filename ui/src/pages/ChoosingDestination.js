@@ -15,29 +15,18 @@ function ChoosingDestination(props) {
         if (parseInt(authTokens.user.userId) === stage.data.currentPlayerId) {
             return (
                 <Options>
-                    <Button onClick={chooseVillage}>Go To Village</Button>
-                    <Button>Go To Dungeon</Button>
-                    <Button onClick={chooseRest}>Rest</Button>
+                    <Button onClick={() => chooseDestination("ChooseVillage")}>Go To Village</Button>
+                    <Button onClick={() => chooseDestination("ChooseDungeon")}>Go To Dungeon</Button>
+                    <Button onClick={() => chooseDestination("ChooseRest")}>Rest</Button>
                 </Options>
             )
         }
     }
 
-    const chooseRest = () => {
+    const chooseDestination = (messageType) => {
         props.gameSocket.send(JSON.stringify(
             {
-                messageType: "ChooseRest",
-                data: {
-                    gameId: gameState.gameId
-                }
-            }
-        ))
-    }
-
-    const chooseVillage = () => {
-        props.gameSocket.send(JSON.stringify(
-            {
-                messageType: "ChooseVillage",
+                messageType: messageType,
                 data: {
                     gameId: gameState.gameId
                 }
@@ -57,7 +46,11 @@ function ChoosingDestination(props) {
                 magicAttack: "Magic Attack",
                 }}
             />
-            <PlayerHand registerHovered={props.registerHovered} arrangement={props.arrangement} />
+            <PlayerHand
+                registerHovered={props.registerHovered}
+                arrangement={props.arrangement}
+                registerDrop={props.registerDrop}
+            />
             {renderChoices()}
             {props.renderHovered()}
         </div>

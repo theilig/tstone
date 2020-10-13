@@ -15,6 +15,9 @@ class Card(name: String, imageName: String, val frequency: Int) {
   def getName: String = name
   def getCost: Option[Int] = None
   def getImageName: String = imageName
+  def getDungeonEffects: List[TurnEffect] = Nil
+  def getBattleEffects: List[TurnEffect] = Nil
+  def attributes: Map[String, Int] = Map("Light" -> getLight)
   def write(connection: Connection): Int = {
     val statement = connection.createStatement()
     statement.execute(s"INSERT INTO Card (name, image, frequency) VALUES ('$name', '$imageName', $frequency)")
@@ -140,6 +143,9 @@ case class DiseaseCard(
                          imageName: String,
                          dungeonEffects: List[TurnEffect],
                        ) extends Card(name, imageName, 45) {
+
+  override def getDungeonEffects: List[TurnEffect] = dungeonEffects
+
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
     dungeonEffects.foreach(d => d.write(connection, id))
@@ -175,6 +181,13 @@ case class HeroCard(
                      victoryPoints: Int,
                      override val frequency: Int
                    ) extends Card(name, imageName, frequency) {
+
+  override def attributes: Map[String, Int] = super.attributes + ("Strength" -> strength)
+
+  override def getDungeonEffects: List[TurnEffect] = dungeonEffects
+
+  override def getBattleEffects: List[TurnEffect] = battleEffects
+
   override def getGoldValue: Int = goldValue.getOrElse(0)
 
   override def hasGoldValue: Boolean = goldValue.nonEmpty
@@ -240,6 +253,8 @@ case class ItemCard(
                      victoryPoints: Int,
                      override val frequency: Int
                    ) extends Card(name, imageName, frequency) {
+  override def getDungeonEffects: List[TurnEffect] = dungeonEffects
+
   override def getGoldValue: Int = goldValue
 
   override def hasGoldValue: Boolean = true
@@ -290,6 +305,8 @@ case class SpellCard(
                       dungeonEffects: List[TurnEffect],
                       victoryPoints: Int
                     ) extends Card(name, imageName, 8) {
+  override def getDungeonEffects: List[TurnEffect] = dungeonEffects
+
   override def getCost: Option[Int] = Some(cost)
 
   override def write(connection: Connection): Int = {
@@ -391,6 +408,10 @@ case class WeaponCard(
                        victoryPoints: Int,
                        override val frequency: Int
                     ) extends Card(name, imageName, frequency) {
+  override def attributes: Map[String, Int] = super.attributes + ("Weight" -> weight)
+
+  override def getDungeonEffects: List[TurnEffect] = dungeonEffects
+
   override def getCost: Option[Int] = Some(cost)
 
   override def getGoldValue: Int = goldValue
@@ -450,6 +471,10 @@ case class MonsterCard(
                         experiencePoints: Int,
                         override val frequency: Int
                       ) extends Card(name, imageName, frequency) {
+  override def getDungeonEffects: List[TurnEffect] = dungeonEffects
+
+  override def getBattleEffects: List[TurnEffect] = battleEffects
+
   override def getGoldValue: Int = goldValue
 
   override def hasGoldValue: Boolean = true

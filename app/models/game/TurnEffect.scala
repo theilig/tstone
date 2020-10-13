@@ -4,6 +4,7 @@ import java.sql.{Connection, Types}
 
 import models.schema.Tables
 import play.api.libs.json.{Format, Json}
+import services.CardManager
 
 case class TurnEffect(
                        effectType: String,
@@ -32,8 +33,16 @@ case class TurnEffect(
   def isEquippedEffect: Boolean = {
     false
   }
+
+  def isGeneralEffect: Boolean = {
+    repeatable && requiredType.nonEmpty && effectType != "Destroy"
+  }
   def isIndividualCardEffect: Boolean = {
-    !isCombined && !isLate && !isMatchupEffect && !isEquippedEffect
+    !isCombined && !isLate && !isMatchupEffect && !isEquippedEffect && !isGeneralEffect
+  }
+
+  def individualEffectActive(slot: List[Card], monster: Card): Boolean = {
+    false
   }
 
   def write(connection: Connection, id: Int): Unit = {
@@ -67,13 +76,23 @@ case class TurnEffect(
     statement.execute()
   }
 
-  def isActive(destroyed: Option[List[Card]], destroyedSelf: Boolean): Boolean = {
+  def isActive(targetCard: Card, destroyed: Option[List[Card]]): Boolean = {
     (effect, requiredType) match {
       case (_, None) => true
-      case (Some("Destroy"), Some("Self")) => destroyedSelf
+      case (Some("Destroy"), Some("Self")) => destroyed.get.exists(_.getName == targetCard.getName)
       case (Some("Destroy"), Some(cardType)) if destroyed.nonEmpty => destroyed.get.exists(_.getName == cardType)
     }
   }
+
+  def isCombinedActive(attributes: Map[String, Int]): Boolean = false
+
+  def isDestroy: Boolean = effectType == "Destroy"
+
+  def spoils: Option[String] = effectType match {
+    case "Spoils" => effect
+    case _ => None
+  }
+
   def adjustAttributes(currentValues: Map[String, Int], oldCard: Option[Card] = None): Map[String, Int] = {
     adjustment.map {
       case AttributeAdjustment(op, amount, attribute) =>
@@ -88,23 +107,14 @@ case class TurnEffect(
     }.getOrElse(currentValues)
   }
 
-  def matchesRequiredCard(card: Card, isSelf: Boolean): Boolean = {
+  def matchesRequiredCard(card: Card, isSelf: Boolean = false): Boolean = {
     requiredType.forall(required => {
       (required, card) match {
         case ("Self", _) => isSelf
-        case ("GoldValue", c) => c.hasGoldValue
-        case ("Spell", _: SpellCard) => true
-        case ("Hero", _: HeroCard) => true
-        case ("Monster", _: MonsterCard) => true
-        case (name, c) if c.getName == name => true
-        case (itemTraits, f: ItemCard) if itemTraits.split("\\+").forall(t => f.traits.contains(t)) => true
-        case (heroTrait, h: HeroCard) if h.traits.contains(heroTrait) => true
-        case (notHeroTrait, h: HeroCard)
-          if notHeroTrait.startsWith("!") && !h.traits.contains(notHeroTrait.substring(1)) => true
+        case _ => CardManager.matchesType(card, required)
       }
     })
   }
-
 }
 
 object TurnEffect {

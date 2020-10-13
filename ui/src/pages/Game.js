@@ -12,6 +12,7 @@ import {HTML5Backend} from "react-dnd-html5-backend";
 import {cardMatches, executeEffect, isGeneralEffect, isLateEffect} from "../services/effects";
 import {getAttributes} from "../components/HandCard";
 import Purchasing from "./Purchasing";
+import Crawling from "./Crawling";
 
 function Game() {
     const [ gameState, setGameState ] = useState()
@@ -233,15 +234,19 @@ function Game() {
                 case "ChoosingDestination":
                     return <ChoosingDestination registerHovered={registerHovered} renderHovered={renderHovered}
                                                 registerDrop={registerDrop} attributes={attributes}
-                                                gameSocket={gameSocket} arrangement={arrangement}/>
+                                                gameSocket={gameSocket} arrangement={arrangement} />
                 case "Resting":
                     return <Resting registerHovered={registerHovered} renderHovered={renderHovered}
                                     registerDrop={registerDrop}
-                                    gameSocket={gameSocket} arrangement={arrangement}/>
-                default:
+                                    gameSocket={gameSocket} arrangement={arrangement} />
+                case "Purchasing":
                     return <Purchasing registerHovered={registerHovered} renderHovered={renderHovered}
                                        registerDrop={registerDrop} attributes={attributes}
-                                       gameSocket={gameSocket} arrangement={arrangement}/>
+                                       gameSocket={gameSocket} arrangement={arrangement} />
+                case "Crawling":
+                    return <Crawling registerHovered={registerHovered} renderHovered={renderHovered}
+                                     registerDrop={registerDrop} attributes={attributes}
+                                     gameSocket={gameSocket} arrangement={arrangement} />
             }
         } else {
             switch (stage.stage) {
@@ -250,7 +255,7 @@ function Game() {
                 default:
                     return <ChoosingDestination registerHovered={registerHovered} renderHovered={renderHovered}
                                                 registerDrop={registerDrop} attributes={attributes}
-                                                gameSocket={gameSocket} arrangement={arrangement}/>
+                                                gameSocket={gameSocket} arrangement={arrangement} />
             }
         }
     }

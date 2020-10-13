@@ -1,6 +1,6 @@
 package controllers.game.stage
 
-import models.game.{Player, State}
+import models.game.{GameError, Player, State}
 import services.CardManager
 
 abstract class PlayerStage() extends GameStage {
@@ -21,5 +21,27 @@ abstract class PlayerStage() extends GameStage {
       }
     }
     after(currentPlayer(state).get, state.players).getOrElse(state.players.head)
+  }
+
+  def checkSpoils(state: State): State = {
+    val spoils = state.currentPlayer.get.hand.flatten(c =>
+      c.getBattleEffects
+    ).foldLeft(List[String]())((soFar, effect) => {
+      effect.spoils.map(s => s :: soFar).getOrElse(soFar)
+    })
+    if (spoils.nonEmpty) {
+      state.copy(currentStage = TakingSpoils(currentPlayerId, spoils))
+    } else {
+      endTurn(state)
+    }
+
+  }
+
+  def destroyCards(cardNames: List[String], state: State, finalTransform: State => State): Either[GameError, State] = {
+    val initial: Either[GameError, State] = Right(state)
+    cardNames.foldLeft(initial)((currentState, cardName) => {
+      currentState.flatMap(s => CardManager.destroy(cardName, s))
+    }).map(finalState => finalTransform(finalState))
+
   }
 }

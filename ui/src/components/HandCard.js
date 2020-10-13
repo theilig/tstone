@@ -3,30 +3,32 @@ import {cardMatches, executeEffect, isEarlyEffect} from "../services/effects";
 import cardImages from "../img/cards/cards";
 import {useDrag} from "react-dnd";
 
-const initialAttributes = (card) => {
-    let starting = {
-        goldValue: 0,
-        light: 0,
-        attack: 0,
-        magicAttack: 0,
-        strength: 0,
-        weight: 0,
-    }
+const initialAttributes = (card, attributes) => {
+    let starting = {...attributes}
     Object.keys(card.data).forEach((key) => {
         let value = card.data[key]
         if (key in starting) {
-            starting[key] = value
+            starting[key] = starting[key] + value
         }
     })
     return starting
 }
 
 export const getAttributes = (slots, generalEffects) => {
-    let attributes = {}
+    let attributes = {
+        goldValue: 0,
+        light: 0,
+        attack: 0,
+        magicAttack: 0,
+        strength: 0,
+        weight: 0,
+        buys: 0
+    }
+
     const activeCard = slots[0][0]
     if (activeCard && activeCard.cardType !== "WeaponCard") {
-        attributes = initialAttributes(activeCard)
         slots[0].forEach((attachedCard) => {
+            attributes = initialAttributes(attachedCard, attributes)
             attributes = addInitialEffects(attachedCard, generalEffects, attributes)
         })
         if (slots[1]) {
@@ -79,7 +81,7 @@ export function HandCard(props) {
     const [,drag, preview] = useDrag({
         item: {type: props.cardType, index: props.index},
         end: (item, monitor) => {
-            if (!monitor.didDrop()) {
+            if (!monitor.didDrop() && props.registerDrop) {
                 props.registerDrop(props.index, null)
             }
         }
@@ -87,23 +89,37 @@ export function HandCard(props) {
 
     const refContainer = useRef(null)
 
-    const handleHovered = () => {
+    const handleHovered = (shift) => {
         if (refContainer && refContainer.current) {
-            props.registerHovered(props.name, refContainer.current.getBoundingClientRect())
+            let location = refContainer.current.getBoundingClientRect()
+            let top = location.top
+            if (shift) {
+                top = location.bottom - 375
+            }
+            props.registerHovered(props.name, {left: location.left, top: top})
         }
     }
 
     let marginTop = '-140px'
+    if (props.small) {
+        marginTop = '-78px'
+    }
     if (props.position === 0) {
         marginTop = '0px'
     }
 
+    let style = {width: '126px', height: '180px', marginLeft: '10px', marginTop:marginTop}
+
+    if (props.small) {
+        style = {width: '70px', height: '100px', marginLeft: '10px', marginTop:marginTop}
+    }
+
     return <div ref={drag}>
-        <img style={{width: '126px', height: '180px', marginLeft: '10px', marginTop:marginTop}}
+        <img style={style}
               key={props.id} id={props.id}
               src={cardImages[props.name]} title={props.name} alt={props.name}
               ref={refContainer}
-              onMouseOver={() => handleHovered()}
+              onMouseOver={() => handleHovered(props.shiftHovered)}
               onMouseDown={() => props.registerHovered(null, null)}
               onMouseOut={() => props.registerHovered(null, null)}
         />

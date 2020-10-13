@@ -21,14 +21,14 @@ function PlayerHand(props) {
             {props.arrangement.map((column, index) => {
                 if (column.length > 1) {
                     return (<Pair key={index}>
-                        <HandSlot cards={column[0]} index={index + ".1"} key={"1"} registerDrop={props.registerDrop}
+                        <HandSlot cards={column[0]} index={index + ".1"} key={index + ".1"} registerDrop={props.registerDrop}
                                   registerHovered={props.registerHovered} />
-                        <DestroySlot cards={column[1]} index={column[1][0]} key={"2"} registerDrop={props.registerDrop}
+                        <DestroySlot cards={column[1]} index={column[1][0]} key={index + ".2"} registerDrop={props.registerDrop}
                                      registerHovered={props.registerHovered} />
                     </Pair>)
                 } else {
                     return (
-                        <HandSlot cards={column[0]} index={index + ".1"} key={1} registerDrop={props.registerDrop}
+                        <HandSlot cards={column[0]} index={index + ".1"} key={index + ".1"} registerDrop={props.registerDrop}
                                   registerHovered={props.registerHovered} />
                     )
                 }

@@ -1,4 +1,3 @@
 package controllers
 
-class GameException(message: String) extends Throwable {
-}
+class GameException(message: String) extends Exception(message)

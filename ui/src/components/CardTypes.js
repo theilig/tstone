@@ -7,7 +7,9 @@ export const CardTypes = {
     FOOD: 'Food',
     ITEM: 'Item',
     DISCARD: 'Discard',
-    DESTROY: 'Destroy'
+    DESTROY: 'Destroy',
+    VILLAGE: 'Village',
+    DUNGEON: 'Dungeon'
 }
 
 export const getDragType = (card) => {

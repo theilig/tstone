@@ -1,12 +1,26 @@
 package services
 
 import controllers.GameException
-import models.game.{Card, GameError, Player, State}
+import models.game.{Card, GameError, HeroCard, ItemCard, MonsterCard, Player, SpellCard, State}
 
 import scala.annotation.tailrec
 import scala.util.Random
 
 object CardManager {
+  def matchesType(card: Card, requiredType: String): Boolean = {
+    (requiredType, card) match {
+    case ("GoldValue", c) => c.hasGoldValue
+    case ("Spell", _: SpellCard) => true
+    case ("Hero", _: HeroCard) => true
+    case ("Monster", _: MonsterCard) => true
+    case (name, c) if c.getName == name => true
+    case (itemTraits, f: ItemCard) if itemTraits.split("\\+").forall(t => f.traits.contains(t)) => true
+    case (heroTrait, h: HeroCard) if h.traits.contains(heroTrait) => true
+    case (notHeroTrait, h: HeroCard)
+      if notHeroTrait.startsWith("!") && !h.traits.contains(notHeroTrait.substring(1)) => true
+  }
+}
+
   val HandSize = 6
 
   def fillPlayerHand(player: Player, state: State, random: Random = new Random()): State = {
@@ -46,7 +60,8 @@ object CardManager {
     }
   }
 
-  def destroy(player: Player, cardName: String, state: State): Either[GameError, State] = {
+  def destroy(cardName: String, state: State): Either[GameError, State] = {
+    val player = state.currentPlayer.get
     val possibleCard = player.hand.find(_.getName == cardName)
     if (possibleCard.nonEmpty) {
       Right(state.updatePlayer(player.userId)(p => {

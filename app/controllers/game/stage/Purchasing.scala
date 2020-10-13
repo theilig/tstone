@@ -49,7 +49,9 @@ case class Purchasing(currentPlayerId: Int) extends PlayerStage {
     performDestroys(possibleDestroys, destroyed, hand, Map())
   }
   def getBuyingPower(hand: List[Card], destroyed: Map[Card, List[Card]]): (Int, Int, List[Card]) = {
-    val (adjustments, updatedHand) = destroyed.foldLeft((Map("Gold" -> 0, "Experience" -> 0), hand))((update, destroy) => {
+    val (adjustments, updatedHand) = destroyed.foldLeft((
+      Map("Gold" -> 0, "Experience" -> 0, "Buys" -> 0), hand
+    ))((update, destroy) => {
       val (currentAdjustments, currentHand) = update
       destroy match {
         case (c, cardList) =>
@@ -61,7 +63,7 @@ case class Purchasing(currentPlayerId: Int) extends PlayerStage {
     })
     (
       updatedHand.map(_.getGoldValue).sum + adjustments("Gold"),
-      adjustments("Experience"),
+      adjustments("Buys") + 1,
       updatedHand
     )
   }
@@ -92,10 +94,11 @@ case class Purchasing(currentPlayerId: Int) extends PlayerStage {
               }
             }
           })
-          Right(result._3)
+          Right(endTurn(result._3))
         } catch {
           case g: GameException => Left(GameError(g.getMessage))
         }
+      case m => Left(GameError("Unexpected message " + m.getClass.getSimpleName))
     }
   }
 }

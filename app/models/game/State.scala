@@ -28,6 +28,7 @@ case class State(players: List[Player], village: Option[Village], dungeon: Optio
       case p => p
     })
   }
+  def currentPlayer: Option[Player] = currentStage.currentPlayer(this)
 }
 
 object State {
