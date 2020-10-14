@@ -23,19 +23,36 @@ object CardManager {
 
   val HandSize = 6
 
-  def fillPlayerHand(player: Player, state: State, random: Random = new Random()): State = {
-    @tailrec
-    def fillHand(hand: List[Card], deck: List[Card], discard: List[Card]): (List[Card], List[Card], List[Card]) = {
-      CardManager.HandSize - hand.length match {
-        case 0 => (hand, deck, discard)
-        case x if x < deck.length => (hand ::: deck.take(x), deck.drop(x), discard)
-        case _ if discard.isEmpty => (hand ::: deck, Nil, Nil)
-        case _ =>
-          fillHand(hand ::: deck, random.shuffle(discard), Nil)
-      }
+  @tailrec
+  private def fillHand(
+                hand: List[Card],
+                deck: List[Card],
+                discard: List[Card],
+                cards: Int,
+                random: Random = new Random()
+              ): (List[Card], List[Card], List[Card]) = {
+    cards match {
+      case 0 => (hand, deck, discard)
+      case x if x < deck.length => (hand ::: deck.take(x), deck.drop(x), discard)
+      case _ if discard.isEmpty => (hand ::: deck, Nil, Nil)
+      case _ =>
+        fillHand(hand ::: deck, random.shuffle(discard), Nil, cards - deck.length)
     }
-    val (newHand, newDeck, newDiscard) = fillHand(player.hand, player.deck, player.discard)
+  }
+
+  def fillPlayerHand(player: Player, state: State): State = {
+    val (newHand, newDeck, newDiscard) =
+      fillHand(player.hand, player.deck, player.discard, CardManager.HandSize - player.hand.length)
     state.updatePlayer(player.userId)(_.copy(hand = newHand, deck = newDeck, discard = newDiscard))
+  }
+
+  def givePlayerCards(player: Player, cards: Int, state: State): (List[Card], State) = {
+    val (newHand, newDeck, newDiscard) =
+      fillHand(player.hand, player.deck, player.discard, cards)
+    (
+      newHand.drop(player.hand.length),
+      state.updatePlayer(player.userId)(_.copy(hand = newHand, deck = newDeck, discard = newDiscard))
+    )
   }
 
   def discardHand(player: Player, state: State): State = {

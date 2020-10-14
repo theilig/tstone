@@ -17,6 +17,7 @@ class Card(name: String, imageName: String, val frequency: Int) {
   def getImageName: String = imageName
   def getDungeonEffects: List[TurnEffect] = Nil
   def getBattleEffects: List[TurnEffect] = Nil
+  def getVillageEffects: List[TurnEffect] = Nil
   def attributes: Map[String, Int] = Map("Light" -> getLight)
   def write(connection: Connection): Int = {
     val statement = connection.createStatement()
@@ -355,6 +356,8 @@ case class VillagerCard(
   override def getGoldValue: Int = goldValue.getOrElse(0)
 
   override def hasGoldValue: Boolean = goldValue.nonEmpty
+
+  override def getVillageEffects: List[TurnEffect] = villageEffects
 
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
