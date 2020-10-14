@@ -3,10 +3,15 @@ import {useDrop} from 'react-dnd'
 import {getDragType, getDropTypes} from "./CardTypes";
 import trash from "../img/trash.png"
 import {HandCard} from "./HandCard";
+
+export const DESTROY_OFFSET = 100
+
 function DestroySlot(props) {
+
     const [, drop] = useDrop({
         accept: getDropTypes({cardType: "TakeAny"}),
         drop: (c) => {
+            props.registerDestroy(c.name)
             props.registerDrop(c.index, props.index)
         }
     })

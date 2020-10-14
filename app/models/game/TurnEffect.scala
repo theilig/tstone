@@ -42,7 +42,7 @@ case class TurnEffect(
   }
 
   def individualEffectActive(slot: List[Card], monster: Card): Boolean = {
-    false
+    requiredType.isEmpty
   }
 
   def write(connection: Connection, id: Int): Unit = {

@@ -13,6 +13,7 @@ import {cardMatches, executeEffect, isGeneralEffect, isLateEffect} from "../serv
 import {getAttributes} from "../components/HandCard";
 import Purchasing from "./Purchasing";
 import Crawling from "./Crawling";
+import {DESTROY_OFFSET} from "../components/DestroySlot";
 
 function Game() {
     const [ gameState, setGameState ] = useState()
@@ -23,7 +24,6 @@ function Game() {
     const [ isAttached, setIsAttached ] = useState([])
     const [ using, setUsing ] = useState([])
     const [ player, setPlayer ] = useState(null)
-    const DESTROY_OFFSET = 100
 
     let game = useParams()
     let gameId = parseInt(game.gameId)
@@ -98,6 +98,7 @@ function Game() {
             usingList.push(indexedCard)
             newUsing[target] = usingList
         }
+
         setUsing(newUsing)
         setIsAttached(newAttached)
     }
@@ -202,13 +203,13 @@ function Game() {
                     })
                 }
                 if (stage === "Purchasing" && canDestroy(card.data.villageEffects)) {
-                    cardArrangement[arrangementIndex][1] = index + DESTROY_OFFSET
+                    cardArrangement[arrangementIndex][1] = using[DESTROY_OFFSET + index] ?? []
                 }
                 if (stage === "Crawling" && canDestroy(card.data.dungeonEffects)) {
-                    cardArrangement[arrangementIndex][1] = index + DESTROY_OFFSET
+                    cardArrangement[arrangementIndex][1] = using[DESTROY_OFFSET + index] ?? []
                 }
                 if (stage === "Resting" && arrangementIndex === 0) {
-                    cardArrangement[arrangementIndex][1] = index + DESTROY_OFFSET
+                    cardArrangement[arrangementIndex][1] = using[DESTROY_OFFSET] ?? []
                 }
             }
         })
@@ -223,13 +224,14 @@ function Game() {
         let stage = gameState.currentStage
 
         let attributes = {}
+        const activePlayer = stage.stage && stage.data && stage.data.currentPlayerId != null &&
+            parseInt(authTokens.user.userId) === stage.data.currentPlayerId
         if (player && player.hand.length > 0) {
-            arrangement = getArrangement(player.hand, stage.stage)
+            arrangement = getArrangement(player.hand, activePlayer ? stage.stage : "ChoosingDestination")
             attributes = getHandValues(arrangement)
         }
 
-        if (stage.stage && stage.data.currentPlayerId != null &&
-            parseInt(authTokens.user.userId) === stage.data.currentPlayerId) {
+        if (activePlayer) {
             switch (stage.stage) {
                 case "ChoosingDestination":
                     return <ChoosingDestination registerHovered={registerHovered} renderHovered={renderHovered}

@@ -142,7 +142,7 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
             val slotAttributes = combineAttributes(cardAttributes)
             (cards ::: (monster :: Nil)).foldLeft(slotAttributes)((a, card) => {
               card.getDungeonEffects.filter(_.isIndividualCardEffect).filter(
-                _.individualEffectActive(cards, monster)).foldLeft(slotAttributes)((currentAttributes, effect) => {
+                _.individualEffectActive(cards, monster)).foldLeft(a)((currentAttributes, effect) => {
                 effect.adjustAttributes(currentAttributes, None)
               })
             })

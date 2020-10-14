@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 
 import HandSlot from "./HandSlot";
-import DestroySlot from "./DestroySlot";
+import DestroySlot, {DESTROY_OFFSET} from "./DestroySlot";
 
 const HandContainer = styled.div`
     display: flex;
@@ -23,7 +23,8 @@ function PlayerHand(props) {
                     return (<Pair key={index}>
                         <HandSlot cards={column[0]} index={index + ".1"} key={index + ".1"} registerDrop={props.registerDrop}
                                   registerHovered={props.registerHovered} />
-                        <DestroySlot cards={column[1]} index={column[1][0]} key={index + ".2"} registerDrop={props.registerDrop}
+                        <DestroySlot cards={column[1]} index={DESTROY_OFFSET + index} key={index + ".2"}
+                                     registerDrop={props.registerDrop} registerDestroy={props.registerDestroy}
                                      registerHovered={props.registerHovered} />
                     </Pair>)
                 } else {

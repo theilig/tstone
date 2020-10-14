@@ -19,13 +19,13 @@ function Resting(props) {
                 messageType: "Destroy",
                 data: {
                     gameId: gameState.gameId,
-                    cardName: destroyed
+                    cardNames: [destroyed]
                 }
             }
         ))
     }
 
-    const registerDestroy = (destroyingIndex, name) => {
+    const registerDestroy = name => {
         setDestroyed(name)
     }
 
@@ -61,7 +61,11 @@ function Resting(props) {
                     <Dungeon registerHovered={props.registerHovered} />
                     <Village registerHovered={props.registerHovered}/>
                 </div>
-                <PlayerHand registerHovered={props.registerHovered} registerDestroy={registerDestroy} show={{}}/>
+                <PlayerHand arrangement={props.arrangement}
+                            registerHovered={props.registerHovered}
+                            registerDrop={props.registerDrop}
+                            registerDestroy={registerDestroy}
+                />
                 {renderChoices()}
                 {props.renderHovered()}
             </div>

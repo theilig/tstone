@@ -31,8 +31,8 @@ export const getAttributes = (slots, generalEffects) => {
             attributes = initialAttributes(attachedCard, attributes)
             attributes = addInitialEffects(attachedCard, generalEffects, attributes)
         })
-        if (slots[1]) {
-            slots[1].forEach((destroyedCard) => {
+        if (slots[1] && slots[1].size > 1) {
+            slots[1].slice(1).forEach((destroyedCard) => {
                 attributes = addDestroyEffects(destroyedCard, activeCard, attributes)
             })
         }
@@ -79,7 +79,7 @@ const addDestroyEffects = (destroyedCard, activeCard, currentAttributes) => {
 
 export function HandCard(props) {
     const [,drag, preview] = useDrag({
-        item: {type: props.cardType, index: props.index},
+        item: {type: props.cardType, index: props.index, name: props.name},
         end: (item, monitor) => {
             if (!monitor.didDrop() && props.registerDrop) {
                 props.registerDrop(props.index, null)

@@ -14,7 +14,7 @@ function VillagePile(props) {
     const [,drag, preview] = useDrag({
         item: {type: CardTypes.VILLAGE, index: props.pile.cards[0].name},
         end: (item, monitor) => {
-            if (!monitor.didDrop()) {
+            if (!monitor.didDrop() && props.registerDrop) {
                 props.registerDrop(props.index, null)
             }
         }
