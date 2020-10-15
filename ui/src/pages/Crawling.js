@@ -15,8 +15,7 @@ function Crawling(props) {
     const {gameState} = useGameState()
     const {authTokens} = useAuth()
     const [battling, setBattling] = useState(null)
-    const [destroyed, setDestroyed] = useState([])
-    const [cardsPurchased, setCardsPurchased] = useState([])
+    const [destroyed, setDestroyed] = useState({})
     const battle = () => {
         let finalArrangement = []
         props.arrangement.forEach(slot => {
@@ -51,6 +50,13 @@ function Crawling(props) {
                 }
             }
         ))
+    }
+
+    const registerDestroy = (name, destroyerName) => {
+        let newDestroyed = {...destroyed}
+        newDestroyed[destroyerName] = destroyed[destroyerName] ?? []
+        newDestroyed[destroyerName].push(name)
+        setDestroyed(newDestroyed)
     }
 
     const registerDrop = (source, target) => {
@@ -98,7 +104,7 @@ function Crawling(props) {
                 <Dungeon key={1} registerHovered={props.registerHovered} />
                 <div style={disabledStyle}>
                     <Village key={2} registerHovered={props.registerHovered} registerDrop={props.registerDrop}
-                             purchased={cardsPurchased} />
+                             purchased={[]} />
                 </div>
                 <AttributeValues key={3} values={props.attributes} show={{
                     light: "Light",
@@ -106,7 +112,7 @@ function Crawling(props) {
                     magicAttack: "Magic Attack"
                 }} />
                 <PlayerHand key={4} registerHovered={props.registerHovered} registerDrop={registerDrop}
-                            arrangement={props.arrangement} />
+                            registerDestroy={registerDestroy} arrangement={props.arrangement} />
                 {renderChoices()}
                 {props.renderHovered()}
             </div>

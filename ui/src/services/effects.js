@@ -3,19 +3,33 @@ export const isGeneralEffect = (effect) => {
 }
 
 export const isEarlyEffect = (effect) => {
-    return (effect.adjustment && (effect.adjustment.operation === "Add" || effect.adjustment.operation === "Subtract"))
+    return (effect.adjustment && (
+        effect.adjustment.operation === "Add" ||
+        effect.adjustment.operation === "Subtract" ||
+        effect.adjustment.operation === "Net"
+    ))
 }
 
 export const isLateEffect = (effect) => {
     return (!isGeneralEffect(effect) && !isEarlyEffect(effect));
 }
 
+export const isActive = (effect, data) => {
+    if (effect.requiredType != null) {
+        return cardMatches(data.card, effect, null)
+    } else {
+        return true
+    }
+}
+
 export const executeEffect = (effect, attributes, originalCard) => {
-    let newAttributes = attributes
+    let newAttributes = {...attributes}
     if (newAttributes) {
         let attributeMap = {
             "Attack": "attack",
-            "Magic Attack": "magicAttack"
+            "Magic Attack": "magicAttack",
+            "Gold": "goldValue",
+            "Experience": "experience"
         }
         let affected = attributeMap[effect.adjustment.attribute]
         switch (effect.adjustment.operation) {
@@ -24,6 +38,7 @@ export const executeEffect = (effect, attributes, originalCard) => {
                 break
             case "Net":
                 newAttributes[affected] = newAttributes[affected] + effect.adjustment.amount + originalCard.data[affected]
+                break
             default:
                 break
         }
@@ -36,7 +51,7 @@ export const cardMatches = (card, effect, activeCard) => {
         case "Hero": return card.cardType === "HeroCard"
         case "Food": return card.data.traits.contains("Food")
         case "Militia": return card.data.name === "Militia"
-        case "Self": return card.index === activeCard.index
+        case "Self": return activeCard && card.index === activeCard.index
         case "GoldValue": return card.data.goldValue != null
         case undefined: return true
         default: return false

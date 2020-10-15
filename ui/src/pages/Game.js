@@ -151,13 +151,14 @@ function Game() {
         return newDest
     }
 
-    const getHandValues = (arrangement) => {
+    const getHandValues = (arrangement, isVillage) => {
         let attributes = {
             goldValue: 0,
             light: 0,
             attack: 0,
             magicAttack: 0,
-            buys: 1
+            buys: 1,
+            experience: 0
         }
 
         let generalEffects = []
@@ -167,7 +168,7 @@ function Game() {
             })
         })
         arrangement.forEach((column) => {
-            const newAttributes = getAttributes(column, generalEffects)
+            const newAttributes = getAttributes(column, generalEffects, isVillage)
             attributes = mergeObjects(attributes, newAttributes)
         })
 
@@ -182,34 +183,43 @@ function Game() {
     const getArrangement = (hand, stage) => {
         const canDestroy = (effects) => {
             if (effects) {
+                let result = false
                 effects.forEach(e => {
                     if (e.effect === "Destroy") {
-                        return true;
+                        result = true;
                     }
                 })
+                return result
             }
             return false
         }
         let cardArrangement = []
+        const addDestroy = (c) => {
+            if (stage === "Purchasing" && canDestroy(c.data.villageEffects)) {
+                return true
+            }
+            if (stage === "Crawling" && canDestroy(c.data.dungeonEffects)) {
+                return true
+            }
+        }
         hand.forEach((card, index) => {
             let indexedCard = {...card}
             indexedCard['index'] = index
-            if (isAttached[index] == null) {
+            if (isAttached[index] == null || using[DESTROY_OFFSET + index] != null) {
                 let arrangementIndex = cardArrangement.length
                 cardArrangement.push([[indexedCard]])
+                let destroySlot = (stage === "Resting" && arrangementIndex === 0) || using[DESTROY_OFFSET] != null
+                if (card.cardType !== "WeaponCard") {
+                    destroySlot = destroySlot || addDestroy(card)
+                }
                 if (using[index] != null) {
                     using[index].forEach((card) => {
                         cardArrangement[arrangementIndex][0].push(card)
+                        destroySlot = destroySlot || addDestroy(card)
                     })
                 }
-                if (stage === "Purchasing" && canDestroy(card.data.villageEffects)) {
+                if (destroySlot) {
                     cardArrangement[arrangementIndex][1] = using[DESTROY_OFFSET + index] ?? []
-                }
-                if (stage === "Crawling" && canDestroy(card.data.dungeonEffects)) {
-                    cardArrangement[arrangementIndex][1] = using[DESTROY_OFFSET + index] ?? []
-                }
-                if (stage === "Resting" && arrangementIndex === 0) {
-                    cardArrangement[arrangementIndex][1] = using[DESTROY_OFFSET] ?? []
                 }
             }
         })
@@ -228,7 +238,8 @@ function Game() {
             parseInt(authTokens.user.userId) === stage.data.currentPlayerId
         if (player && player.hand.length > 0) {
             arrangement = getArrangement(player.hand, activePlayer ? stage.stage : "ChoosingDestination")
-            attributes = getHandValues(arrangement)
+            attributes = getHandValues(arrangement, activePlayer ? stage.stage === "Purchasing" : false)
+            attributes.experience = attributes.experience + player.xp
         }
 
         if (activePlayer) {

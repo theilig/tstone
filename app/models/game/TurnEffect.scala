@@ -22,7 +22,7 @@ case class TurnEffect(
   }
 
   def isCombined: Boolean = {
-    adjustment.exists(combinedOperation)
+    adjustment.exists(combinedOperation) || requiredType.contains("LightPenalty")
   }
   def isLate: Boolean = {
     isCombined || effectType == "Battle"
@@ -84,7 +84,12 @@ case class TurnEffect(
     }
   }
 
-  def isCombinedActive(attributes: Map[String, Int]): Boolean = false
+  def isCombinedActive(attributes: Map[String, Int]): Boolean =
+    requiredType match {
+      case None => true
+      case Some("LightPenalty") => attributes.getOrElse("Light", 0) < 0
+      case _ => false
+    }
 
   def isDestroy: Boolean = effectType == "Destroy"
 

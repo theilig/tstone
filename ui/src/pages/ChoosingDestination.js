@@ -44,6 +44,7 @@ function ChoosingDestination(props) {
                 light: "Light",
                 attack: "Attack",
                 magicAttack: "Magic Attack",
+                experience: "Experience"
                 }}
             />
             <PlayerHand

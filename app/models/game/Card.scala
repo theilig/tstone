@@ -185,6 +185,8 @@ case class HeroCard(
 
   override def attributes: Map[String, Int] = super.attributes + ("Strength" -> strength)
 
+  override def getLight: Int = light
+
   override def getDungeonEffects: List[TurnEffect] = dungeonEffects
 
   override def getBattleEffects: List[TurnEffect] = battleEffects
@@ -258,6 +260,8 @@ case class ItemCard(
 
   override def getGoldValue: Int = goldValue
 
+  override def getLight: Int = light
+
   override def hasGoldValue: Boolean = true
 
   override def getCost: Option[Int] = Some(cost)
@@ -309,6 +313,8 @@ case class SpellCard(
   override def getDungeonEffects: List[TurnEffect] = dungeonEffects
 
   override def getCost: Option[Int] = Some(cost)
+
+  override def getLight: Int = light
 
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
@@ -413,6 +419,8 @@ case class WeaponCard(
                     ) extends Card(name, imageName, frequency) {
   override def attributes: Map[String, Int] = super.attributes + ("Weight" -> weight)
 
+  override def getLight: Int = light
+
   override def getDungeonEffects: List[TurnEffect] = dungeonEffects
 
   override def getCost: Option[Int] = Some(cost)
@@ -475,6 +483,8 @@ case class MonsterCard(
                         override val frequency: Int
                       ) extends Card(name, imageName, frequency) {
   override def getDungeonEffects: List[TurnEffect] = dungeonEffects
+
+  override def getLight: Int = light
 
   override def getBattleEffects: List[TurnEffect] = battleEffects
 

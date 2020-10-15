@@ -25,7 +25,7 @@ function PlayerHand(props) {
                                   registerHovered={props.registerHovered} />
                         <DestroySlot cards={column[1]} index={DESTROY_OFFSET + index} key={index + ".2"}
                                      registerDrop={props.registerDrop} registerDestroy={props.registerDestroy}
-                                     registerHovered={props.registerHovered} />
+                                     registerHovered={props.registerHovered} name={column[0][0].data.name}/>
                     </Pair>)
                 } else {
                     return (

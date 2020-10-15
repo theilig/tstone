@@ -11,7 +11,7 @@ function DestroySlot(props) {
     const [, drop] = useDrop({
         accept: getDropTypes({cardType: "TakeAny"}),
         drop: (c) => {
-            props.registerDestroy(c.name)
+            props.registerDestroy(c.name, props.name)
             props.registerDrop(c.index, props.index)
         }
     })

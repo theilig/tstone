@@ -15,7 +15,7 @@ function Purchasing(props) {
     const {gameState} = useGameState()
     const {authTokens} = useAuth()
     const [bought, setBought] = useState([])
-    const [destroyed, setDestroyed] = useState([])
+    const [destroyed, setDestroyed] = useState({})
     const [cardsPurchased, setCardsPurchased] = useState([])
     const endTurn = () => {
         props.gameSocket.send(JSON.stringify(
@@ -24,10 +24,17 @@ function Purchasing(props) {
                 data: {
                     gameId: gameState.gameId,
                     bought: bought.map(c => c.data.name),
-                    destroyed: {},
+                    destroyed: destroyed,
                 }
             }
         ))
+    }
+
+    const registerDestroy = (name, destroyerName) => {
+        let newDestroyed = {...destroyed}
+        newDestroyed[destroyerName] = destroyed[destroyerName] ?? []
+        newDestroyed[destroyerName].push(name)
+        setDestroyed(newDestroyed)
     }
 
     const registerDrop = (source, target) => {
@@ -69,6 +76,7 @@ function Purchasing(props) {
                 setCardsPurchased(newCardsPurchased)
             }
         }
+        props.registerDrop(source, target)
     }
 
     const renderChoices = () => {
@@ -120,10 +128,11 @@ function Purchasing(props) {
                          purchased={cardsPurchased} />
                 <AttributeValues key={3} values={props.attributes} show={{
                     goldValue: "Gold",
-                    buys: "Buys"
+                    buys: "Buys",
+                    experience: "Experience"
                 }} />
                 <PlayerHand key={4} registerHovered={props.registerHovered} registerDrop={registerDrop}
-                            arrangement={props.arrangement} />
+                            registerDestroy={registerDestroy} arrangement={props.arrangement} />
                 {renderChoices()}
                 {props.renderHovered()}
             </div>

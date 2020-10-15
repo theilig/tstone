@@ -1,5 +1,5 @@
 import React, {useRef} from "react";
-import {cardMatches, executeEffect, isEarlyEffect} from "../services/effects";
+import {cardMatches, executeEffect, isActive, isEarlyEffect} from "../services/effects";
 import cardImages from "../img/cards/cards";
 import {useDrag} from "react-dnd";
 
@@ -14,7 +14,7 @@ const initialAttributes = (card, attributes) => {
     return starting
 }
 
-export const getAttributes = (slots, generalEffects) => {
+export const getAttributes = (slots, generalEffects, isVillage) => {
     let attributes = {
         goldValue: 0,
         light: 0,
@@ -22,7 +22,8 @@ export const getAttributes = (slots, generalEffects) => {
         magicAttack: 0,
         strength: 0,
         weight: 0,
-        buys: 0
+        buys: 0,
+        experience: 0
     }
 
     const activeCard = slots[0][0]
@@ -31,9 +32,38 @@ export const getAttributes = (slots, generalEffects) => {
             attributes = initialAttributes(attachedCard, attributes)
             attributes = addInitialEffects(attachedCard, generalEffects, attributes)
         })
-        if (slots[1] && slots[1].size > 1) {
-            slots[1].slice(1).forEach((destroyedCard) => {
-                attributes = addDestroyEffects(destroyedCard, activeCard, attributes)
+        if (slots[1]) {
+            slots[1].forEach((destroyedCard) => {
+                if (isVillage) {
+                    attributes = addDestroyEffects(
+                        destroyedCard,
+                        activeCard,
+                        activeCard.data.villageEffects,
+                        attributes
+                    )
+                    // handle self destroys for equipped cards
+                    if (destroyedCard.name !== activeCard.name) {
+                        attributes = addDestroyEffects(
+                            destroyedCard,
+                            destroyedCard,
+                            destroyedCard.data.villageEffects,
+                            attributes
+                        )
+                    }
+                } else {
+                    attributes = addDestroyEffects(
+                        destroyedCard,
+                        activeCard,
+                        activeCard.data.dungeonEffects,
+                        attributes
+                    )
+                    attributes = addDestroyEffects(
+                        destroyedCard,
+                        destroyedCard,
+                        destroyedCard.data.dungeonEffects,
+                        attributes
+                    )
+                }
             })
         }
     } else if (activeCard) {
@@ -45,18 +75,20 @@ export const getAttributes = (slots, generalEffects) => {
 const addInitialEffects = (card, generalEffects, currentAttributes) => {
     let newCardAttributes = currentAttributes
     generalEffects.forEach((effect) => {
-        newCardAttributes = executeEffect(effect, newCardAttributes)
+        if (isActive(effect, {card: card})) {
+            newCardAttributes = executeEffect(effect, newCardAttributes)
+        }
     })
     if (card.data.dungeonEffects) {
         card.data.dungeonEffects.forEach((effect) => {
-            if (isEarlyEffect(effect)) {
+            if (isEarlyEffect(effect) && isActive(effect, {card: card})) {
                 newCardAttributes = executeEffect(effect, newCardAttributes)
             }
         })
     }
     if (card.data.villageEffects) {
         card.data.villageEffects.forEach((effect) => {
-            if (isEarlyEffect(effect)) {
+            if (isEarlyEffect(effect) && isActive(effect, {card: card})) {
                 newCardAttributes = executeEffect(effect, newCardAttributes)
             }
         })
@@ -64,13 +96,13 @@ const addInitialEffects = (card, generalEffects, currentAttributes) => {
     return newCardAttributes
 }
 
-const addDestroyEffects = (destroyedCard, activeCard, currentAttributes) => {
+const addDestroyEffects = (destroyedCard, activeCard, effects, currentAttributes) => {
     let newAttributes = {...currentAttributes}
-    if (activeCard.data.dungeonEffects) {
-        activeCard.data.dungeonEffects.forEach((effect) => {
+    if (effects) {
+        effects.forEach((effect) => {
             if (effect.effect === "Destroy" &&
                 cardMatches(destroyedCard, effect, activeCard)) {
-                newAttributes = executeEffect(effect, newAttributes)
+                newAttributes = executeEffect(effect, newAttributes, destroyedCard)
             }
         })
     }

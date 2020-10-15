@@ -48,7 +48,7 @@ case class Purchasing(currentPlayerId: Int) extends PlayerStage {
 
     performDestroys(possibleDestroys, destroyed, hand, Map())
   }
-  def getBuyingPower(hand: List[Card], destroyed: Map[Card, List[Card]]): (Int, Int, List[Card]) = {
+  def getBuyingPower(hand: List[Card], destroyed: Map[Card, List[Card]]): (Int, Int, Int, List[Card]) = {
     val (adjustments, updatedHand) = destroyed.foldLeft((
       Map("Gold" -> 0, "Experience" -> 0, "Buys" -> 0), hand
     ))((update, destroy) => {
@@ -64,6 +64,7 @@ case class Purchasing(currentPlayerId: Int) extends PlayerStage {
     (
       updatedHand.map(_.getGoldValue).sum + adjustments("Gold"),
       adjustments("Buys") + 1,
+      adjustments("Experience"),
       updatedHand
     )
   }
@@ -78,9 +79,9 @@ case class Purchasing(currentPlayerId: Int) extends PlayerStage {
               currentHand.find(c => c.getName == key).get ->
                 list.map(name => currentHand.find(c => c.getName == name).get)
           }
-          val (totalGold, totalBuys, newHand) = getBuyingPower(currentHand, destroyedCards)
+          val (totalGold, totalBuys, newExperience, newHand) = getBuyingPower(currentHand, destroyedCards)
           val destroyedState = state.updatePlayer(currentPlayerId)(_.copy(hand = newHand))
-          val result = bought.foldLeft((totalGold, totalBuys, destroyedState))((buyingPower, name) => {
+          val (_, _, finalTurnState) = bought.foldLeft((totalGold, totalBuys, destroyedState))((buyingPower, name) => {
             val (gold, buys, newState) = buyingPower
             if (buys <= 0) {
               throw new GameException("Bought too many cards")
@@ -94,7 +95,7 @@ case class Purchasing(currentPlayerId: Int) extends PlayerStage {
               }
             }
           })
-          Right(endTurn(result._3))
+          Right(endTurn(finalTurnState.updatePlayer(currentPlayerId)(p => p.copy(xp = p.xp + newExperience))))
         } catch {
           case g: GameException => Left(GameError(g.getMessage))
         }
