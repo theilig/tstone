@@ -95,7 +95,15 @@ case class Purchasing(currentPlayerId: Int) extends PlayerStage {
               }
             }
           })
-          Right(endTurn(finalTurnState.updatePlayer(currentPlayerId)(p => p.copy(xp = p.xp + newExperience))))
+          val finalPlayer = currentPlayer(finalTurnState).get
+          val totalExperience = finalPlayer.xp + newExperience
+          val potentialUpgrades = finalPlayer.hand.filter(_.canUpgrade(totalExperience))
+          if (potentialUpgrades.nonEmpty) {
+            Right(finalTurnState.updatePlayer(currentPlayerId)(p => p.copy(xp = totalExperience)).copy(
+              currentStage = Upgrading(currentPlayerId)))
+          } else {
+            Right(endTurn(finalTurnState.updatePlayer(currentPlayerId)(p => p.copy(xp = p.xp + newExperience))))
+          }
         } catch {
           case g: GameException => Left(GameError(g.getMessage))
         }

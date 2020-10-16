@@ -216,3 +216,20 @@ case class Battle(monster: Int, arrangement: List[BattleSlot]) extends CurrentPl
 object Battle {
   implicit val battleFormat: Format[Battle] = Json.format
 }
+
+case class Upgrade(upgrades: Map[String, String]) extends CurrentPlayerMessage {
+  override def validate(state: State): Boolean = {
+    def findAll[T, U](starting: T, transform: (T, U) => Option[T], targets: Iterable[U]): Boolean = {
+      targets.foldLeft(starting, true)((status, target) => {
+        transform(status._1, target) match {
+          case Some(t) => (t, status._2)
+          case None => (status._1, false)
+        }
+      })._2
+    }
+    findAll[Village, String](state.village.get, ((v, name) => v.takeCard(name) match {
+      case (v, Some(_)) => Some(v)
+      case _ => None
+    }), upgrades.values)
+  }
+}

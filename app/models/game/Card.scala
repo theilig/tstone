@@ -8,6 +8,12 @@ import play.api.libs.json._
 import models.schema.Tables
 
 class Card(name: String, imageName: String, val frequency: Int) {
+  def canUpgrade(totalExperience: Int): Boolean =
+    this match {
+      case h: HeroCard => h.upgradeCost.exists(cost => cost <= totalExperience)
+      case _ => false
+    }
+
   def getLight: Int = 0
   def getVictoryPoints: Int = 0
   def getGoldValue = 0
@@ -196,6 +202,13 @@ case class HeroCard(
   override def hasGoldValue: Boolean = goldValue.nonEmpty
 
   override def getCost: Option[Int] = Some(cost)
+
+  def upgradeCost: Option[Int] = level match {
+    case 0 => Some(3)
+    case 1 => Some(2)
+    case 2 =>  Some(3)
+    case _ =>  None
+  }
 
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
