@@ -24,17 +24,14 @@ function Village(props) {
                     <VillagePile key={index + 10} pile={pile}
                                  registerHovered={props.registerHovered}
                                  registerDrop={props.registerDrop}
-                                 purchased={purchased.filter((r) => {
-                                     return r.key === "heroes" && r.index === index
-                                 })}
+                                 upgrading={props.upgrading}
+                                 purchased={purchased}
                     />
                 ))}
                 {gameState.village.weapons.map((pile,index) => (
                     <VillagePile key={index + 20} pile={pile} registerHovered={props.registerHovered}
                                  registerDrop={props.registerDrop}
-                                 purchased={purchased.filter((r) => {
-                                     return r.key === "weapons" && r.pile === index
-                                 })}
+                                 purchased={purchased}
                     />
                 ))}
             </VillageRow>
@@ -42,25 +39,19 @@ function Village(props) {
                 {gameState.village.spells.map((pile, index) => (
                     <VillagePile key={index + 30} pile={pile} registerHovered={props.registerHovered}
                                  registerDrop={props.registerDrop}
-                                 purchased={purchased.filter((r) => {
-                                     return r.key === "spells" && r.pile === index
-                                 })}
+                                 purchased={purchased}
                     />
                 ))}
                 {gameState.village.items.map((pile, index) => (
                     <VillagePile key={index + 40} pile={pile} registerHovered={props.registerHovered}
                                  registerDrop={props.registerDrop}
-                                 purchased={purchased.filter((r) => {
-                                     return r.key === "items" && r.index === index
-                                 })}
+                                 purchased={purchased}
                     />
                 ))}
                 {gameState.village.villagers.map((pile, index) => (
                     <VillagePile key={index + 50} pile={pile} registerHovered={props.registerHovered}
                                  registerDrop={props.registerDrop}
-                                 purchased={purchased.filter((r) => {
-                                     return r.key === "villagers" && r.index === index
-                                 })}
+                                 purchased={purchased}
                     />
                 ))}
             </VillageRow>

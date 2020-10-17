@@ -3,7 +3,6 @@ package controllers.game.stage
 import models.User
 import models.game.{Destroy, GameError, Message, State}
 import play.api.libs.json.{Format, Json}
-import services.CardManager
 
 case class Resting(currentPlayerId: Int) extends PlayerStage {
   def receive(message: Message, user: User, state: State): Either[GameError, State] =

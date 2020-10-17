@@ -94,6 +94,7 @@ object Message {
           case "Destroy" => (JsPath \ "data").read[Destroy].reads(js)
           case "Purchase" => (JsPath \ "data").read[Purchase].reads(js)
           case "Battle" => (JsPath \ "data").read[Battle].reads(js)
+          case "Upgrade" => (JsPath \ "data").read[Upgrade].reads(js)
         }
       )
     },
@@ -227,9 +228,19 @@ case class Upgrade(upgrades: Map[String, String]) extends CurrentPlayerMessage {
         }
       })._2
     }
-    findAll[Village, String](state.village.get, ((v, name) => v.takeCard(name) match {
+    findAll[Village, String](state.village.get, (v, name) => v.takeCard(name) match {
       case (v, Some(_)) => Some(v)
       case _ => None
-    }), upgrades.values)
+    }, upgrades.values) &&
+      findAll[List[Card], String](state.currentPlayer.get.hand, (hand, name) =>
+        CardManager.removeOneInstanceFromCards(hand, name) match {
+          case newHand if newHand.length < hand.length => Some(newHand)
+          case _ => None
+        }, upgrades.keys
+      )
   }
+}
+
+object Upgrade {
+  implicit val upgradeFormat: Format[Upgrade] = Json.format
 }

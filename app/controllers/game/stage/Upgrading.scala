@@ -1,11 +1,12 @@
 package controllers.game.stage
 
 import models.User
-import models.game.{Destroy, GameError, HeroCard, Message, State}
+import models.game.{GameError, HeroCard, Message, State, Upgrade}
+import play.api.libs.json.{Format, Json}
 import services.CardManager
 
 case class Upgrading(currentPlayerId: Int) extends PlayerStage {
-  def upgradeCards(upgrades: Map[String, String], state: State, finalTransform: State => State): Either[GameError, State] = {
+  def upgradeCards(upgrades: Map[String, String], state: State): Either[GameError, State] = {
     val initial: Either[GameError, State] = Right(state)
     upgrades.foldLeft(initial)((current, upgrade) => {
       current.fold(
@@ -36,9 +37,14 @@ case class Upgrading(currentPlayerId: Int) extends PlayerStage {
 
   def receive(message: Message, user: User, state: State): Either[GameError, State] =
     message match {
-      case Upgrade(upgrades) => upgradeCards(upgrades, state)
+      case Upgrade(upgrades) => upgradeCards(upgrades, state).map(
+        s => endTurn(s)
+      )
       case m => Left(GameError("Unexpected message " + m.getClass.getSimpleName))
     }
 }
 
+object Upgrading {
+  implicit val format: Format[Upgrading] = Json.format
+}
 

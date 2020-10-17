@@ -3,6 +3,16 @@ import {cardMatches, executeEffect, isActive, isEarlyEffect} from "../services/e
 import cardImages from "../img/cards/cards";
 import {useDrag} from "react-dnd";
 
+export const upgradeCost = (card) => {
+    if (card.data.level == null || card.data.level >= 3) {
+        return 0
+    }
+    if (card.data.level === 1) {
+        return 2
+    }
+    return 3
+}
+
 const initialAttributes = (card, attributes) => {
     let starting = {...attributes}
     Object.keys(card.data).forEach((key) => {

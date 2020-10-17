@@ -24,6 +24,7 @@ object GameStage {
           case "Crawling" => (JsPath \ "data").read[Crawling].reads(js)
           case "Destroying" => (JsPath \ "data").read[Destroying].reads(js)
           case "TakingSpoils" => (JsPath \ "data").read[TakingSpoils].reads(js)
+          case "Upgrading" => (JsPath \ "data").read[Upgrading].reads(js)
         }
       )
     },
@@ -64,6 +65,13 @@ object GameStage {
           "stage" -> JsString("Destroying"),
           "data" -> Destroying.format.writes(d)
         )
+      )
+      case u: Upgrading => JsObject(
+        Seq(
+          "stage" -> JsString("Upgrading"),
+          "data" -> Upgrading.format.writes(u)
+        )
+
       )
     }
   )

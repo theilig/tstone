@@ -42,6 +42,8 @@ export const getDropTypes = (card) => {
             return [
                 CardTypes.HERO, CardTypes.ITEM, CardTypes.WEAPON, CardTypes.FOOD, CardTypes.MONSTER,
                 CardTypes.VILLAGER, CardTypes.SPELL]
+        case "Upgrade":
+            return [CardTypes.VILLAGE]
         default:
                 return []
     }

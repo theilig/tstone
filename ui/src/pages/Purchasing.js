@@ -16,7 +16,6 @@ function Purchasing(props) {
     const {authTokens} = useAuth()
     const [bought, setBought] = useState([])
     const [destroyed, setDestroyed] = useState({})
-    const [cardsPurchased, setCardsPurchased] = useState([])
     const endTurn = () => {
         props.gameSocket.send(JSON.stringify(
             {
@@ -40,7 +39,6 @@ function Purchasing(props) {
     const registerDrop = (source, target) => {
         if (target === SlotIndexes.BuyIndex) {
             let boughtCard = null
-            let newPurchase = null
             const village = gameState.village
             const keys = ["heroes", "spells", "weapons", "items", "villagers"]
             keys.forEach(key => {
@@ -50,10 +48,6 @@ function Purchasing(props) {
                             index: SlotIndexes.BuyIndex + bought.length + 1,
                             data: {...pile.cards[0]}
                         }
-                        newPurchase = {
-                            key: key,
-                            pile: index
-                        }
                     }
                 })
             })
@@ -61,9 +55,6 @@ function Purchasing(props) {
                 const newBought = [...bought]
                 newBought.push(boughtCard)
                 setBought(newBought)
-                const newCardsPurchased = [...cardsPurchased]
-                newCardsPurchased.push(newPurchase)
-                setCardsPurchased(newCardsPurchased)
             }
         } else if (target === null) {
             const cardIndex = source - SlotIndexes.BuyIndex
@@ -71,9 +62,6 @@ function Purchasing(props) {
                 const newBought = [...bought]
                 newBought.splice(cardIndex - 1, 1)
                 setBought(newBought)
-                const newCardsPurchased = [...cardsPurchased]
-                newCardsPurchased.splice(cardIndex - 1, 1)
-                setCardsPurchased(newCardsPurchased)
             }
         }
         props.registerDrop(source, target)
@@ -125,7 +113,7 @@ function Purchasing(props) {
                     <Dungeon registerHovered={props.registerHovered} />
                 </div>
                 <Village key={2} registerHovered={props.registerHovered} registerDrop={props.registerDrop}
-                         purchased={cardsPurchased} />
+                         purchased={bought.map(c => c.data.name)} />
                 <AttributeValues key={3} values={props.attributes} show={{
                     goldValue: "Gold",
                     buys: "Buys",

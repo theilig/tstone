@@ -9,11 +9,13 @@ import cardImages from "../img/cards/cards";
 import Resting from "./Resting";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
-import {cardMatches, executeEffect, isGeneralEffect, isLateEffect} from "../services/effects";
-import {getAttributes} from "../components/HandCard";
+import {executeEffect, isGeneralEffect, isLateEffect} from "../services/effects";
+import {getAttributes, upgradeCost} from "../components/HandCard";
 import Purchasing from "./Purchasing";
 import Crawling from "./Crawling";
 import {DESTROY_OFFSET} from "../components/DestroySlot";
+import {UPGRADE_OFFSET} from "../components/UpgradeSlot";
+import Upgrading from "./Upgrading";
 
 function Game() {
     const [ gameState, setGameState ] = useState()
@@ -21,7 +23,7 @@ function Game() {
     const { authTokens } = useAuth()
     const [ gameOver, setGameOver] = useState(false)
     const [ hovered, setHovered] = useState(null)
-    const [ isAttached, setIsAttached ] = useState([])
+    const [ isAttached, setIsAttached ] = useState({})
     const [ using, setUsing ] = useState([])
     const [ player, setPlayer ] = useState(null)
 
@@ -80,7 +82,7 @@ function Game() {
     }, [gameSocket, authTokens.token, gameId, gameState])
 
     const registerDrop = (source, target) => {
-        let newAttached = [...isAttached]
+        let newAttached = {...isAttached}
         let newUsing = [...using]
         if (newAttached[source] != null) {
             let removeUsing = [...using[newAttached[source]]]
@@ -101,6 +103,11 @@ function Game() {
 
         setUsing(newUsing)
         setIsAttached(newAttached)
+    }
+
+    const canUpgrade = (card, xp) => {
+        const cost = upgradeCost(card)
+        return cost > 0 && xp >= cost
     }
     const addGeneralEffects = (card) => {
         let generalEffects = []
@@ -180,7 +187,9 @@ function Game() {
         return attributes
     }
 
-    const getArrangement = (hand, stage) => {
+    const getArrangement = (player, stage) => {
+        const hand = player.hand
+        const xp = player.xp
         const canDestroy = (effects) => {
             if (effects) {
                 let result = false
@@ -209,6 +218,7 @@ function Game() {
                 let arrangementIndex = cardArrangement.length
                 cardArrangement.push([[indexedCard]])
                 let destroySlot = (stage === "Resting" && arrangementIndex === 0) || using[DESTROY_OFFSET] != null
+                const upgradeSlot = (stage === "Upgrading" && canUpgrade(card, xp))
                 if (card.cardType !== "WeaponCard") {
                     destroySlot = destroySlot || addDestroy(card)
                 }
@@ -217,6 +227,9 @@ function Game() {
                         cardArrangement[arrangementIndex][0].push(card)
                         destroySlot = destroySlot || addDestroy(card)
                     })
+                }
+                if (upgradeSlot) {
+                    cardArrangement[arrangementIndex][1] = using[UPGRADE_OFFSET + index] ?? []
                 }
                 if (destroySlot) {
                     cardArrangement[arrangementIndex][1] = using[DESTROY_OFFSET + index] ?? []
@@ -234,12 +247,24 @@ function Game() {
         let stage = gameState.currentStage
 
         let attributes = {}
+        let upgrading = []
         const activePlayer = stage.stage && stage.data && stage.data.currentPlayerId != null &&
             parseInt(authTokens.user.userId) === stage.data.currentPlayerId
         if (player && player.hand.length > 0) {
-            arrangement = getArrangement(player.hand, activePlayer ? stage.stage : "ChoosingDestination")
-            attributes = getHandValues(arrangement, activePlayer ? stage.stage === "Purchasing" : false)
-            attributes.experience = attributes.experience + player.xp
+            arrangement = getArrangement(player, activePlayer ? stage.stage : "ChoosingDestination")
+            if (stage.stage === "Upgrading") {
+                upgrading = player.hand.filter(c => canUpgrade(c, player.xp)).map(c => c.data.name)
+                attributes = {experience: player.xp + arrangement.map(columns => {
+                        if (columns[1] && columns[1][1]) {
+                            return upgradeCost(columns[1][1])
+                        } else {
+                            return 0
+                        }
+                    }).reduce((total, extra) => total + extra)}
+            } else {
+                attributes = getHandValues(arrangement, activePlayer ? stage.stage === "Purchasing" : false)
+                attributes.experience = attributes.experience + player.xp
+            }
         }
 
         if (activePlayer) {
@@ -260,6 +285,11 @@ function Game() {
                     return <Crawling registerHovered={registerHovered} renderHovered={renderHovered}
                                      registerDrop={registerDrop} attributes={attributes}
                                      gameSocket={gameSocket} arrangement={arrangement} />
+                case "Upgrading":
+                    return <Upgrading registerHovered={registerHovered} renderHovered={renderHovered}
+                                      registerDrop={registerDrop} attributes={attributes}
+                                      gameSocket={gameSocket} arrangement={arrangement}
+                                      upgrading={upgrading} />
             }
         } else {
             switch (stage.stage) {
