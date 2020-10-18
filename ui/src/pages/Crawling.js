@@ -45,8 +45,7 @@ function Crawling(props) {
                 messageType: "Battle",
                 data: {
                     gameId: gameState.gameId,
-                    monster: battling.name,
-                    rank: battling.sourceIndex - SourceIndexes.DungeonIndex + 1,
+                    monster: battling.data.sourceIndex - SourceIndexes.DungeonIndex,
                     arrangement: finalArrangement,
                 }
             }
@@ -73,10 +72,9 @@ function Crawling(props) {
     const renderChoices = () => {
         if (parseInt(authTokens.user.userId) === gameState.currentStage.data.currentPlayerId) {
             if (battling != null) {
-                const monsterCard = gameState.dungeon.monsterPile[battling]
                 return (
                     <Options key={5}>
-                        <BattleSlot card={monsterCard} registerHovered={props.registerHovered} registerDrop={registerDrop}
+                        <BattleSlot card={battling} registerHovered={props.registerHovered} registerDrop={registerDrop}
                                  index={TargetIndexes.BattleIndex} />
                         <Button onClick={battle}>Battle</Button>
                     </Options>
@@ -102,7 +100,7 @@ function Crawling(props) {
     return (
         <DndProvider backend={HTML5Backend}>
             <div>
-                <Dungeon key={1} registerHovered={props.registerHovered} />
+                <Dungeon key={1} registerHovered={props.registerHovered} registerDrop={props.registerDrop} />
                 <div style={disabledStyle}>
                     <Village key={2} registerHovered={props.registerHovered} registerDrop={props.registerDrop}
                              purchased={[]} />

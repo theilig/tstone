@@ -1,6 +1,5 @@
 package controllers.game.stage
 
-import controllers.Crawling
 import models.User
 import models.game.{GameError, Message, Player, State}
 import play.api.libs.json.{Format, JsError, JsObject, JsPath, JsString, JsSuccess, Reads, Writes}

@@ -237,7 +237,7 @@ function Game() {
                 return true
             }
         }
-        hand.forEach((card, index) => {
+        hand.forEach(card => {
             let destroyIndex = TargetIndexes.DestroyIndex - TargetIndexes.HandIndex + card.sourceIndex
             if (isAttached[card.data.sourceIndex] == null || using[destroyIndex] != null) {
                 let arrangementIndex = cardArrangement.length
@@ -247,8 +247,8 @@ function Game() {
                 if (card.cardType !== "WeaponCard") {
                     destroySlot = destroySlot || addDestroy(card)
                 }
-                if (using[index] != null) {
-                    using[index].forEach((card) => {
+                if (using[card.data.sourceIndex] != null) {
+                    using[card.data.sourceIndex].forEach(card => {
                         cardArrangement[arrangementIndex][0].push(card)
                         destroySlot = destroySlot || addDestroy(card)
                     })

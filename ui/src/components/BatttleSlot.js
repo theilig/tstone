@@ -7,7 +7,7 @@ function BattleSlot(props) {
     const [, drop] = useDrop({
         accept: CardTypes.MONSTER,
         drop: (c) => {
-            props.registerDrop(c.data, props.index)
+            props.registerDrop(c.card, props.index)
         }
     })
 

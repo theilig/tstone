@@ -18,6 +18,7 @@ object CardManager {
     case (heroTrait, h: HeroCard) if h.traits.contains(heroTrait) => true
     case (notHeroTrait, h: HeroCard)
       if notHeroTrait.startsWith("!") && !h.traits.contains(notHeroTrait.substring(1)) => true
+    case _ => false
   }
 }
 

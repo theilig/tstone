@@ -1,6 +1,6 @@
-package controllers
+package controllers.game.stage
 
-import controllers.game.stage.{Destroying, PlayerStage}
+import controllers.GameException
 import models.User
 import models.game._
 import play.api.libs.json.{Format, Json}

@@ -9,7 +9,7 @@ function HandSlot(props) {
             return getDropTypes(props.cards[0]).includes(item.type)
         }),
         drop: (c) => {
-            props.registerDrop(c.data, props.cards[0].index)
+            props.registerDrop(c.card, props.cards[0].data.sourceIndex)
         }
     })
 

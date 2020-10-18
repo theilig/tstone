@@ -1,5 +1,4 @@
 package controllers.game.stage
-import controllers.Crawling
 import models.User
 import models.game.{Card, ChooseDungeon, ChooseRest, ChooseVillage, GameError, Message, State, TurnEffect}
 import play.api.libs.json.{Format, Json}
