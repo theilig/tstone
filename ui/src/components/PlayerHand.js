@@ -22,7 +22,7 @@ function PlayerHand(props) {
         <HandContainer>
             {props.arrangement.map((column, index) => {
                 if (column.length > 1) {
-                    if (props.upgrading.length > 0) {
+                    if (props.upgrading && props.upgrading.length > 0) {
                         return (<Pair key={index * SourceIndexes.HandOffset}>
                             <HandSlot
                                 cards={column[0]}

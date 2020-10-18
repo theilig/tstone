@@ -26,13 +26,15 @@ function Game() {
     const [ gameOver, setGameOver] = useState(false)
     const [ hovered, setHovered] = useState(null)
     const [ isAttached, setIsAttached ] = useState({})
-    const [ using, setUsing ] = useState([])
+    const [ using, setUsing ] = useState({})
     const [ player, setPlayer ] = useState(null)
 
     let game = useParams()
     let gameId = parseInt(game.gameId)
 
     const setState = (data) => {
+        setIsAttached({})
+        setUsing({})
         setGameState(data);
     }
 
@@ -84,6 +86,7 @@ function Game() {
                 // listen to data sent from the websocket server
                 const message = JSON.parse(evt.data)
                 if (message.messageType === "GameState") {
+
                     setState(indexCards(message.data.state))
                 } else if (message.messageType === "GameOver") {
                     setGameOver(true)
@@ -106,13 +109,13 @@ function Game() {
     }, [gameSocket, authTokens.token, gameId, gameState])
 
     const registerDrop = (source, targetIndex) => {
-        const sourceIndex = source.sourceIndex
+        const sourceIndex = source.data.sourceIndex
         let newAttached = {...isAttached}
-        let newUsing = [...using]
+        let newUsing = {...using}
         if (newAttached[sourceIndex] != null) {
             let removeUsing = [...using[newAttached[sourceIndex]]]
             removeUsing = removeUsing.filter((c) => {
-                return c.sourceIndex !== sourceIndex
+                return c.data.sourceIndex !== sourceIndex
             })
             newUsing[newAttached[sourceIndex]] = removeUsing
             newAttached[sourceIndex] = null
@@ -235,10 +238,11 @@ function Game() {
             }
         }
         hand.forEach((card, index) => {
-            if (isAttached[index] == null || using[DESTROY_OFFSET + index] != null) {
+            let destroyIndex = TargetIndexes.DestroyIndex - TargetIndexes.HandIndex + card.sourceIndex
+            if (isAttached[card.data.sourceIndex] == null || using[destroyIndex] != null) {
                 let arrangementIndex = cardArrangement.length
                 cardArrangement.push([[card]])
-                let destroySlot = (stage === "Resting" && arrangementIndex === 0) || using[DESTROY_OFFSET] != null
+                let destroySlot = (stage === "Resting" && arrangementIndex === 0) || using[TargetIndexes.DestroyIndex] != null
                 const upgradeSlot = (stage === "Upgrading" && canUpgrade(card, xp))
                 if (card.cardType !== "WeaponCard") {
                     destroySlot = destroySlot || addDestroy(card)
@@ -254,7 +258,8 @@ function Game() {
                     TargetIndexes.HandIndex + card.data.sourceIndex] ?? []
                 }
                 if (destroySlot) {
-                    cardArrangement[arrangementIndex][1] = using[DESTROY_OFFSET + index] ?? []
+                    cardArrangement[arrangementIndex][1] = using[TargetIndexes.DestroyIndex +
+                    card.data.sourceIndex - TargetIndexes.HandIndex] ?? []
                 }
             }
         })

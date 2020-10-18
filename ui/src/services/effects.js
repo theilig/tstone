@@ -47,11 +47,14 @@ export const executeEffect = (effect, attributes, originalCard) => {
 }
 
 export const cardMatches = (card, effect, activeCard) => {
+    if (card.data == null) {
+        card = {data: card}
+    }
     switch (effect.requiredType) {
         case "Hero": return card.cardType === "HeroCard"
         case "Food": return card.data.traits.contains("Food")
         case "Militia": return card.data.name === "Militia"
-        case "Self": return activeCard && card.index === activeCard.index
+        case "Self": return activeCard && card.data.sourceIndex === activeCard.data.sourceIndex
         case "GoldValue": return card.data.goldValue != null
         case undefined: return true
         default: return false

@@ -19,13 +19,12 @@ function BattleSlot(props) {
                      src={battle} title={'Battle'} alt={'Battle'}
                 />
                 <HandCard key={props.card.data.sourceIndex}
-                          data={props.card.data}
+                          card={props.card}
                           small={true}
                           shiftHovered={true}
                           position={1}
                           registerHovered={props.registerHovered}
                           registerDrop={props.registerDrop}
-                          cardType={"Dungeon"}
                           style={{
                               zIndex: 1,
                           }}

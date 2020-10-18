@@ -17,11 +17,10 @@ function HandSlot(props) {
         <div ref={drop}>
             {props.cards.map((c, index) => (
                 <HandCard key={c.data.sourceIndex}
-                          data={c.data}
+                          card={c}
                           position={index}
                           registerHovered={props.registerHovered}
                           registerDrop={props.registerDrop}
-                          cardType={getDragType(c)}
                           style={{
                               zIndex: index
                          }}

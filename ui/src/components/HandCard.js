@@ -2,6 +2,7 @@ import React, {useRef} from "react";
 import {cardMatches, executeEffect, isActive, isEarlyEffect} from "../services/effects";
 import cardImages from "../img/cards/cards";
 import {useDrag} from "react-dnd";
+import {getDragType} from "./CardTypes";
 
 export const upgradeCost = (card) => {
     if (card.data.level == null || card.data.level >= 3) {
@@ -121,10 +122,10 @@ const addDestroyEffects = (destroyedCard, activeCard, effects, currentAttributes
 
 export function HandCard(props) {
     const [,drag, preview] = useDrag({
-        item: {type: props.cardType, data: props.data},
+        item: {type: getDragType(props.card), card: props.card},
         end: (item, monitor) => {
             if (!monitor.didDrop() && props.registerDrop) {
-                props.registerDrop(props.data, null)
+                props.registerDrop(props.card, null)
             }
         }
     })
@@ -138,7 +139,7 @@ export function HandCard(props) {
             if (shift) {
                 top = location.bottom - 375
             }
-            props.registerHovered(props.data.name, {left: location.left, top: top})
+            props.registerHovered(props.card.data.name, {left: location.left, top: top})
         }
     }
 
@@ -158,8 +159,8 @@ export function HandCard(props) {
 
     return <div ref={drag}>
         <img style={style}
-              key={props.data.sourceIndex} id={props.data.sourceIndex}
-              src={cardImages[props.data.name]} title={props.data.name} alt={props.data.name}
+              key={props.card.data.sourceIndex} id={props.card.data.sourceIndex}
+              src={cardImages[props.card.data.name]} title={props.card.data.name} alt={props.card.data.name}
               ref={refContainer}
               onMouseOver={() => handleHovered(props.shiftHovered)}
               onMouseDown={() => props.registerHovered(null, null)}

@@ -43,12 +43,10 @@ function Dungeon(props) {
                  <HandCard
                      key={card.data.sourceIndex}
                      small={true}
-                     data={card.data}
+                     card={card}
                      position={0}
-                     name={card.data.name}
                      registerHovered={props.registerHovered}
                      registerDrop={props.registerDrop}
-                     cardType={getDragType(card)}
                      style={{
                          zIndex: index
                     }}

@@ -7,7 +7,7 @@ function BuySlot(props) {
     const [, drop] = useDrop({
         accept: CardTypes.VILLAGE,
         drop: (c) => {
-            props.registerDrop(c.data, props.index)
+            props.registerDrop(c.card, props.index)
         }
     })
 
@@ -19,13 +19,12 @@ function BuySlot(props) {
             />
             {props.cards.map((c, index) => (
                 <HandCard key={c.data.sourceIndex}
-                          data={c.data}
+                          card={c}
                           small={true}
                           shiftHovered={true}
                           position={1}
                           registerHovered={props.registerHovered}
                           registerDrop={props.registerDrop}
-                          cardType={getDragType(c)}
                           style={{
                               zIndex: index + 1,
                           }}

@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React from "react";
 import { useAuth } from "../context/auth";
 import { Button, Options } from "../components/inputElements"
 import {useGameState} from "../context/GameState";
@@ -8,41 +8,35 @@ import PlayerHand from "../components/PlayerHand"
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import {removePurchased} from "../components/VillagePile";
-import {UPGRADE_OFFSET} from "../components/UpgradeSlot";
+import {getLowerMapFromArrangement} from "../services/Arrangement";
 
 function Upgrading(props) {
     const { gameState } = useGameState()
     const { authTokens } = useAuth()
 
-    const  getUpgradedData = () => {
-        const upgradedData = {}
-        props.arrangement.forEach(column => {
-            if (column[1] != null && column[1][1] != null) {
-                upgradedData[column[0][0].name] = column[1][0].name
-            }
-        })
-        return upgradedData;
-    }
-
     const upgrade = () => {
-        const upgradedData = getUpgradedData()
+        const upgradedData = getLowerMapFromArrangement(props.arrangement)
+        // Normalize since we want to pass card => card and lower map is card => [card,...]
+        Object.keys(upgradedData).forEach(key => {
+            upgradedData[key] = upgradedData[key][0]
+        })
         props.gameSocket.send(JSON.stringify(
             {
                 messageType: "Upgrade",
                 data: {
                     gameId: gameState.gameId,
-                    upgraded: upgradedData
+                    upgrades: upgradedData
                 }
             }
         ))
     }
 
     const getUpgradedCard = (oldCard, newName) => {
-        const oldName = oldCard.name
+        const oldName = oldCard.data.name
         let level = null
         let upgradedCard = null
         let purchasedCards = []
-        const upgradedData = getUpgradedData()
+        const upgradedData = getLowerMapFromArrangement(props.arrangement)
         purchasedCards = Object.keys(upgradedData)
         const village = gameState.village
         village["heroes"].forEach((pile) => {
@@ -61,7 +55,9 @@ function Upgrading(props) {
             }
             level = null
         })
-        return upgradedCard
+        // Village cards don't have a type when they come from the server, fixing that here
+        // since we pulled straight from gameState
+        return {cardType: 'HeroCard', data: upgradedCard}
     }
 
     const registerUpgrade = (oldCard, newName) => {
@@ -75,7 +71,7 @@ function Upgrading(props) {
 
     const renderChoices = () => {
         if (parseInt(authTokens.user.userId) === gameState.currentStage.data.currentPlayerId) {
-            if (Object.keys(getUpgradedData()).length === 0) {
+            if (Object.keys(getLowerMapFromArrangement(props.arrangement)).length === 0) {
                 return (
                     <div>
                         <div style={{fontSize: "x-large"}}>You can upgrade</div>

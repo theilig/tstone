@@ -11,8 +11,7 @@ function DestroySlot(props) {
     const [, drop] = useDrop({
         accept: getDropTypes({cardType: "TakeAny"}),
         drop: (c) => {
-            props.registerDestroy(c.data.name, props.name)
-            props.registerDrop(c.data, props.index)
+            props.registerDrop(c.card, props.index)
         }
     })
 
@@ -23,12 +22,11 @@ function DestroySlot(props) {
                  src={trash} title={'Destroy'} alt={'Destroy'}
             />
             {props.cards.map((c, index) => (
-                <HandCard key={c.data.sourceIndex}
-                          data={c.data}
+                <HandCard key={c.sourceIndex}
+                          card={c}
                           position={1}
                           registerHovered={props.registerHovered}
                           registerDrop={props.registerDrop}
-                          cardType={getDragType(c)}
                           style={{
                               zIndex: index,
                           }}

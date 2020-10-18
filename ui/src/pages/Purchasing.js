@@ -10,12 +10,12 @@ import PlayerHand from "../components/PlayerHand";
 import AttributeValues from "../components/AttributeValues";
 import BuySlot from "../components/BuySlot";
 import {TargetIndexes} from "../components/SlotIndexes"
+import {getLowerMapFromArrangement} from "../services/Arrangement";
 
 function Purchasing(props) {
     const {gameState} = useGameState()
     const {authTokens} = useAuth()
     const [bought, setBought] = useState([])
-    const [destroyed, setDestroyed] = useState({})
     const endTurn = () => {
         props.gameSocket.send(JSON.stringify(
             {
@@ -23,17 +23,10 @@ function Purchasing(props) {
                 data: {
                     gameId: gameState.gameId,
                     bought: bought.map(c => c.data.name),
-                    destroyed: destroyed,
+                    destroyed: getLowerMapFromArrangement(props.arrangement),
                 }
             }
         ))
-    }
-
-    const registerDestroy = (name, destroyerName) => {
-        let newDestroyed = {...destroyed}
-        newDestroyed[destroyerName] = destroyed[destroyerName] ?? []
-        newDestroyed[destroyerName].push(name)
-        setDestroyed(newDestroyed)
     }
 
     const registerDrop = (source, target) => {
@@ -106,7 +99,7 @@ function Purchasing(props) {
                     experience: "Experience"
                 }} />
                 <PlayerHand key={4} registerHovered={props.registerHovered} registerDrop={registerDrop}
-                            registerDestroy={registerDestroy} arrangement={props.arrangement} />
+                            arrangement={props.arrangement} />
                 {renderChoices()}
                 {props.renderHovered()}
             </div>

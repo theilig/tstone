@@ -25,7 +25,7 @@ export const removePurchased = (cards, purchased) => {
 
 
 function VillagePile(props) {
-    const cards = removePurchased(props.pile.cards, props.purchased)
+    const cards = removePurchased(props.pile, props.purchased)
 
     const getNames = () => {
         return cards.map(c => c.name).filter((value, index, self) => {
@@ -35,14 +35,14 @@ function VillagePile(props) {
     const [,drag, preview] = useDrag({
         item: {
             type: CardTypes.VILLAGE,
-            data: cards[0],
+            card: cards[0],
             names: getNames()
         },
     })
 
     let card = null
     if (cards.length > 0) {
-        card = cards[0]
+        card = cards[0].data
     } else {
         card = {
             id: 1000 + props.id,
@@ -55,7 +55,7 @@ function VillagePile(props) {
             let name = null
             let foundUpgrade = false
             if (props.upgrading != null) {
-                const names = cards.map(c => c.name).reverse()
+                const names = cards.map(c => c.data.name).reverse()
                 names.forEach(n => {
                     if (props.upgrading.includes(n)) {
                         foundUpgrade = true
@@ -65,7 +65,7 @@ function VillagePile(props) {
                 })
             }
             if (name == null) {
-                name = cards[0].name
+                name = cards[0].data.name
             }
             props.registerHovered(name, refContainer.current.getBoundingClientRect())
         }
