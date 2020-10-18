@@ -9,17 +9,16 @@ function HandSlot(props) {
             return getDropTypes(props.cards[0]).includes(item.type)
         }),
         drop: (c) => {
-            props.registerDrop(c.index, props.cards[0].index)
+            props.registerDrop(c.data, props.cards[0].index)
         }
     })
 
     return (
         <div ref={drop}>
             {props.cards.map((c, index) => (
-                <HandCard key={c.index * 200}
-                          index={c.index}
+                <HandCard key={c.data.sourceIndex}
+                          data={c.data}
                           position={index}
-                          name={c.data.name}
                           registerHovered={props.registerHovered}
                           registerDrop={props.registerDrop}
                           cardType={getDragType(c)}

@@ -8,7 +8,7 @@ import Dungeon from "../components/Dungeon";
 import Village from "../components/Village";
 import PlayerHand from "../components/PlayerHand";
 import AttributeValues from "../components/AttributeValues";
-import {SlotIndexes} from "../components/SlotIndexes"
+import {SourceIndexes, TargetIndexes} from "../components/SlotIndexes"
 import BattleSlot from "../components/BatttleSlot";
 
 function Crawling(props) {
@@ -45,7 +45,8 @@ function Crawling(props) {
                 messageType: "Battle",
                 data: {
                     gameId: gameState.gameId,
-                    monster: battling,
+                    monster: battling.name,
+                    rank: battling.sourceIndex - SourceIndexes.DungeonIndex + 1,
                     arrangement: finalArrangement,
                 }
             }
@@ -59,13 +60,13 @@ function Crawling(props) {
         setDestroyed(newDestroyed)
     }
 
-    const registerDrop = (source, target) => {
-        if (target === SlotIndexes.BattleIndex) {
+    const registerDrop = (source, targetIndex) => {
+        if (targetIndex === TargetIndexes.BattleIndex) {
             setBattling(source)
-        } else if (target === null && source === battling) {
+        } else if (targetIndex === null && source.sourceIndex === battling.sourceIndex) {
             setBattling(null)
         } else {
-            props.registerDrop(source, target)
+            props.registerDrop(source, targetIndex)
         }
     }
 
@@ -76,7 +77,7 @@ function Crawling(props) {
                 return (
                     <Options key={5}>
                         <BattleSlot card={monsterCard} registerHovered={props.registerHovered} registerDrop={registerDrop}
-                                 index={SlotIndexes.BattleIndex} />
+                                 index={TargetIndexes.BattleIndex} />
                         <Button onClick={battle}>Battle</Button>
                     </Options>
                 )
@@ -86,7 +87,7 @@ function Crawling(props) {
                         <div key={6} style={{fontSize: "x-large"}}>Select a monster to battle</div>
                         <Options key={7}>
                             <BattleSlot key={8} card={null} registerHovered={props.registerHovered}
-                                     registerDrop={registerDrop} index={SlotIndexes.BattleIndex} />
+                                     registerDrop={registerDrop} index={TargetIndexes.BattleIndex} />
                         </Options>
                     </div>
                 )

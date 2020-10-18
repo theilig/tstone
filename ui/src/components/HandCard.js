@@ -121,10 +121,10 @@ const addDestroyEffects = (destroyedCard, activeCard, effects, currentAttributes
 
 export function HandCard(props) {
     const [,drag, preview] = useDrag({
-        item: {type: props.cardType, index: props.index, name: props.name},
+        item: {type: props.cardType, data: props.data},
         end: (item, monitor) => {
             if (!monitor.didDrop() && props.registerDrop) {
-                props.registerDrop(props.index, null)
+                props.registerDrop(props.data, null)
             }
         }
     })
@@ -138,7 +138,7 @@ export function HandCard(props) {
             if (shift) {
                 top = location.bottom - 375
             }
-            props.registerHovered(props.name, {left: location.left, top: top})
+            props.registerHovered(props.data.name, {left: location.left, top: top})
         }
     }
 
@@ -158,8 +158,8 @@ export function HandCard(props) {
 
     return <div ref={drag}>
         <img style={style}
-              key={props.id} id={props.id}
-              src={cardImages[props.name]} title={props.name} alt={props.name}
+              key={props.data.sourceIndex} id={props.data.sourceIndex}
+              src={cardImages[props.data.name]} title={props.data.name} alt={props.data.name}
               ref={refContainer}
               onMouseOver={() => handleHovered(props.shiftHovered)}
               onMouseDown={() => props.registerHovered(null, null)}

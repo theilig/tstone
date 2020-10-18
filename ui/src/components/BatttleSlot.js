@@ -7,7 +7,7 @@ function BattleSlot(props) {
     const [, drop] = useDrop({
         accept: CardTypes.MONSTER,
         drop: (c) => {
-            props.registerDrop(c.index, props.index)
+            props.registerDrop(c.data, props.index)
         }
     })
 
@@ -18,12 +18,11 @@ function BattleSlot(props) {
                      key={102} id={102}
                      src={battle} title={'Battle'} alt={'Battle'}
                 />
-                <HandCard key={props.card.index * 200}
-                          index={props.card.index}
+                <HandCard key={props.card.data.sourceIndex}
+                          data={props.card.data}
                           small={true}
                           shiftHovered={true}
                           position={1}
-                          name={props.card.data.name}
                           registerHovered={props.registerHovered}
                           registerDrop={props.registerDrop}
                           cardType={"Dungeon"}

@@ -9,7 +9,7 @@ import Village from "../components/Village";
 import PlayerHand from "../components/PlayerHand";
 import AttributeValues from "../components/AttributeValues";
 import BuySlot from "../components/BuySlot";
-import {SlotIndexes} from "../components/SlotIndexes"
+import {TargetIndexes} from "../components/SlotIndexes"
 
 function Purchasing(props) {
     const {gameState} = useGameState()
@@ -37,30 +37,16 @@ function Purchasing(props) {
     }
 
     const registerDrop = (source, target) => {
-        if (target === SlotIndexes.BuyIndex) {
-            let boughtCard = null
-            const village = gameState.village
-            const keys = ["heroes", "spells", "weapons", "items", "villagers"]
-            keys.forEach(key => {
-                village[key].forEach((pile, index) => {
-                    if (pile.cards && pile.cards[0].name === source) {
-                        boughtCard = {
-                            index: SlotIndexes.BuyIndex + bought.length + 1,
-                            data: {...pile.cards[0]}
-                        }
-                    }
-                })
-            })
-            if (boughtCard) {
-                const newBought = [...bought]
-                newBought.push(boughtCard)
-                setBought(newBought)
-            }
+        if (target === TargetIndexes.BuyIndex) {
+            const newBought = [...bought]
+            newBought.push(source)
+            setBought(newBought)
         } else if (target === null) {
-            const cardIndex = source - SlotIndexes.BuyIndex
-            if (cardIndex > 0 && cardIndex <= bought.length) {
+            const boughtIndexes = bought.map(c => c.sourceIndex)
+            const removedIndex = boughtIndexes.indexOf(source.sourceIndex)
+            if (removedIndex >= 0) {
                 const newBought = [...bought]
-                newBought.splice(cardIndex - 1, 1)
+                newBought.splice(removedIndex, 1)
                 setBought(newBought)
             }
         }
@@ -73,7 +59,7 @@ function Purchasing(props) {
                 return (
                     <Options key={5}>
                         <BuySlot cards={bought} registerHovered={props.registerHovered} registerDrop={registerDrop}
-                                 index={SlotIndexes.BuyIndex}/>
+                                 index={TargetIndexes.BuyIndex}/>
                         <Button onClick={endTurn}>Done</Button>
                     </Options>
                 )
@@ -83,7 +69,7 @@ function Purchasing(props) {
                         <div key={6} style={{fontSize: "x-large"}}>You do not have that many buys</div>
                         <Options key={7}>
                             <BuySlot key={8} cards={bought} registerHovered={props.registerHovered}
-                                     registerDrop={registerDrop} index={SlotIndexes.BuyIndex} />
+                                     registerDrop={registerDrop} index={TargetIndexes.BuyIndex} />
                         </Options>
                     </div>
                 )
@@ -93,7 +79,7 @@ function Purchasing(props) {
                         <div key={6} style={{fontSize: "x-large"}}>You have more Buys available</div>
                         <Options key={7}>
                             <BuySlot key={8} cards={bought} registerHovered={props.registerHovered}
-                                     registerDrop={registerDrop} index={SlotIndexes.BuyIndex} />
+                                     registerDrop={registerDrop} index={TargetIndexes.BuyIndex} />
                             <Button key={9} onClick={endTurn}>Skip Buys</Button>
                         </Options>
                     </div>

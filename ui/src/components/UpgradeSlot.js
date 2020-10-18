@@ -10,8 +10,8 @@ function UpgradeSlot(props) {
     const [, drop] = useDrop({
         accept: getDropTypes({cardType: "Upgrade"}),
         drop: (c) => {
-            const newName = props.registerUpgrade(c.index, props.upgradee.data.name)
-            props.registerDrop(newName, props.index)
+            const newCard = props.registerUpgrade(c.data, props.upgradee.data.name)
+            props.registerDrop(newCard, props.index)
         }
     })
 
@@ -23,8 +23,8 @@ function UpgradeSlot(props) {
                      src={upgrade} title={'Upgrade'} alt={'Upgrade'}
                 />
                 <HandCard position={1}
-                          index={props.index + 50}
-                          name={props.cards[0].index}
+                          index={props.cards[0].sourceIndex}
+                          data={props.cards[0]}
                           registerHovered={props.registerHovered}
                           registerDrop={props.registerDrop}
                           cardType={CardTypes.HERO}

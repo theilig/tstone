@@ -16,6 +16,8 @@ import Crawling from "./Crawling";
 import {DESTROY_OFFSET} from "../components/DestroySlot";
 import {UPGRADE_OFFSET} from "../components/UpgradeSlot";
 import Upgrading from "./Upgrading";
+import {SourceIndexes, TargetIndexes} from "../components/SlotIndexes";
+import {villageCategories} from "../components/Village";
 
 function Game() {
     const [ gameState, setGameState ] = useState()
@@ -35,6 +37,28 @@ function Game() {
     }
 
     useEffect(() => {
+        const indexCards = (state => {
+            state.players.forEach((p, index) => {
+                p.hand.forEach((c, cardIndex) => {
+                    c.data.sourceIndex = SourceIndexes.HandIndex + SourceIndexes.HandOffset * cardIndex +
+                        SourceIndexes.PlayerOffset * index
+                })
+            })
+            let villageIndex = 0
+            villageCategories.forEach(category => {
+                state.village[category].forEach(pile => {
+                    pile.cards.forEach((c, index) => {
+                        c.sourceIndex = SourceIndexes.VillageIndex + SourceIndexes.VillagePileOffset * villageIndex +
+                            index
+                    })
+                    villageIndex += 1
+                })
+            })
+            state.dungeon.monsterPile.forEach((c, index) => {
+                c.data.sourceIndex = SourceIndexes.DungeonIndex + index
+            })
+            return state
+        })
         if (gameSocket === null) {
             let ws = new WebSocket('ws://localhost:9000/api/game')
             setGameSocket(ws)
@@ -60,7 +84,7 @@ function Game() {
                 // listen to data sent from the websocket server
                 const message = JSON.parse(evt.data)
                 if (message.messageType === "GameState") {
-                    setState(message.data.state)
+                    setState(indexCards(message.data.state))
                 } else if (message.messageType === "GameOver") {
                     setGameOver(true)
                 }
@@ -81,24 +105,23 @@ function Game() {
 
     }, [gameSocket, authTokens.token, gameId, gameState])
 
-    const registerDrop = (source, target) => {
+    const registerDrop = (source, targetIndex) => {
+        const sourceIndex = source.sourceIndex
         let newAttached = {...isAttached}
         let newUsing = [...using]
-        if (newAttached[source] != null) {
-            let removeUsing = [...using[newAttached[source]]]
+        if (newAttached[sourceIndex] != null) {
+            let removeUsing = [...using[newAttached[sourceIndex]]]
             removeUsing = removeUsing.filter((c) => {
-                return c.index !== source
+                return c.sourceIndex !== sourceIndex
             })
-            newUsing[newAttached[source]] = removeUsing
-            newAttached[source] = null
+            newUsing[newAttached[sourceIndex]] = removeUsing
+            newAttached[sourceIndex] = null
         }
-        if (target != null) {
-            newAttached[source] = target
-            let usingList = newUsing[target] ?? []
-            let indexedCard = {...player.hand[source]}
-            indexedCard['index'] = source
-            usingList.push(indexedCard)
-            newUsing[target] = usingList
+        if (targetIndex != null) {
+            newAttached[sourceIndex] = targetIndex
+            let usingList = newUsing[targetIndex] ?? []
+            usingList.push(source)
+            newUsing[targetIndex] = usingList
         }
 
         setUsing(newUsing)
@@ -212,11 +235,9 @@ function Game() {
             }
         }
         hand.forEach((card, index) => {
-            let indexedCard = {...card}
-            indexedCard['index'] = index
             if (isAttached[index] == null || using[DESTROY_OFFSET + index] != null) {
                 let arrangementIndex = cardArrangement.length
-                cardArrangement.push([[indexedCard]])
+                cardArrangement.push([[card]])
                 let destroySlot = (stage === "Resting" && arrangementIndex === 0) || using[DESTROY_OFFSET] != null
                 const upgradeSlot = (stage === "Upgrading" && canUpgrade(card, xp))
                 if (card.cardType !== "WeaponCard") {
@@ -229,7 +250,8 @@ function Game() {
                     })
                 }
                 if (upgradeSlot) {
-                    cardArrangement[arrangementIndex][1] = using[UPGRADE_OFFSET + index] ?? []
+                    cardArrangement[arrangementIndex][1] = using[TargetIndexes.UpgradeIndex -
+                    TargetIndexes.HandIndex + card.data.sourceIndex] ?? []
                 }
                 if (destroySlot) {
                     cardArrangement[arrangementIndex][1] = using[DESTROY_OFFSET + index] ?? []

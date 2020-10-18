@@ -14,6 +14,8 @@ const VillageRow = styled.div`
     margin-bottom: 20px;
 `;
 
+export const villageCategories = ['heroes', 'weapons', 'spells', 'items', 'villagers']
+
 function Village(props) {
     const { gameState } = useGameState()
     const purchased = props.purchased ?? []

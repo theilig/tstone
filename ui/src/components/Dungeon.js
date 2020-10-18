@@ -2,7 +2,6 @@ import React, {useEffect, createRef, useState} from "react";
 import {useGameState} from "../context/GameState";
 import cardImages from "../img/cards/cards"
 import styled from "styled-components";
-import {useDrag} from "react-dnd";
 import {HandCard} from "./HandCard";
 import {getDragType} from "./CardTypes";
 
@@ -42,9 +41,9 @@ function Dungeon(props) {
         <DungeonContainer>
             {gameState.dungeon.monsterPile.map((card, index) => (
                  <HandCard
-                     key={index}
-                     index={index}
+                     key={card.data.sourceIndex}
                      small={true}
+                     data={card.data}
                      position={0}
                      name={card.data.name}
                      registerHovered={props.registerHovered}

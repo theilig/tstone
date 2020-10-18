@@ -6,7 +6,7 @@ function DiscardSlot(props) {
     const [collectedProps, drop] = useDrop({
         accept: getDropTypes("All"),
         drop: (c) => {
-            props.registerDrop(c.index, props.cards[0].index)
+            props.registerDrop(c.data, props.cards[0].sourceIndex)
         }
     })
 

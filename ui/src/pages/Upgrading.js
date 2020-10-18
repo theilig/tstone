@@ -13,14 +13,19 @@ import {UPGRADE_OFFSET} from "../components/UpgradeSlot";
 function Upgrading(props) {
     const { gameState } = useGameState()
     const { authTokens } = useAuth()
-    const [ upgraded, setUpgraded ] = useState({})
+
+    const  getUpgradedData = () => {
+        const upgradedData = {}
+        props.arrangement.forEach(column => {
+            if (column[1] != null && column[1][1] != null) {
+                upgradedData[column[0][0].name] = column[1][0].name
+            }
+        })
+        return upgradedData;
+    }
 
     const upgrade = () => {
-        const upgradedData = {}
-        Object.keys(upgraded).forEach(key => {
-            const card = upgraded[key]
-            upgradedData[key] = card.name
-        })
+        const upgradedData = getUpgradedData()
         props.gameSocket.send(JSON.stringify(
             {
                 messageType: "Upgrade",
@@ -32,49 +37,13 @@ function Upgrading(props) {
         ))
     }
 
-/*    const registerDrop = (source, target) => {
-    }
-        if (target - target % 100 === UPGRADE_OFFSET) {
-            let upgradedCard = null
-            const village = gameState.village
-            village["heroes"].forEach((pile) => {
-                if (pile.cards) {
-                    Object.keys(upgraded).forEach(key => {
-                        purchasedCards.push(upgrade[key].name)
-                    })
-                    const cards = removePurchased(pile.cards, purchasedCards)
-                    cards.forEach(c => {
-                        if (c.level === props.upgradee.data.level + 1) {
-                            upgradedCard = c
-                        }
-                    })
-                    if (upgradedCard) {
-                        let newData = {...upgradedCard.data}
-                        newData.index = target + 50
-                        props.registerDrop(newData, target)
-                        let newUpgraded = [...upgraded]
-                        newUpgraded[newData.index] = newData
-                        setUpgraded(newUpgraded)
-                    }
-                }
-            })
-        } else if (target === null) {
-            let newUpgraded = [...upgraded]
-            newUpgraded[target + 50] = null
-            setUpgraded(newUpgraded)
-        }
-        props.registerDrop(source, target)
-     }
-
- */
-
-    const getUpgradedName = (oldName, newName) => {
+    const getUpgradedCard = (oldCard, newName) => {
+        const oldName = oldCard.name
         let level = null
-        let upgradedName = null
+        let upgradedCard = null
         let purchasedCards = []
-        Object.keys(upgraded).forEach(key => {
-            purchasedCards.push(upgraded[key])
-        })
+        const upgradedData = getUpgradedData()
+        purchasedCards = Object.keys(upgradedData)
         const village = gameState.village
         village["heroes"].forEach((pile) => {
             if (pile.cards) {
@@ -84,7 +53,7 @@ function Upgrading(props) {
                         level = 0
                     }
                     if (level != null && c.level === level + 1) {
-                        upgradedName = c.name
+                        upgradedCard = c
                     } else if (c.name === oldName) {
                         level = c.level
                     }
@@ -92,26 +61,21 @@ function Upgrading(props) {
             }
             level = null
         })
-        return upgradedName
+        return upgradedCard
     }
 
-    const registerUpgrade = (oldName, newName) => {
-        let newUpgraded = {...upgraded}
-        let upgradedName = null
+    const registerUpgrade = (oldCard, newName) => {
+        let upgradedCard = null
         if (newName != null) {
-            upgradedName = getUpgradedName(oldName, newName)
-            newUpgraded[oldName] = upgradedName
-        } else {
-            delete newUpgraded[oldName]
+            upgradedCard = getUpgradedCard(oldCard, newName)
         }
-        setUpgraded(newUpgraded)
-        return upgradedName
+        return upgradedCard
     }
 
 
     const renderChoices = () => {
         if (parseInt(authTokens.user.userId) === gameState.currentStage.data.currentPlayerId) {
-            if (Object.keys(upgraded).length === 0) {
+            if (Object.keys(getUpgradedData()).length === 0) {
                 return (
                     <div>
                         <div style={{fontSize: "x-large"}}>You can upgrade</div>
