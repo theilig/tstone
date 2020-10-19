@@ -8,7 +8,7 @@ case class Destroying(currentPlayerId: Int, possibleCards: List[Card], minRequir
   extends PlayerStage {
   def receive(message: Message, user: User, state: State): Either[GameError, State] = {
     message match {
-      case Destroy(cardNames) => destroyCards(cardNames, state, checkSpoils)
+      case Destroy(cardNames) => destroyCards(cardNames.values.flatten.toList, state, checkSpoils)
       case m => Left(GameError("Unexpected message " + m.getClass.getSimpleName))
     }
   }

@@ -238,7 +238,7 @@ function Game() {
             }
         }
         hand.forEach(card => {
-            let destroyIndex = TargetIndexes.DestroyIndex - TargetIndexes.HandIndex + card.sourceIndex
+            let destroyIndex = TargetIndexes.DestroyIndex - TargetIndexes.HandIndex + card.data.sourceIndex
             if (isAttached[card.data.sourceIndex] == null || using[destroyIndex] != null) {
                 let arrangementIndex = cardArrangement.length
                 cardArrangement.push([[card]])

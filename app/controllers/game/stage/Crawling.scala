@@ -39,11 +39,11 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
 
   def defeat(monster: MonsterCard, rank: Int, finalHand: List[Card], state: State): State = {
     val newDungeon = state.dungeon.map(_.defeat(rank))
-    val newState = state.updatePlayer(currentPlayerId)(p =>
+    val newState = getDiseases(monster, state.updatePlayer(currentPlayerId)(p =>
       p.copy(discard = monster :: p.discard, hand = finalHand, xp = p.xp + monster.experiencePoints)
     ).copy(
       dungeon = newDungeon
-    )
+    ))
     val possibleDestroys = getPossibleDestroys(monster, finalHand)
     if (possibleDestroys.length > 1) {
       newState.copy(currentStage = Destroying(currentPlayerId, possibleDestroys))
@@ -54,11 +54,11 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
 
   def fightOff(monster: MonsterCard, rank: Int, finalHand: List[Card], state: State): State = {
     val newDungeon = state.dungeon.map(_.fightOff(rank))
-    val newState = state.updatePlayer(currentPlayerId)(p =>
+    val newState = getDiseases(monster, state.updatePlayer(currentPlayerId)(p =>
       p.copy(hand = finalHand)
     ).copy(
       dungeon = newDungeon
-    )
+    ))
     val possibleDestroys: List[Card] = getPossibleDestroys(monster, finalHand)
     if (possibleDestroys.length > 1) {
       newState.copy(currentStage = Destroying(currentPlayerId, possibleDestroys))
@@ -72,6 +72,18 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
       soFar ::: finalHand.filter(c => effect.matchesRequiredCard(c))
     })
     possibleDestroys
+  }
+
+  private def getDiseases(monster: MonsterCard, state: State): State = {
+    val diseaseCard = state.village.get.takeCard("Disease")._2.get
+
+    monster.battleEffects.foldLeft(state)((state, e) => {
+      if (e.effect.contains("Spoils") && e.requiredType.contains("Disease")) {
+        state.updatePlayer(currentPlayerId)(p => p.copy(discard = diseaseCard :: p.discard))
+      } else {
+        state
+      }
+    })
   }
 
   def canCarry(heroAttributes: Map[String, Int], itemAttributes: Map[String, Int]): Boolean = {
@@ -143,7 +155,7 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
             val cards = (finalHand.find(_.getName == slot.card) ::
               slot.equipped.map(name => finalHand.find(_.getName == name))).flatten
             val cardAttributes = cards.head match {
-              case w: WeaponCard => List(Map[String, Int]()) // Unequipped weapons have no effect
+              case _: WeaponCard => List(Map[String, Int]()) // Unequipped weapons have no effect
               case _ => cards.map( card => {
                 generalEffectsHand.foldLeft(card.attributes)((currentAttributes, effectCard) => {
                   effectCard.getDungeonEffects.filter(_.isGeneralEffect).filter(_.matchesRequiredCard(card)).

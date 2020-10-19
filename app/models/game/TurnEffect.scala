@@ -91,7 +91,7 @@ case class TurnEffect(
       case _ => false
     }
 
-  def isDestroy: Boolean = effectType == "Destroy"
+  def isDestroy: Boolean = effect.contains("Destroy")
 
   def spoils: Option[String] = effectType match {
     case "Spoils" => effect

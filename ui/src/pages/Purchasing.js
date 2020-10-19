@@ -1,5 +1,4 @@
 import {useGameState} from "../context/GameState";
-import {useAuth} from "../context/auth";
 import React, {useState} from "react";
 import {Button, Options} from "../components/inputElements";
 import {DndProvider} from "react-dnd";
@@ -10,11 +9,10 @@ import PlayerHand from "../components/PlayerHand";
 import AttributeValues from "../components/AttributeValues";
 import BuySlot from "../components/BuySlot";
 import {TargetIndexes} from "../components/SlotIndexes"
-import {getLowerMapFromArrangement} from "../services/Arrangement";
+import {destroyForCards, getCardDestroysFromArrangement, getLowerMapFromArrangement} from "../services/Arrangement";
 
 function Purchasing(props) {
     const {gameState} = useGameState()
-    const {authTokens} = useAuth()
     const [bought, setBought] = useState([])
     const endTurn = () => {
         props.gameSocket.send(JSON.stringify(
@@ -24,6 +22,18 @@ function Purchasing(props) {
                     gameId: gameState.gameId,
                     bought: bought.map(c => c.data.name),
                     destroyed: getLowerMapFromArrangement(props.arrangement),
+                }
+            }
+        ))
+    }
+
+    const destroy = () => {
+        props.gameSocket.send(JSON.stringify(
+            {
+                messageType: "Destroy",
+                data: {
+                    gameId: gameState.gameId,
+                    cardNames: getCardDestroysFromArrangement(props.arrangement)
                 }
             }
         ))
@@ -47,37 +57,38 @@ function Purchasing(props) {
     }
 
     const renderChoices = () => {
-        if (parseInt(authTokens.user.userId) === gameState.currentStage.data.currentPlayerId) {
-            if (bought.length === props.attributes.buys) {
-                return (
-                    <Options key={5}>
-                        <BuySlot cards={bought} registerHovered={props.registerHovered} registerDrop={registerDrop}
-                                 index={TargetIndexes.BuyIndex}/>
-                        <Button onClick={endTurn}>Done</Button>
+        if (bought.length === props.attributes.buys) {
+            return (
+                <Options key={5}>
+                    <BuySlot cards={bought} registerHovered={props.registerHovered} registerDrop={registerDrop}
+                             index={TargetIndexes.BuyIndex}/>
+                     ({destroyForCards(props.arrangement) && (<Button onClick={destroy}>Destroy</Button>)}
+                    <Button onClick={endTurn}>Done</Button>
+                </Options>
+            )
+        } else if (bought.length > props.attributes.buys) {
+            return (
+                <div key={5}>
+                    <div key={6} style={{fontSize: "x-large"}}>You do not have that many buys</div>
+                    <Options key={7}>
+                        <BuySlot key={8} cards={bought} registerHovered={props.registerHovered}
+                                 registerDrop={registerDrop} index={TargetIndexes.BuyIndex} />
+                        ({destroyForCards(props.arrangement) && (<Button onClick={destroy}>Destroy</Button>)}
                     </Options>
-                )
-            } else if (bought.length > props.attributes.buys) {
-                return (
-                    <div key={5}>
-                        <div key={6} style={{fontSize: "x-large"}}>You do not have that many buys</div>
-                        <Options key={7}>
-                            <BuySlot key={8} cards={bought} registerHovered={props.registerHovered}
-                                     registerDrop={registerDrop} index={TargetIndexes.BuyIndex} />
-                        </Options>
-                    </div>
-                )
-            } else {
-                return (
-                    <div key={5}>
-                        <div key={6} style={{fontSize: "x-large"}}>You have more Buys available</div>
-                        <Options key={7}>
-                            <BuySlot key={8} cards={bought} registerHovered={props.registerHovered}
-                                     registerDrop={registerDrop} index={TargetIndexes.BuyIndex} />
-                            <Button key={9} onClick={endTurn}>Skip Buys</Button>
-                        </Options>
-                    </div>
-                )
-            }
+                </div>
+            )
+        } else {
+            return (
+                <div key={5}>
+                    <div key={6} style={{fontSize: "x-large"}}>You have more Buys available</div>
+                    <Options key={7}>
+                        <BuySlot key={8} cards={bought} registerHovered={props.registerHovered}
+                                 registerDrop={registerDrop} index={TargetIndexes.BuyIndex} />
+                        ({destroyForCards(props.arrangement) && (<Button onClick={destroy}>Destroy</Button>)}
+                        <Button key={9} onClick={endTurn}>Skip Buys</Button>
+                    </Options>
+                </div>
+            )
         }
     }
 

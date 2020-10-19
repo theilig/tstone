@@ -29,7 +29,8 @@ export const executeEffect = (effect, attributes, originalCard) => {
             "Attack": "attack",
             "Magic Attack": "magicAttack",
             "Gold": "goldValue",
-            "Experience": "experience"
+            "Experience": "experience",
+            "Buys": "buys"
         }
         let affected = attributeMap[effect.adjustment.attribute]
         switch (effect.adjustment.operation) {

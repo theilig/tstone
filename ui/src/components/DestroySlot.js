@@ -22,7 +22,7 @@ function DestroySlot(props) {
                  src={trash} title={'Destroy'} alt={'Destroy'}
             />
             {props.cards.map((c, index) => (
-                <HandCard key={c.sourceIndex}
+                <HandCard key={c.data.sourceIndex}
                           card={c}
                           position={1}
                           registerHovered={props.registerHovered}

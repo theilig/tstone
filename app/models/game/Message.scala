@@ -128,17 +128,18 @@ case object ChooseVillage extends CurrentPlayerMessage
 case object ChooseRest extends CurrentPlayerMessage
 case object ChooseDungeon extends CurrentPlayerMessage
 
-case class Destroy(cardNames: List[String]) extends CurrentPlayerMessage {
+case class Destroy(cardNames: Map[String, List[String]]) extends CurrentPlayerMessage {
   override def validate(state: State): Boolean = {
     val cardList = cards(state)
     state.currentStage match {
       case _: Resting => cardList.length <= 1
-      case d: Destroying => cardList.length >= d.minRequired &&cardList.length <= d.maxAllowed
+      case d: Destroying => cardList.length >= d.minRequired && cardList.length <= d.maxAllowed
+      case _: Purchasing => cardList.nonEmpty
     }
   }
 
   def cards(state: State): List[Card] = {
-    cardNames.foldLeft(state.currentPlayer.get.hand, List[Card]())((soFar, name) => {
+    cardNames.values.flatten.foldLeft(state.currentPlayer.get.hand, List[Card]())((soFar, name) => {
       val (hand, alreadyFound) = soFar
       hand.find(_.getName == name).map(c =>
         (CardManager.removeOneInstanceFromCards(hand, name), c :: alreadyFound)
