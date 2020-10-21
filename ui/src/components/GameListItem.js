@@ -23,8 +23,8 @@ function GameListItem(props) {
     return (
         <Summary>
             <Team>Started by {props.game.state.players[0].name}</Team>
-            {props.game.state.players.slice(1).map((player) => (
-                <Team>{player.name}</Team>
+            {props.game.state.players.slice(1).map((player, index) => (
+                <Team key={index}>{player.name}</Team>
             ))}
         </Summary>
     );

@@ -4,7 +4,6 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 import akka.pattern.pipe
 import dao.{CardDao, GameDao}
 import models.game.ConnectToGame
-import services.CardManager
 
 import scala.concurrent.{ExecutionContext, Future}
 

@@ -1,10 +1,8 @@
-import React, {useState} from "react";
+import React from "react";
 import {useDrop} from 'react-dnd'
-import {CardTypes, getDragType, getDropTypes} from "./CardTypes";
+import {getDropTypes} from "./CardTypes";
 import upgrade from "../img/upgrade.png"
 import {HandCard} from "./HandCard";
-
-export const UPGRADE_OFFSET = 200
 
 function UpgradeSlot(props) {
     const [, drop] = useDrop({

@@ -9,7 +9,6 @@ import PlayerHand from "../components/PlayerHand";
 import AttributeValues from "../components/AttributeValues";
 import {TargetIndexes} from "../components/SlotIndexes"
 import LoanSlot from "../components/LoanSlot";
-import {useAuth} from "../context/auth";
 
 function Loaning(props) {
     const {gameState} = useGameState()

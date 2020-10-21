@@ -87,19 +87,21 @@ function GameList() {
     if (!gameList || !gameList.games) {
         return (
             <div>
-                <Button onClick={createGame}>New Game</Button>
-                <Button onClick={logOut}> Log out</Button>
+                <Button key={"1.1"} onClick={createGame}>New Game</Button>
+                <Button key={"1.2"} onClick={logOut}> Log out</Button>
             </div>
         )
     }
     return (
         <div>
-            <Button onClick={createGame}>New Game</Button>
-            <Button onClick={logOut}> Log out</Button>
-            <H2>Current Games</H2>
-            <GameListBlock>
+            <Button key={"1.1"} onClick={createGame}>New Game</Button>
+            <Button key={"1.2"} onClick={logOut}> Log out</Button>
+            <H2 key={"1.3"}>Current Games</H2>
+            <GameListBlock key={"1.4"}>
                 {gameList && gameList.games.map((game) => (
-                    <GameBlock key={game.gameId} onClick={() => {setSelectedGame(game.gameId)}}><GameListItem game={game} /></GameBlock>
+                    <GameBlock key={game.gameId} onClick={() => {setSelectedGame(game.gameId)}}>
+                        <GameListItem key={game.gameId} game={game} />
+                    </GameBlock>
                 ))}
             </GameListBlock>
         </div>

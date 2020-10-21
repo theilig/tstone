@@ -1,10 +1,8 @@
 import React from "react";
-import {useDrop} from 'react-dnd'
-import {getDragType, getDropTypes} from "./CardTypes";
+import { useDrop } from 'react-dnd'
+import { getDropTypes } from "./CardTypes";
 import trash from "../img/trash.png"
-import {HandCard} from "./HandCard";
-
-export const DESTROY_OFFSET = 100
+import { HandCard } from "./HandCard";
 
 function DestroySlot(props) {
 

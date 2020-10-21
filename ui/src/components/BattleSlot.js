@@ -1,8 +1,8 @@
 import React from "react";
-import {useDrop} from 'react-dnd'
-import {CardTypes, getDragType, getDropTypes} from "./CardTypes";
+import { useDrop } from 'react-dnd'
+import { CardTypes } from "./CardTypes";
 import battle from "../img/battle.png"
-import {HandCard} from "./HandCard";
+import { HandCard } from "./HandCard";
 function BattleSlot(props) {
     const [, drop] = useDrop({
         accept: CardTypes.MONSTER,

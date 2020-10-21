@@ -1,6 +1,6 @@
-import {useGameState} from "../context/GameState";
-import React, {useState} from "react";
-import {Button, Options} from "../components/inputElements";
+import { useGameState } from "../context/GameState";
+import React from "react";
+import { Button } from "../components/inputElements";
 import PlayerResult from "../components/PlayerResult";
 import styled from "styled-components";
 

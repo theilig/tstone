@@ -1,9 +1,8 @@
-import React, {useEffect, createRef, useState} from "react";
+import React from "react";
 import {useGameState} from "../context/GameState";
 import cardImages from "../img/cards/cards"
 import styled from "styled-components";
 import {HandCard} from "./HandCard";
-import {getDragType} from "./CardTypes";
 
 const DungeonContainer = styled.div`
     display: flex;

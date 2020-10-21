@@ -1,7 +1,7 @@
 import React from "react";
-import {HandCard} from "./HandCard";
-import {useDrop} from 'react-dnd'
-import {CardTypes, getDragType, getDropTypes} from "./CardTypes";
+import { HandCard } from "./HandCard";
+import { useDrop } from 'react-dnd'
+import { CardTypes, getDropTypes } from "./CardTypes";
 function HandSlot(props) {
     const [, drop] = useDrop({
         accept: [CardTypes.FOOD, CardTypes.WEAPON],

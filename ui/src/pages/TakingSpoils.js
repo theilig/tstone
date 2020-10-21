@@ -9,7 +9,7 @@ import PlayerHand from "../components/PlayerHand";
 import AttributeValues from "../components/AttributeValues";
 import BuySlot from "../components/BuySlot";
 import {TargetIndexes} from "../components/SlotIndexes"
-import {destroyForCards, getCardDestroysFromArrangement, getLowerMapFromArrangement} from "../services/Arrangement";
+import {getLowerMapFromArrangement} from "../services/Arrangement";
 
 function TakingSpoils(props) {
     const {gameState} = useGameState()

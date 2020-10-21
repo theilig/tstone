@@ -1,8 +1,8 @@
 import React from "react";
-import {useDrop} from 'react-dnd'
-import {CardTypes, getDragType, getDropTypes} from "./CardTypes";
+import { useDrop } from 'react-dnd'
+import { CardTypes } from "./CardTypes";
 import banish from "../img/banish.png"
-import {HandCard} from "./HandCard";
+import { HandCard } from "./HandCard";
 function BanishSlot(props) {
     const [, drop] = useDrop({
         accept: CardTypes.MONSTER,

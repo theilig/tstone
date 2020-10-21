@@ -112,7 +112,7 @@ function Game() {
             })
         }
 
-    }, [gameSocket, authTokens.token, gameId, gameState])
+    }, [gameSocket, authTokens.token, gameId, gameState, authTokens.user.userId])
 
     const registerDrop = (source, targetIndex) => {
         const sourceIndex = source.data.sourceIndex
@@ -377,6 +377,8 @@ function Game() {
                     return <WaitingForHeroes registerHovered={registerHovered} renderHovered={renderHovered}
                                          registerDrop={registerDrop} attributes={attributes}
                                          gameSocket={gameSocket} arrangement={arrangement} />
+                default:
+                    return <div>Unknown state</div>
 
             }
         } else {
@@ -385,8 +387,8 @@ function Game() {
                     return <Startup gameSocket={gameSocket} />
                 case "BorrowHeroes":
                     let needLoan = false
-                    stage.data.players.forEach(p => {
-                        if (p.userId === parseInt(authTokens.user.userId)) {
+                    stage.data.playerIds.forEach(p => {
+                        if (p === parseInt(authTokens.user.userId)) {
                             needLoan = true
                         }
                     })

@@ -135,7 +135,7 @@ case class Destroy(cardNames: Map[String, List[String]]) extends CurrentPlayerMe
     val cardList = cards(state)
     state.currentStage match {
       case _: Resting => cardList.length <= 1
-      case d: Destroying => cardList.length != 1
+      case _: Destroying => cardList.length != 1
       case _: Purchasing => cardList.nonEmpty
       case _ => true
     }

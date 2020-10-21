@@ -42,8 +42,10 @@ export const executeEffect = (effect, attributes, originalCard) => {
                 break
             case "Subtract":
                 newAttributes[affected] = newAttributes[affected] - effect.adjustment.amount
+                break
             case "Multiply":
                 newAttributes[affected] = newAttributes[affected] * effect.adjustment.amount
+                break
             default:
                 break
         }

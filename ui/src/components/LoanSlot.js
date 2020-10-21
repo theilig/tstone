@@ -1,8 +1,8 @@
 import React from "react";
-import {useDrop} from 'react-dnd'
-import {CardTypes, getDragType, getDropTypes} from "./CardTypes";
+import { useDrop } from 'react-dnd'
+import { CardTypes } from "./CardTypes";
 import borrow from "../img/borrow.png"
-import {HandCard} from "./HandCard";
+import { HandCard } from "./HandCard";
 function LoanSlot(props) {
     const [, drop] = useDrop({
         accept: CardTypes.HERO,

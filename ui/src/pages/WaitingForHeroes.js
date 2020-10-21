@@ -1,16 +1,10 @@
 import React from "react";
-import { useAuth } from "../context/auth";
-import { Button, Options } from "../components/inputElements"
-import {useGameState} from "../context/GameState";
 import Dungeon from "../components/Dungeon";
 import Village from "../components/Village";
 import PlayerHand from "../components/PlayerHand"
 import AttributeValues from "../components/AttributeValues";
 
 function WaitingForHeroes(props) {
-    const { gameState } = useGameState()
-    const { authTokens } = useAuth()
-
     return (
         <div>
             <Dungeon registerHovered={props.registerHovered} />

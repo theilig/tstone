@@ -1,8 +1,8 @@
-import React, {useRef, useState} from "react";
+import React, { useRef } from "react";
 import cardImages from "../img/cards/cards"
 import styled from "styled-components";
-import {useDrag} from "react-dnd";
-import {CardTypes} from "./CardTypes";
+import { useDrag } from "react-dnd";
+import { CardTypes } from "./CardTypes";
 
 const VillageCard = styled.img`
     width: 70px;

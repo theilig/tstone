@@ -1,7 +1,6 @@
-import React, {useState} from "react";
-import { useAuth } from "../context/auth";
+import React from "react";
 import { Button, Options } from "../components/inputElements"
-import {useGameState} from "../context/GameState";
+import { useGameState } from "../context/GameState";
 import Dungeon from "../components/Dungeon";
 import Village from "../components/Village";
 import PlayerHand from "../components/PlayerHand"

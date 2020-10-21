@@ -36,7 +36,7 @@ case class ChoosingDestination(currentPlayerId: Int) extends PlayerStage {
       Nil
     }
     if (playersToBorrowFrom.nonEmpty) {
-      state.copy(currentStage = BorrowHeroes(currentPlayerId, playersToBorrowFrom))
+      state.copy(currentStage = BorrowHeroes(currentPlayerId, playersToBorrowFrom.map(_.userId)))
     } else {
       addCards(c => c.getDungeonEffects, currentPlayer(state).get.hand, state).copy(
         currentStage = Crawling(currentPlayerId))

@@ -1,5 +1,4 @@
 import {useGameState} from "../context/GameState";
-import {useAuth} from "../context/auth";
 import React, {useState} from "react";
 import {Button, Options} from "../components/inputElements";
 import {DndProvider} from "react-dnd";
@@ -9,12 +8,11 @@ import Village from "../components/Village";
 import PlayerHand from "../components/PlayerHand";
 import AttributeValues from "../components/AttributeValues";
 import {SourceIndexes, TargetIndexes} from "../components/SlotIndexes"
-import BattleSlot from "../components/BatttleSlot";
+import BattleSlot from "../components/BattleSlot";
 import {getLowerMapFromArrangement} from "../services/Arrangement";
 
 function Crawling(props) {
     const {gameState} = useGameState()
-    const {authTokens} = useAuth()
     const [battling, setBattling] = useState(null)
     const [destroyed, setDestroyed] = useState({})
     const battle = () => {

@@ -1,8 +1,8 @@
 import React from "react";
-import {useDrop} from 'react-dnd'
-import {CardTypes, getDragType, getDropTypes} from "./CardTypes";
+import { useDrop } from 'react-dnd'
+import { CardTypes } from "./CardTypes";
 import buy from "../img/buy.png"
-import {HandCard} from "./HandCard";
+import { HandCard } from "./HandCard";
 function BuySlot(props) {
     const [, drop] = useDrop({
         accept: CardTypes.VILLAGE,
