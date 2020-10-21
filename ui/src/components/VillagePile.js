@@ -64,10 +64,12 @@ function VillagePile(props) {
                     }
                 })
             }
-            if (name == null) {
+            if (name == null && cards[0] && cards[0].data) {
                 name = cards[0].data.name
             }
-            props.registerHovered(name, refContainer.current.getBoundingClientRect())
+            if (name) {
+                props.registerHovered(name, refContainer.current.getBoundingClientRect())
+            }
         }
     }
     if (card) {

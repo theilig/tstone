@@ -24,7 +24,7 @@ export const isActive = (effect, data) => {
 
 export const executeEffect = (effect, attributes, originalCard) => {
     let newAttributes = {...attributes}
-    if (newAttributes) {
+    if (newAttributes && effect.adjustment) {
         let attributeMap = {
             "Attack": "attack",
             "Magic Attack": "magicAttack",
@@ -40,10 +40,16 @@ export const executeEffect = (effect, attributes, originalCard) => {
             case "Net":
                 newAttributes[affected] = newAttributes[affected] + effect.adjustment.amount + originalCard.data[affected]
                 break
+            case "Subtract":
+                newAttributes[affected] = newAttributes[affected] - effect.adjustment.amount
+            case "Multiply":
+                newAttributes[affected] = newAttributes[affected] * effect.adjustment.amount
             default:
                 break
         }
         return newAttributes;
+    } else {
+        return attributes
     }
 }
 

@@ -95,6 +95,8 @@ object Message {
           case "Purchase" => (JsPath \ "data").read[Purchase].reads(js)
           case "Battle" => (JsPath \ "data").read[Battle].reads(js)
           case "Upgrade" => (JsPath \ "data").read[Upgrade].reads(js)
+          case "Banish" => (JsPath \ "data").read[Banish].reads(js)
+          case "Loan" => (JsPath \ "data").read[Loan].reads(js)
         }
       )
     },
@@ -133,8 +135,9 @@ case class Destroy(cardNames: Map[String, List[String]]) extends CurrentPlayerMe
     val cardList = cards(state)
     state.currentStage match {
       case _: Resting => cardList.length <= 1
-      case d: Destroying => cardList.length >= d.minRequired && cardList.length <= d.maxAllowed
+      case d: Destroying => cardList.length != 1
       case _: Purchasing => cardList.nonEmpty
+      case _ => true
     }
   }
 
@@ -150,6 +153,21 @@ case class Destroy(cardNames: Map[String, List[String]]) extends CurrentPlayerMe
 object Destroy {
   implicit val destroyFormat: Format[Destroy] = Json.format
 }
+
+case class Banish(banished: List[String]) extends CurrentPlayerMessage {
+  override def validate(state: State): Boolean = {
+    val dungeon = state.dungeon.get.monsterPile.take(3)
+    val remaining = banished.foldLeft(dungeon)((d, name) => {
+      CardManager.removeOneInstanceFromCards(d, name)
+    })
+    remaining.length + banished.length == dungeon.length
+  }
+}
+
+object Banish {
+  implicit val banishFormat: Format[Banish] = Json.format
+}
+
 case class Purchase(bought: List[String], destroyed: Map[String, List[String]]) extends CurrentPlayerMessage {
   override def validate(state: State): Boolean = {
   @tailrec
@@ -244,4 +262,10 @@ case class Upgrade(upgrades: Map[String, String]) extends CurrentPlayerMessage {
 
 object Upgrade {
   implicit val upgradeFormat: Format[Upgrade] = Json.format
+}
+
+case class Loan(hero: String) extends Message
+
+object Loan {
+  implicit val loanFormat: Format[Loan] = Json.format
 }

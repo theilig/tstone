@@ -1,6 +1,6 @@
 package controllers.game.stage
 import models.User
-import models.game.{Card, ChooseDungeon, ChooseRest, ChooseVillage, GameError, Message, State, TurnEffect}
+import models.game.{Card, ChooseDungeon, ChooseRest, ChooseVillage, GameError, HeroCard, Message, State, TurnEffect}
 import play.api.libs.json.{Format, Json}
 import services.CardManager
 
@@ -24,19 +24,35 @@ case class ChoosingDestination(currentPlayerId: Int) extends PlayerStage {
     }
   }
 
-  def receive(message: Message, user: User, state: State): Either[GameError, State] = {
+  def enterDungeon(state: State): State = {
+    val playersToBorrowFrom = if (state.currentPlayer.get.hand.exists(c => c.getDungeonEffects.exists(e => {
+      e.effect.contains("Borrow")
+    }))) {
+      state.players.filter(p => p.userId != currentPlayerId && p.hand.exists({
+        case _: HeroCard => true
+        case _ => false
+      }))
+    } else {
+      Nil
+    }
+    if (playersToBorrowFrom.nonEmpty) {
+      state.copy(currentStage = BorrowHeroes(currentPlayerId, playersToBorrowFrom))
+    } else {
+      addCards(c => c.getDungeonEffects, currentPlayer(state).get.hand, state).copy(
+        currentStage = Crawling(currentPlayerId))
+    }
+  }
+
+  def receive(message: Message, user: User, state: State): Either[GameError, State] =
     message match {
       case ChooseRest => Right(state.copy(currentStage = Resting(currentPlayerId)))
       case ChooseVillage => Right(addCards(c => c.getVillageEffects, currentPlayer(state).get.hand, state).copy(
         currentStage = Purchasing(currentPlayerId))
       )
-      case ChooseDungeon => Right(addCards(c => c.getDungeonEffects, currentPlayer(state).get.hand, state).copy(
-        currentStage = Crawling(currentPlayerId))
-      )
+      case ChooseDungeon => Right(enterDungeon(state))
 
       case m => Left(GameError("Unexpected message " + m.getClass.getSimpleName))
     }
-  }
 }
 
 object ChoosingDestination {

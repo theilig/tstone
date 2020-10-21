@@ -1,15 +1,26 @@
 package controllers.game.stage
 
-import models.game.{GameError, Player, State}
+import models.game.{Card, GameError, MonsterCard, Player, State, ThunderstoneCard}
 import services.CardManager
 
 abstract class PlayerStage() extends GameStage {
   def currentPlayerId: Int
   override def currentPlayer(state: State): Option[Player] = state.players.find(_.userId == currentPlayerId)
   def endTurn(state: State): State = {
-    CardManager.discardHand(currentPlayer(state).get, state).copy(
-      currentStage = ChoosingDestination(nextPlayer(state).userId)
-    )
+    val gameOver = state.dungeon.get.monsterPile match {
+      case (_: ThunderstoneCard) :: _ => true
+      case pile => !pile.exists {
+        case _ : ThunderstoneCard => true
+        case _ => false
+      }
+    }
+    if (gameOver) {
+      state.copy(currentStage = GameEnded)
+    } else {
+      CardManager.discardHand(currentPlayer(state).get, state).copy(
+        currentStage = ChoosingDestination(nextPlayer(state).userId)
+      )
+    }
   }
   def nextPlayer(state: State): Player = {
     @scala.annotation.tailrec
@@ -23,18 +34,27 @@ abstract class PlayerStage() extends GameStage {
     after(currentPlayer(state).get, state.players).getOrElse(state.players.head)
   }
 
-  def checkSpoils(state: State): State = {
-    val spoils = state.currentPlayer.get.hand.flatten(c =>
-      c.getBattleEffects
-    ).foldLeft(List[String]())((soFar, effect) => {
-      effect.spoils.map(s => s :: soFar).getOrElse(soFar)
-    })
-    if (spoils.nonEmpty) {
-      state.copy(currentStage = TakingSpoils(currentPlayerId, spoils))
-    } else {
-      endTurn(state)
+  def checkSpoils(monsterSpoils: List[String], state: State): State = {
+    // only take monster card spoils if it's the monster we just killed
+    val spoils = monsterSpoils ::: availableSpoils(state.currentPlayer.get.hand.filterNot({
+      case _ : MonsterCard => true
+      case _ => false
+    }))
+    spoils match {
+      case Nil => endTurn(state)
+      case "DiscardOrDestroy" :: Nil =>
+        val newHandState = CardManager.discardHand(state.currentPlayer.get, state)
+        newHandState.copy(currentStage = DiscardOrDestroy(currentPlayerId, newHandState.currentPlayer.get.hand))
+      case spoils => state.copy(currentStage = TakingSpoils(currentPlayerId, spoils))
     }
+  }
 
+  def availableSpoils(cards: List[Card]): List[String] = {
+    val spoilsEffects = cards.flatMap(c =>
+      c.getBattleEffects
+    ).filter(e => e.effect.contains("Spoils") && !e.requiredType.contains("Disease"))
+    val spoils = spoilsEffects.map(_.requiredType.get)
+    spoils
   }
 
   def destroyCards(cardNames: List[String], state: State, finalTransform: State => State): Either[GameError, State] = {

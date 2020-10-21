@@ -11,7 +11,7 @@ import BuySlot from "../components/BuySlot";
 import {TargetIndexes} from "../components/SlotIndexes"
 import {destroyForCards, getCardDestroysFromArrangement, getLowerMapFromArrangement} from "../services/Arrangement";
 
-function Purchasing(props) {
+function TakingSpoils(props) {
     const {gameState} = useGameState()
     const [bought, setBought] = useState([])
     const endTurn = () => {
@@ -22,18 +22,6 @@ function Purchasing(props) {
                     gameId: gameState.gameId,
                     bought: bought.map(c => c.data.name),
                     destroyed: getLowerMapFromArrangement(props.arrangement, "destroy"),
-                }
-            }
-        ))
-    }
-
-    const destroy = () => {
-        props.gameSocket.send(JSON.stringify(
-            {
-                messageType: "Destroy",
-                data: {
-                    gameId: gameState.gameId,
-                    cardNames: getCardDestroysFromArrangement(props.arrangement)
                 }
             }
         ))
@@ -57,35 +45,23 @@ function Purchasing(props) {
     }
 
     const renderChoices = () => {
-        if (bought.length === props.attributes.buys) {
+        if (bought.length > 0) {
             return (
                 <Options key={5}>
+                    <div key={6} style={{fontSize: "x-large"}}>You can take {props.spoils.join(',')}</div>
                     <BuySlot cards={bought} registerHovered={props.registerHovered} registerDrop={registerDrop}
                              index={TargetIndexes.BuyIndex}/>
-                     ({destroyForCards(props.arrangement) && (<Button onClick={destroy}>Destroy</Button>)}
                     <Button onClick={endTurn}>Done</Button>
                 </Options>
-            )
-        } else if (bought.length > props.attributes.buys) {
-            return (
-                <div key={5}>
-                    <div key={6} style={{fontSize: "x-large"}}>You do not have that many buys</div>
-                    <Options key={7}>
-                        <BuySlot key={8} cards={bought} registerHovered={props.registerHovered}
-                                 registerDrop={registerDrop} index={TargetIndexes.BuyIndex} />
-                        ({destroyForCards(props.arrangement) && (<Button onClick={destroy}>Destroy</Button>)}
-                    </Options>
-                </div>
             )
         } else {
             return (
                 <div key={5}>
-                    <div key={6} style={{fontSize: "x-large"}}>You have more Buys available</div>
+                    <div key={6} style={{fontSize: "x-large"}}>You can take {props.spoils.join(',')}</div>
                     <Options key={7}>
                         <BuySlot key={8} cards={bought} registerHovered={props.registerHovered}
                                  registerDrop={registerDrop} index={TargetIndexes.BuyIndex} />
-                        ({destroyForCards(props.arrangement) && (<Button onClick={destroy}>Destroy</Button>)}
-                        <Button key={9} onClick={endTurn}>Skip Buys</Button>
+                        <Button key={9} onClick={endTurn}>Skip Spoils</Button>
                     </Options>
                 </div>
             )
@@ -107,7 +83,6 @@ function Purchasing(props) {
                 <AttributeValues key={3} values={props.attributes} show={{
                     goldValue: "Gold",
                     buys: "Buys",
-                    experience: "Experience"
                 }} />
                 <PlayerHand key={4} registerHovered={props.registerHovered} registerDrop={registerDrop}
                             arrangement={props.arrangement} />
@@ -118,4 +93,4 @@ function Purchasing(props) {
     )
 }
 
-export default Purchasing;
+export default TakingSpoils;

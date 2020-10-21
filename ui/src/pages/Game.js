@@ -13,11 +13,14 @@ import {executeEffect, isGeneralEffect, isLateEffect} from "../services/effects"
 import {getAttributes, upgradeCost} from "../components/HandCard";
 import Purchasing from "./Purchasing";
 import Crawling from "./Crawling";
-import {DESTROY_OFFSET} from "../components/DestroySlot";
-import {UPGRADE_OFFSET} from "../components/UpgradeSlot";
 import Upgrading from "./Upgrading";
 import {SourceIndexes, TargetIndexes} from "../components/SlotIndexes";
 import {villageCategories} from "../components/Village";
+import Destroying from "./Destroying";
+import TakingSpoils from "./TakingSpoils";
+import WaitingForHeroes from "./WaitingForHeroes";
+import Loaning from "./Loaning";
+import GameResult from "./GameResult";
 
 function Game() {
     const [ gameState, setGameState ] = useState()
@@ -40,6 +43,9 @@ function Game() {
 
     useEffect(() => {
         const indexCards = (state => {
+            if (state.currentStage.stage === "WaitingForPlayers") {
+                return state
+            }
             state.players.forEach((p, index) => {
                 p.hand.forEach((c, cardIndex) => {
                     c.data.sourceIndex = SourceIndexes.HandIndex + SourceIndexes.HandOffset * cardIndex +
@@ -196,7 +202,7 @@ function Game() {
 
         let generalEffects = []
         arrangement.forEach((column) => {
-            column[0].forEach(card => {
+            column.cards.forEach(card => {
                 generalEffects = generalEffects.concat(addGeneralEffects(card))
             })
         })
@@ -206,11 +212,32 @@ function Game() {
         })
 
         arrangement.forEach((column, index) => {
-            column[0].forEach(card => {
+            column.cards.forEach(card => {
                 attributes = addLateEffects(card, index, attributes)
             })
         })
         return attributes
+    }
+
+    const addBanish = (stage, c) => {
+        if (stage === "Crawling" && canBanish(c.data.dungeonEffects)) {
+            return true
+        }
+        if (stage === "TakingSpoils" && canBanish(c.data.battleEffects)) {
+            return true
+        }
+    }
+    const canBanish = (effects) => {
+        if (effects) {
+            let result = false
+            effects.forEach(e => {
+                if (e.effect === "SendToBottom") {
+                    result = true
+                }
+            })
+            return result
+        }
+        return false
     }
 
     const getArrangement = (player, stage) => {
@@ -236,30 +263,46 @@ function Game() {
             if (stage === "Crawling" && canDestroy(c.data.dungeonEffects)) {
                 return true
             }
+            if (stage === "Destroying") {
+                const targets = gameState.currentStage.data.possibleCards.map(c => c.data.name)
+                return targets.includes(c.data.name)
+            }
+            if (stage === "DiscardOrDestroy") {
+                return true
+            }
         }
         hand.forEach(card => {
             let destroyIndex = TargetIndexes.DestroyIndex - TargetIndexes.HandIndex + card.data.sourceIndex
             if (isAttached[card.data.sourceIndex] == null || using[destroyIndex] != null) {
                 let arrangementIndex = cardArrangement.length
-                cardArrangement.push([[card]])
-                let destroySlot = (stage === "Resting" && arrangementIndex === 0) || using[TargetIndexes.DestroyIndex] != null
+                cardArrangement.push({cards: [card]})
+                let destroySlot = (stage === "Resting" && arrangementIndex === 0) || using[destroyIndex] != null
                 const upgradeSlot = (stage === "Upgrading" && canUpgrade(card, xp))
-                if (card.cardType !== "WeaponCard") {
+                const banishSlot = addBanish(stage, card)
+                if (card.cardType !== "WeaponCard" || stage === "DiscardOrDestroy") {
                     destroySlot = destroySlot || addDestroy(card)
                 }
                 if (using[card.data.sourceIndex] != null) {
                     using[card.data.sourceIndex].forEach(card => {
-                        cardArrangement[arrangementIndex][0].push(card)
+                        cardArrangement[arrangementIndex].cards.push(card)
                         destroySlot = destroySlot || addDestroy(card)
                     })
                 }
                 if (upgradeSlot) {
-                    cardArrangement[arrangementIndex][1] = using[TargetIndexes.UpgradeIndex -
+                    cardArrangement[arrangementIndex].upgrade = using[TargetIndexes.UpgradeIndex -
                     TargetIndexes.HandIndex + card.data.sourceIndex] ?? []
                 }
                 if (destroySlot) {
-                    cardArrangement[arrangementIndex][1] = using[TargetIndexes.DestroyIndex +
-                    card.data.sourceIndex - TargetIndexes.HandIndex] ?? []
+                    if (stage === "Resting") {
+                        cardArrangement[arrangementIndex].destroy = using[TargetIndexes.DestroyIndex] ?? []
+                    } else {
+                        cardArrangement[arrangementIndex].destroy = using[TargetIndexes.DestroyIndex +
+                            card.data.sourceIndex - TargetIndexes.HandIndex] ?? []
+                    }
+                }
+                if (banishSlot) {
+                    cardArrangement[arrangementIndex].banish = using[TargetIndexes.BanishIndex +
+                        card.data.sourceIndex - TargetIndexes.HandIndex] ?? []
                 }
             }
         })
@@ -281,9 +324,9 @@ function Game() {
             arrangement = getArrangement(player, activePlayer ? stage.stage : "ChoosingDestination")
             if (stage.stage === "Upgrading") {
                 upgrading = player.hand.filter(c => canUpgrade(c, player.xp)).map(c => c.data.name)
-                attributes = {experience: player.xp + arrangement.map(columns => {
-                        if (columns[1] && columns[1][1]) {
-                            return upgradeCost(columns[1][1])
+                attributes = {experience: player.xp - arrangement.map(columns => {
+                        if (columns.upgrade && columns.upgrade[1]) {
+                            return upgradeCost(columns.upgrade[1])
                         } else {
                             return 0
                         }
@@ -317,16 +360,54 @@ function Game() {
                                       registerDrop={registerDrop} attributes={attributes}
                                       gameSocket={gameSocket} arrangement={arrangement}
                                       upgrading={upgrading} />
+
+                case "DiscardOrDestroy":
+                case "Destroying":
+                    return <Destroying registerHovered={registerHovered} renderHovered={renderHovered}
+                                       registerDrop={registerDrop} attributes={attributes}
+                                       gameSocket={gameSocket} arrangement={arrangement}
+                    />
+                case "TakingSpoils":
+                    return <TakingSpoils registerHovered={registerHovered} renderHovered={renderHovered}
+                                       registerDrop={registerDrop} attributes={attributes}
+                                       spoils={stage.data.spoilsTypes.filter(s => s !== "DiscardOrDestroy")}
+                                       gameSocket={gameSocket} arrangement={arrangement} />
+
+                case "BorrowHeroes":
+                    return <WaitingForHeroes registerHovered={registerHovered} renderHovered={renderHovered}
+                                         registerDrop={registerDrop} attributes={attributes}
+                                         gameSocket={gameSocket} arrangement={arrangement} />
+
             }
         } else {
             switch (stage.stage) {
                 case "WaitingForPlayers":
                     return <Startup gameSocket={gameSocket} />
+                case "BorrowHeroes":
+                    let needLoan = false
+                    stage.data.players.forEach(p => {
+                        if (p.userId === parseInt(authTokens.user.userId)) {
+                            needLoan = true
+                        }
+                    })
+                    if (needLoan) {
+                        return (<Loaning
+                            registerHovered={registerHovered} renderHovered={renderHovered}
+                            registerDrop={registerDrop} attributes={attributes}
+                            gameSocket={gameSocket} arrangement={arrangement}
+                            />)
+                    }
+                    break;
+                case "GameEnded":
+                    return (<GameResult registerHovered={registerHovered}
+                                        leaveGame={() => setGameOver(true)}
+                                        renderHovered={renderHovered}/>)
                 default:
-                    return <ChoosingDestination registerHovered={registerHovered} renderHovered={renderHovered}
-                                                registerDrop={registerDrop} attributes={attributes}
-                                                gameSocket={gameSocket} arrangement={arrangement} />
+                    break;
             }
+            return <ChoosingDestination registerHovered={registerHovered} renderHovered={renderHovered}
+                                        registerDrop={registerDrop} attributes={attributes}
+                                        gameSocket={gameSocket} arrangement={arrangement} />
         }
     }
 

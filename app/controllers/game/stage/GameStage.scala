@@ -17,18 +17,22 @@ object GameStage {
       stage.fold(
         _ => JsError("stage undefined or incorrect"), {
           case "WaitingForPlayers" => JsSuccess(WaitingForPlayers)
+          case "GameEnded" => JsSuccess(GameEnded)
           case "ChoosingDestination" => (JsPath \ "data").read[ChoosingDestination].reads(js)
           case "Resting" => (JsPath \ "data").read[Resting].reads(js)
           case "Purchasing" => (JsPath \ "data").read[Purchasing].reads(js)
           case "Crawling" => (JsPath \ "data").read[Crawling].reads(js)
           case "Destroying" => (JsPath \ "data").read[Destroying].reads(js)
+          case "DiscardOrDestroy" => (JsPath \ "data").read[DiscardOrDestroy].reads(js)
           case "TakingSpoils" => (JsPath \ "data").read[TakingSpoils].reads(js)
           case "Upgrading" => (JsPath \ "data").read[Upgrading].reads(js)
+          case "BorrowHeroes" => (JsPath \ "data").read[BorrowHeroes].reads(js)
         }
       )
     },
     Writes {
       case WaitingForPlayers => JsObject(Seq("stage" -> JsString("WaitingForPlayers")))
+      case GameEnded => JsObject(Seq("stage" -> JsString("GameEnded")))
       case c: ChoosingDestination => JsObject(
         Seq(
           "stage" -> JsString("ChoosingDestination"),
@@ -65,12 +69,24 @@ object GameStage {
           "data" -> Destroying.format.writes(d)
         )
       )
+      case d: DiscardOrDestroy => JsObject(
+        Seq(
+          "stage" -> JsString("DiscardOrDestroy"),
+          "data" -> DiscardOrDestroy.format.writes(d)
+        )
+      )
       case u: Upgrading => JsObject(
         Seq(
           "stage" -> JsString("Upgrading"),
           "data" -> Upgrading.format.writes(u)
         )
 
+      )
+      case b: BorrowHeroes => JsObject(
+        Seq(
+          "stage" -> JsString("BorrowHeroes"),
+          "data" -> BorrowHeroes.format.writes(b)
+        )
       )
     }
   )

@@ -10,6 +10,7 @@ import PlayerHand from "../components/PlayerHand";
 import AttributeValues from "../components/AttributeValues";
 import {SourceIndexes, TargetIndexes} from "../components/SlotIndexes"
 import BattleSlot from "../components/BatttleSlot";
+import {getLowerMapFromArrangement} from "../services/Arrangement";
 
 function Crawling(props) {
     const {gameState} = useGameState()
@@ -19,8 +20,8 @@ function Crawling(props) {
     const battle = () => {
         let finalArrangement = []
         props.arrangement.forEach(slot => {
-            const equippedSlot = slot[0]
-            const destroyedSlot = slot[1] ?? []
+            const equippedSlot = slot.cards
+            const destroyedSlot = slot.destroy ?? []
             let mainCard = null
             let equippedCards = []
             let destroyedCards = []
@@ -52,6 +53,20 @@ function Crawling(props) {
         ))
     }
 
+    const banish = () => {
+        const banishList = getLowerMapFromArrangement(props.arrangement, "banish")
+        const banished = Object.values(banishList).map(l => l[0])
+        props.gameSocket.send(JSON.stringify(
+            {
+                messageType: "Banish",
+                data: {
+                    gameId: gameState.gameId,
+                    banished: banished
+                }
+            }
+        ))
+    }
+
     const registerDestroy = (name, destroyerName) => {
         let newDestroyed = {...destroyed}
         newDestroyed[destroyerName] = destroyed[destroyerName] ?? []
@@ -62,7 +77,7 @@ function Crawling(props) {
     const registerDrop = (source, targetIndex) => {
         if (targetIndex === TargetIndexes.BattleIndex) {
             setBattling(source)
-        } else if (targetIndex === null && source.sourceIndex === battling.sourceIndex) {
+        } else if (battling && targetIndex === null && source.data.sourceIndex === battling.data.sourceIndex) {
             setBattling(null)
         } else {
             props.registerDrop(source, targetIndex)
@@ -70,26 +85,30 @@ function Crawling(props) {
     }
 
     const renderChoices = () => {
-        if (parseInt(authTokens.user.userId) === gameState.currentStage.data.currentPlayerId) {
-            if (battling != null) {
-                return (
-                    <Options key={5}>
-                        <BattleSlot card={battling} registerHovered={props.registerHovered} registerDrop={registerDrop}
-                                 index={TargetIndexes.BattleIndex} />
-                        <Button onClick={battle}>Battle</Button>
+        const banishList = getLowerMapFromArrangement(props.arrangement, "banish")
+        if (Object.keys(banishList).length > 0) {
+            return (<Options key={5}>
+                <Button onClick={banish}>Banish</Button>
+            </Options>)
+        }
+        if (battling != null) {
+            return (
+                <Options key={5}>
+                    <BattleSlot card={battling} registerHovered={props.registerHovered} registerDrop={registerDrop}
+                             index={TargetIndexes.BattleIndex} />
+                    <Button onClick={battle}>Battle</Button>
+                </Options>
+            )
+        } else {
+            return (
+                <div key={5}>
+                    <div key={6} style={{fontSize: "x-large"}}>Select a monster to battle</div>
+                    <Options key={7}>
+                        <BattleSlot key={8} card={null} registerHovered={props.registerHovered}
+                                 registerDrop={registerDrop} index={TargetIndexes.BattleIndex} />
                     </Options>
-                )
-            } else {
-                return (
-                    <div key={5}>
-                        <div key={6} style={{fontSize: "x-large"}}>Select a monster to battle</div>
-                        <Options key={7}>
-                            <BattleSlot key={8} card={null} registerHovered={props.registerHovered}
-                                     registerDrop={registerDrop} index={TargetIndexes.BattleIndex} />
-                        </Options>
-                    </div>
-                )
-            }
+                </div>
+            )
         }
     }
 

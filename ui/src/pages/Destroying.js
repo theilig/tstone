@@ -9,48 +9,36 @@ import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import {getLowerMapFromArrangement} from "../services/Arrangement";
 
-function Resting(props) {
+function Destroying(props) {
     const { gameState } = useGameState()
-    const { authTokens } = useAuth()
-    const [ destroyed, setDestroyed ] = useState(null)
 
     const endTurn = () => {
-        const destroys = getLowerMapFromArrangement(props.arrangement, "destroy")
         props.gameSocket.send(JSON.stringify(
             {
                 messageType: "Destroy",
                 data: {
                     gameId: gameState.gameId,
-                    // Resting throws the slot under the first card whatever it is, so we just pull
-                    // the data from the only key in the destroys object
-                    cardNames: {rest: destroys[Object.keys(destroys)[0]]}
+                    cardNames: getLowerMapFromArrangement(props.arrangement, "destroy")
                 }
             }
         ))
     }
 
-    const registerDestroy = name => {
-        setDestroyed(name)
-    }
-
     const renderChoices = () => {
-        if (parseInt(authTokens.user.userId) === gameState.currentStage.data.currentPlayerId) {
-            if (destroyed == null) {
-                return (
-                    <div>
-                        <div style={{fontSize: "x-large"}}>You may destroy one card</div>
-                        <Options>
-                            <Button onClick={endTurn}>Skip Destroy</Button>
-                        </Options>
-                    </div>
-                )
-            } else {
-                return (
-                    <Options>
-                        <Button onClick={endTurn}>Done</Button>
-                    </Options>
-                )
-            }
+        const required = gameState.currentStage.data.minRequired ?? 0
+        if (Object.keys(getLowerMapFromArrangement(props.arrangement, "destroy")).length !== required) {
+            return (
+                <div>
+                    <div style={{fontSize: "x-large"}}>You must destroy {required} card(s)</div>
+                </div>
+            )
+        } else {
+            return (
+                <Options>
+                    {required === 0 && (<div style={{fontSize: "x-large"}}>You may destroy card(s)</div>)}
+                    <Button onClick={endTurn}>Done</Button>
+                </Options>
+            )
         }
     }
 
@@ -68,7 +56,6 @@ function Resting(props) {
                 <PlayerHand arrangement={props.arrangement}
                             registerHovered={props.registerHovered}
                             registerDrop={props.registerDrop}
-                            registerDestroy={registerDestroy}
                 />
                 {renderChoices()}
                 {props.renderHovered()}
@@ -77,4 +64,4 @@ function Resting(props) {
     )
 }
 
-export default Resting;
+export default Destroying;

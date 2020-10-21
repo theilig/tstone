@@ -1,7 +1,7 @@
 package services
 
 import controllers.GameException
-import models.game.{Card, GameError, HeroCard, ItemCard, MonsterCard, Player, SpellCard, State}
+import models.game.{Card, GameError, HeroCard, ItemCard, MonsterCard, Player, SpellCard, State, WeaponCard}
 
 import scala.annotation.tailrec
 import scala.util.Random
@@ -13,6 +13,7 @@ object CardManager {
     case ("Spell", _: SpellCard) => true
     case ("Hero", _: HeroCard) => true
     case ("Monster", _: MonsterCard) => true
+    case ("Weapon", _: WeaponCard) => true
     case (name, c) if c.getName == name => true
     case (itemTraits, f: ItemCard) if itemTraits.split("\\+").forall(t => f.traits.contains(t)) => true
     case (heroTrait, h: HeroCard) if h.traits.contains(heroTrait) => true

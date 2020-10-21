@@ -35,15 +35,27 @@ case class TurnEffect(
   }
 
   def isGeneralEffect: Boolean = {
-    repeatable && requiredType.nonEmpty && effectType != "Destroy"
+    repeatable && effectType != "Destroy"
   }
   def isIndividualCardEffect: Boolean = {
     !isCombined && !isLate && !isMatchupEffect && !isEquippedEffect && !isGeneralEffect
   }
 
-  def individualEffectActive(slot: List[Card], monster: Card): Boolean = {
-    requiredType.isEmpty
-  }
+  def individualEffectActive(slot: List[Card], monster: Card, rank: Int): Boolean =
+    requiredType match {
+      case None => true
+      case Some("!Rank1") => rank > 1
+      case Some(attributeList) if attributeList.contains("+") =>
+        val requiredAttributes = attributeList.split("""\+""")
+        slot.exists(c => {
+          requiredAttributes.forall(c.getTraits.contains(_))
+        })
+      case Some("Hero") => slot.exists({
+        case _: HeroCard => true
+        case _ => false
+      })
+      case _ => false
+    }
 
   def write(connection: Connection, id: Int): Unit = {
     val statement = connection.prepareStatement(
@@ -88,6 +100,7 @@ case class TurnEffect(
     requiredType match {
       case None => true
       case Some("LightPenalty") => attributes.getOrElse("Light", 0) < 0
+      case Some(missing) if missing.startsWith("!") => attributes.getOrElse(missing.substring(1), 0) == 0
       case _ => false
     }
 
@@ -106,7 +119,9 @@ case class TurnEffect(
             (currentValues.getOrElse("Gold", 0) + amount - oldCard.get.getGoldValue))
           case (Add, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) + amount))
           case (Subtract, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) - amount))
-          case (Multiply, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) * amount))
+            // Don't multiply a -1 by 0 (i.e. disease effect)
+          case (Multiply, a) if amount == 0 && currentValues.get(a).exists(_ < 0) => currentValues
+          case (Multiply, a)  => currentValues + (a -> (currentValues.getOrElse(a, 0) * amount))
           case (Divide, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) / amount))
         }
     }.getOrElse(currentValues)

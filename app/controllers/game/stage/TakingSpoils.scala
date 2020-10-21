@@ -35,7 +35,15 @@ case class TakingSpoils(currentPlayerId: Int, spoilsTypes: List[String]) extends
               throw new GameException(s"You cannot take $name")
             }
           })
-          Right(endTurn(result._3))
+          if (spoilsTypes.contains("DiscardOrDestroy")) {
+            val newState = result._3
+            val stateWithNewHand = CardManager.discardHand(newState.currentPlayer.get, newState)
+            Right(stateWithNewHand.copy(currentStage = DiscardOrDestroy(
+              currentPlayerId, stateWithNewHand.currentPlayer.get.hand
+            )))
+          } else {
+            Right(endTurn(result._3))
+          }
         } catch {
           case g: GameException => Left(GameError(g.getMessage))
         }

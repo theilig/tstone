@@ -9,13 +9,14 @@ import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import {removePurchased} from "../components/VillagePile";
 import {getLowerMapFromArrangement} from "../services/Arrangement";
+import AttributeValues from "../components/AttributeValues";
 
 function Upgrading(props) {
     const { gameState } = useGameState()
     const { authTokens } = useAuth()
 
     const upgrade = () => {
-        const upgradedData = getLowerMapFromArrangement(props.arrangement)
+        const upgradedData = getLowerMapFromArrangement(props.arrangement, "upgrade")
         // Normalize since we want to pass card => card and lower map is card => [card,...]
         Object.keys(upgradedData).forEach(key => {
             upgradedData[key] = upgradedData[key][0]
@@ -36,7 +37,7 @@ function Upgrading(props) {
         let level = null
         let upgradedCard = null
         let purchasedCards = []
-        const upgradedData = getLowerMapFromArrangement(props.arrangement)
+        const upgradedData = getLowerMapFromArrangement(props.arrangement, "upgrade")
         purchasedCards = Object.keys(upgradedData)
         const village = gameState.village
         village["heroes"].forEach((pile) => {
@@ -71,7 +72,7 @@ function Upgrading(props) {
 
     const renderChoices = () => {
         if (parseInt(authTokens.user.userId) === gameState.currentStage.data.currentPlayerId) {
-            if (Object.keys(getLowerMapFromArrangement(props.arrangement)).length === 0) {
+            if (Object.keys(getLowerMapFromArrangement(props.arrangement, "upgrade")).length === 0) {
                 return (
                     <div>
                         <div style={{fontSize: "x-large"}}>You can upgrade</div>
@@ -101,6 +102,9 @@ function Upgrading(props) {
                     <Dungeon registerHovered={props.registerHovered} />
                 </div>
                 <Village registerHovered={props.registerHovered} upgrading={props.upgrading}/>
+                <AttributeValues key={3} values={props.attributes} show={{
+                    experience: "Experience"
+                }} />
                 <PlayerHand arrangement={props.arrangement}
                             registerHovered={props.registerHovered}
                             registerDrop={props.registerDrop}

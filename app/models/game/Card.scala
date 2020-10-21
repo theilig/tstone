@@ -15,7 +15,6 @@ class Card(name: String, imageName: String, val frequency: Int) {
     }
 
   def getLight: Int = 0
-  def getVictoryPoints: Int = 0
   def getGoldValue = 0
   def hasGoldValue: Boolean = false
   def getName: String = name
@@ -25,6 +24,7 @@ class Card(name: String, imageName: String, val frequency: Int) {
   def getBattleEffects: List[TurnEffect] = Nil
   def getVillageEffects: List[TurnEffect] = Nil
   def attributes: Map[String, Int] = Map("Light" -> getLight)
+  def getTraits: List[String] = Nil
   def write(connection: Connection): Int = {
     val statement = connection.createStatement()
     statement.execute(s"INSERT INTO Card (name, image, frequency) VALUES ('$name', '$imageName', $frequency)")
@@ -203,6 +203,8 @@ case class HeroCard(
 
   override def getCost: Option[Int] = Some(cost)
 
+  override def getTraits: List[String] = traits
+
   def upgradeCost: Option[Int] = level match {
     case 0 => Some(3)
     case 1 => Some(2)
@@ -279,6 +281,8 @@ case class ItemCard(
 
   override def getCost: Option[Int] = Some(cost)
 
+  override def getTraits: List[String] = traits
+
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
     val statement = connection.prepareStatement(
@@ -329,6 +333,8 @@ case class SpellCard(
 
   override def getLight: Int = light
 
+  override def getTraits: List[String] = traits
+
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
     val statement = connection.prepareStatement(
@@ -377,6 +383,8 @@ case class VillagerCard(
   override def hasGoldValue: Boolean = goldValue.nonEmpty
 
   override def getVillageEffects: List[TurnEffect] = villageEffects
+
+  override def getTraits: List[String] = traits
 
   override def write(connection: Connection): Int = {
     val id = super.write(connection)
@@ -439,6 +447,8 @@ case class WeaponCard(
   override def getCost: Option[Int] = Some(cost)
 
   override def getGoldValue: Int = goldValue
+
+  override def getTraits: List[String] = traits
 
   override def hasGoldValue: Boolean = true
 
@@ -504,6 +514,8 @@ case class MonsterCard(
   override def getGoldValue: Int = goldValue
 
   override def hasGoldValue: Boolean = true
+
+  override def getTraits: List[String] = "Monster" :: traits
 
   def monsterType: String = {
     if (traits.head == "Dragon") {

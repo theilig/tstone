@@ -15,6 +15,8 @@ export const TargetIndexes = {
     BuyIndex: 13000,
     DestroyIndex: 14000,
     DiscardIndex: 15000,
-    BattleIndex: 16000
+    BattleIndex: 16000,
+    BanishIndex: 17000,
+    LoanIndex: 18000
 }
 
