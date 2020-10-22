@@ -53,7 +53,7 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
   }
 
   def fightOff(monster: MonsterCard, rank: Int, finalHand: List[Card], state: State): State = {
-    val newDungeon = state.dungeon.map(_.fightOff(rank))
+    val newDungeon = state.dungeon.map(_.banish(rank))
     val newState = getDiseases(monster, state.updatePlayer(currentPlayerId)(p =>
       p.copy(hand = finalHand)
     ).copy(
@@ -116,10 +116,12 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
       throw new GameException("You can't attack this monster")
     }
     val lightPenalty = -Math.min(0, adjustedAttributes.getOrElse("Light", 0)) * state.dungeon.get.lightPenalty
-    if (adjustedAttributes.getOrElse("Attack", 0) + adjustedAttributes.getOrElse("Magic Attack", 0) >=
-      monster.health + lightPenalty)
+    if (
+      adjustedAttributes.getOrElse("Attack", 0) + adjustedAttributes.getOrElse("Magic Attack", 0) >=
+      monster.health + lightPenalty
+    ) {
       defeat(monster, rank, finalHand, state)
-    else {
+    } else {
       fightOff(monster, rank, finalHand, state)
     }
   }
@@ -131,22 +133,6 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
         a + (key -> (value + a.getOrElse(key, 0)))
       })
     })
-  }
-
-  def applyIndividualEffects(
-                              cards: List[Card],
-                              getEffects: Card => List[TurnEffect],
-                              monster: MonsterCard,
-                              rank: Int,
-                              attributes: Map[String, Int]
-                            ): Map[String, Int] = {
-    cards.foldLeft(attributes)((a, card) => {
-      getEffects(card).filter(_.isIndividualCardEffect).filter(
-        _.individualEffectActive(cards, monster, rank)).foldLeft(a)((currentAttributes, effect) => {
-        effect.adjustAttributes(currentAttributes, None)
-      })
-    })
-
   }
 
   def banishCount(state: State): Int = {
@@ -172,20 +158,7 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
 
           val finalHand = removeDestroyed(hand, cardArrangement, includeSelfDestroyed = false)
           val attributes: List[Map[String, Int]] = cardArrangement.map(slot => {
-            val cards = (finalHand.find(_.getName == slot.card) ::
-              slot.equipped.map(name => finalHand.find(_.getName == name))).flatten
-            cards.head match {
-              case _: WeaponCard => Map[String, Int]() // Unequipped weapons have no effect
-              case _ =>
-                val cardAttributes = cards.map(card => {
-                  generalEffects.filter(_.matchesRequiredCard(card)).foldLeft(card.attributes)((currentAttributes, effect) => {
-                    effect.adjustAttributes(currentAttributes)
-                  })
-                })
-                val slotAttributes = combineAttributes(cardAttributes)
-                applyIndividualEffects(List(monster), c => c.getBattleEffects, monster, monsterIndex + 1, applyIndividualEffects(
-                  cards, c => c.getDungeonEffects, monster, monsterIndex + 1, slotAttributes))
-            }
+            slot.copy(hand = Some(hand)).battleAttributes(generalEffects, monster, monsterIndex + 1)
           })
           Right(resolveBattle(state, finalHand, monster, monsterIndex + 1, combineAttributes(attributes.filterNot(a =>
             a.contains("No Attack")))))

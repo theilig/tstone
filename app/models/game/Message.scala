@@ -1,6 +1,6 @@
 package models.game
 
-import controllers.game.stage.{Destroying, PlayerStage, Purchasing, Resting, TakingSpoils}
+import controllers.game.stage.{Destroying, PlayerDiscard, PlayerStage, Purchasing, Resting, TakingSpoils}
 import models.User
 import play.api.libs.json.{Format, JsError, JsObject, JsPath, JsResult, JsString, JsSuccess, Json, Reads, Writes}
 import services.CardManager
@@ -142,17 +142,30 @@ case class Destroy(cardNames: Map[String, List[String]]) extends CurrentPlayerMe
   }
 
   def cards(state: State): List[Card] = {
-    cardNames.values.flatten.foldLeft(state.currentPlayer.get.hand, List[Card]())((soFar, name) => {
-      val (hand, alreadyFound) = soFar
-      hand.find(_.getName == name).map(c =>
-        (CardManager.removeOneInstanceFromCards(hand, name), c :: alreadyFound)
-      ).getOrElse((hand, alreadyFound))
-    })._2
+    CardManager.getCardsFromHand(cardNames.values.flatten.toList, state.currentPlayer.get.userId, state)
   }
 }
 object Destroy {
   implicit val destroyFormat: Format[Destroy] = Json.format
 }
+
+case class Discard(cardNames: List[String]) extends CurrentPlayerMessage {
+  override def validate(state: State): Boolean = {
+    val cardList = cards(state.currentPlayer.get.userId, state)
+    state.currentStage match {
+      case PlayerDiscard(_, _, number, _) => cardList.length == number
+      case _ => false
+    }
+  }
+
+  def cards(playerId: Int, state: State): List[Card] = {
+    CardManager.getCardsFromHand(cardNames, playerId, state)
+  }
+}
+object Discard {
+  implicit val discardFormat: Format[Discard] = Json.format
+}
+
 
 case class Banish(banished: List[String]) extends CurrentPlayerMessage {
   override def validate(state: State): Boolean = {

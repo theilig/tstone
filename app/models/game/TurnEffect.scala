@@ -22,40 +22,15 @@ case class TurnEffect(
   }
 
   def isCombined: Boolean = {
-    adjustment.exists(combinedOperation) || requiredType.contains("LightPenalty")
-  }
-  def isLate: Boolean = {
-    isCombined || effectType == "Battle"
-  }
-  def isMatchupEffect: Boolean = {
-    false
-  }
-  def isEquippedEffect: Boolean = {
-    false
+    (adjustment.exists(combinedOperation) && !repeatable) || requiredType.contains("LightPenalty")
   }
 
   def isGeneralEffect: Boolean = {
     repeatable && effectType != "Destroy"
   }
   def isIndividualCardEffect: Boolean = {
-    !isCombined && !isLate && !isMatchupEffect && !isEquippedEffect && !isGeneralEffect
+    !isCombined && !isGeneralEffect
   }
-
-  def individualEffectActive(slot: List[Card], monster: Card, rank: Int): Boolean =
-    requiredType match {
-      case None => true
-      case Some("!Rank1") => rank > 1
-      case Some(attributeList) if attributeList.contains("+") =>
-        val requiredAttributes = attributeList.split("""\+""")
-        slot.exists(c => {
-          requiredAttributes.forall(c.getTraits.contains(_))
-        })
-      case Some("Hero") => slot.exists({
-        case _: HeroCard => true
-        case _ => false
-      })
-      case _ => false
-    }
 
   def write(connection: Connection, id: Int): Unit = {
     val statement = connection.prepareStatement(
@@ -111,7 +86,7 @@ case class TurnEffect(
     case _ => None
   }
 
-  def adjustAttributes(currentValues: Map[String, Int], oldCard: Option[Card] = None): Map[String, Int] = {
+  def adjustAttributes(currentValues: Attributes, oldCard: Option[Card] = None): Attributes = {
     adjustment.map {
       case AttributeAdjustment(op, amount, attribute) =>
         (op, attribute) match {
@@ -119,7 +94,7 @@ case class TurnEffect(
             (currentValues.getOrElse("Gold", 0) + amount - oldCard.get.getGoldValue))
           case (Add, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) + amount))
           case (Subtract, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) - amount))
-            // Don't multiply a -1 by 0 (i.e. disease effect)
+          // Don't multiply a -1 by 0 (i.e. disease effect)
           case (Multiply, a) if amount == 0 && currentValues.get(a).exists(_ < 0) => currentValues
           case (Multiply, a)  => currentValues + (a -> (currentValues.getOrElse(a, 0) * amount))
           case (Divide, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) / amount))
@@ -134,6 +109,77 @@ case class TurnEffect(
         case _ => CardManager.matchesType(card, required)
       }
     })
+  }
+
+  def applyIndividualAdjustment(card: Card, destroyed: Boolean)(attributes: Attributes): Attributes = {
+    val matchesCard = adjustment.filterNot(a => {
+      isCombined || List("Light", "Card").contains(a.attribute)
+    }).map(_ => {
+      (requiredType, card) match {
+        case (None, _) => true
+        case (Some("Weapon"), _: WeaponCard) => true
+        case (Some("Hero"), _: HeroCard) => true
+        case (Some("!Fighter"), h: HeroCard) => !h.traits.contains("Fighter")
+        case (Some("Food"), i: ItemCard) => i.traits.contains("Foot")
+        case (Some("Item+Light"), i: ItemCard) => i.getLight > 0
+        case (Some("Item"), _: ItemCard) => true
+        case (Some("Monster"), _: MonsterCard) => true
+        case (Some("MASpell"), s: SpellCard) =>
+          s.dungeonEffects.exists(p => p.adjustment.exists(a => a.attribute == "Magic Attack"))
+        case (Some("Militia"), h: HeroCard) => h.getName == "Militia"
+        case (Some("Weapon+Edged"), w: WeaponCard) => w.traits.contains("Edged")
+        case (Some("Self"), _) if effect.contains("Destroy") => destroyed
+        case _ => false
+      }
+    })
+    if (matchesCard.getOrElse(false)) {
+      adjustAttributes(attributes)
+    } else {
+      attributes
+    }
+  }
+  def applyMatchupAdjustment(
+                              slot: BattleSlot,
+                              monster: MonsterCard,
+                              rank: Int,
+                              late: Boolean)(attributes: Attributes): Attributes = {
+    def equipped(p: Card => Boolean): Boolean = {
+      (slot.equippedCards ::: slot.destroyedCards).collect({
+        case w: WeaponCard => p(w)
+      }).nonEmpty
+    }
+
+    val matchesCard = adjustment.filterNot(a => {
+      isCombined || List("Card").contains(a.attribute)
+    }).exists(_ => {
+      requiredType.map {
+        case "!Magic Attack" => attributes.getOrElse("Magic Attack", 0) <= 0
+        case "!Equipped" => !equipped(_ => true)
+        case "Equipped" => equipped(_ => true)
+        case "!Rank1" => rank > 1
+        case "Rank3" => rank >= 3
+        case "Equipped+Edged" => equipped(c => c.getTraits.contains("Edged"))
+        case "ClericVDoomknight" =>
+          slot.baseCard.getTraits.contains("Cleric") && monster.getTraits.contains("Doomknight")
+        case "ClericVUndead" =>
+          slot.baseCard.getTraits.contains("Cleric") && monster.getTraits.contains("Undead")
+        case "Hero8Strength" => slot.baseCard match {
+          case _: HeroCard => attributes.getOrElse("Strength", 0) >= 8
+          case _ => false
+        }
+      }.getOrElse(late)
+    })
+    if (matchesCard) {
+      if (isCombined && late) {
+        adjustAttributes(attributes)
+      } else if (!isCombined && !late) {
+        adjustAttributes(attributes)
+      } else {
+        attributes
+      }
+    } else {
+      attributes
+    }
   }
 }
 

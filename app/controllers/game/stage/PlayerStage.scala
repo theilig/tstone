@@ -3,7 +3,7 @@ package controllers.game.stage
 import models.game.{Card, GameError, MonsterCard, Player, State, ThunderstoneCard}
 import services.CardManager
 
-abstract class PlayerStage() extends GameStage {
+abstract class PlayerStage extends GameStage {
   def currentPlayerId: Int
   override def currentPlayer(state: State): Option[Player] = state.players.find(_.userId == currentPlayerId)
   def endTurn(state: State): State = {
@@ -64,4 +64,15 @@ abstract class PlayerStage() extends GameStage {
     }).map(finalState => finalTransform(finalState))
 
   }
+
+  def removePlayerFromList(playerIds: List[Int], playerId: Int): List[Int] = {
+    playerIds.foldLeft(List[Int]())((soFar, p) => {
+      if (p == playerId) {
+        soFar
+      } else {
+        p :: soFar
+      }
+    })
+  }
+
 }

@@ -14,13 +14,7 @@ case class BorrowHeroes(currentPlayerId: Int, playerIds: List[Int]) extends Play
             val currentPlayerState = state.updatePlayer(currentPlayerId)(p => p.copy(hand = card :: p.hand))
             val updatedState = currentPlayerState.updatePlayer(donor.userId)(p => p.copy(hand =
               CardManager.removeOneInstanceFromCards(p.hand, hero)))
-            val playersLeft = playerIds.foldLeft(List[Int]())((soFar, p) => {
-              if (p == user.userId) {
-                soFar
-              } else {
-                p :: soFar
-              }
-            })
+            val playersLeft = removePlayerFromList(playerIds, user.userId)
             if (playersLeft.nonEmpty) {
               updatedState.copy(currentStage = BorrowHeroes(currentPlayerId, playersLeft))
             } else {

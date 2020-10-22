@@ -90,4 +90,15 @@ object CardManager {
       Left(GameError(s"$cardName was not found in hand"))
     }
   }
+
+  def getCardsFromHand(cardNames: List[String], playerId: Int, state: State): List[Card] = {
+    val player = state.players.find(_.userId == playerId).get
+    cardNames.foldLeft(player.hand, List[Card]())((soFar, name) => {
+      val (hand, alreadyFound) = soFar
+      hand.find(_.getName == name).map(c =>
+        (CardManager.removeOneInstanceFromCards(hand, name), c :: alreadyFound)
+      ).getOrElse((hand, alreadyFound))
+    })._2
+  }
+
 }

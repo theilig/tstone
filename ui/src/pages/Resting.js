@@ -11,8 +11,6 @@ import {getLowerMapFromArrangement} from "../services/Arrangement";
 
 function Resting(props) {
     const { gameState } = useGameState()
-    const { authTokens } = useAuth()
-    const [ destroyed, setDestroyed ] = useState(null)
 
     const endTurn = () => {
         const destroys = getLowerMapFromArrangement(props.arrangement, "destroy")
@@ -29,28 +27,23 @@ function Resting(props) {
         ))
     }
 
-    const registerDestroy = name => {
-        setDestroyed(name)
-    }
-
     const renderChoices = () => {
-        if (parseInt(authTokens.user.userId) === gameState.currentStage.data.currentPlayerId) {
-            if (destroyed == null) {
-                return (
-                    <div>
-                        <div style={{fontSize: "x-large"}}>You may destroy one card</div>
-                        <Options>
-                            <Button onClick={endTurn}>Skip Destroy</Button>
-                        </Options>
-                    </div>
-                )
-            } else {
-                return (
+        const destroys = getLowerMapFromArrangement(props.arrangement, "destroy")
+        if (Object.keys(destroys).length === 0) {
+            return (
+                <div>
+                    <div style={{fontSize: "x-large"}}>You may destroy one card</div>
                     <Options>
-                        <Button onClick={endTurn}>Done</Button>
+                        <Button onClick={endTurn}>Skip Destroy</Button>
                     </Options>
-                )
-            }
+                </div>
+            )
+        } else {
+            return (
+                <Options>
+                    <Button onClick={endTurn}>Done</Button>
+                </Options>
+            )
         }
     }
 
@@ -68,7 +61,6 @@ function Resting(props) {
                 <PlayerHand arrangement={props.arrangement}
                             registerHovered={props.registerHovered}
                             registerDrop={props.registerDrop}
-                            registerDestroy={registerDestroy}
                 />
                 {renderChoices()}
                 {props.renderHovered()}

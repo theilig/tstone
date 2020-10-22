@@ -13,7 +13,6 @@ class Card(name: String, imageName: String, val frequency: Int) {
       case h: HeroCard => h.upgradeCost.exists(cost => cost <= totalExperience)
       case _ => false
     }
-
   def getLight: Int = 0
   def getGoldValue = 0
   def hasGoldValue: Boolean = false
@@ -23,7 +22,7 @@ class Card(name: String, imageName: String, val frequency: Int) {
   def getDungeonEffects: List[TurnEffect] = Nil
   def getBattleEffects: List[TurnEffect] = Nil
   def getVillageEffects: List[TurnEffect] = Nil
-  def attributes: Map[String, Int] = Map("Light" -> getLight)
+  def attributes: Attributes = Map("Light" -> getLight)
   def getTraits: List[String] = Nil
   def write(connection: Connection): Int = {
     val statement = connection.createStatement()
