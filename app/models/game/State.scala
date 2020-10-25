@@ -11,8 +11,8 @@ case class State(players: List[Player], village: Option[Village], dungeon: Optio
       case GameEnded => this
       case _ =>
         val dungeonProjection = dungeon match {
-          case Some(d) if d.monsterPile.length > 3 => Some(d.copy(monsterPile = d.monsterPile.take(3) ::: CardBack :: Nil))
-          case Some(d) => Some(d.copy(monsterPile = d.monsterPile.take(3)))
+          case Some(d) if d.monsterPile.nonEmpty => Some(d.copy(monsterPile = CardBack :: Nil))
+          case Some(d) => Some(d)
           case None => None
         }
         copy(

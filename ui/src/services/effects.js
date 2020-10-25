@@ -47,12 +47,15 @@ export const executeEffect = (effect, attributes, originalCard) => {
                 newAttributes[affected] = newAttributes[affected] * effect.adjustment.amount
                 break
             default:
-                break
         }
-        return newAttributes;
-    } else {
-        return attributes
+    } else if (newAttributes) {
+        if (effect.effect === 'Banish') {
+            newAttributes['banishes'] = newAttributes['banishes'] + 1
+        } else if (effect.effect === 'SendToBottom') {
+            newAttributes['sendToBottoms'] = newAttributes['sendToBottoms'] + 1
+        }
     }
+    return newAttributes
 }
 
 export const cardMatches = (card, effect, activeCard) => {
@@ -61,7 +64,7 @@ export const cardMatches = (card, effect, activeCard) => {
     }
     switch (effect.requiredType) {
         case "Hero": return card.cardType === "HeroCard"
-        case "Food": return card.data.traits.includes("Food")
+        case "Food": return card.data.traits && card.data.traits.includes("Food")
         case "Militia": return card.data.name === "Militia"
         case "Self": return activeCard && card.data.sourceIndex === activeCard.data.sourceIndex
         case "GoldValue": return card.data.goldValue != null

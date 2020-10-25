@@ -6,8 +6,6 @@ import models.game._
 import play.api.libs.json.{Format, Json}
 import services.CardManager
 
-import scala.annotation.tailrec
-
 case class Crawling(currentPlayerId: Int) extends PlayerStage {
 
   def removeDestroyed(hand: List[Card], arrangement: List[BattleSlot], includeSelfDestroyed: Boolean): List[Card] = {
@@ -26,14 +24,16 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
     }
   }
 
-  def defeat(monster: MonsterCard, rank: Int, finalHand: List[Card], state: State): State = {
+  def defeat(
+              monster: MonsterCard, rank: Int, finalHand: List[Card], attributes: Map[String, Attributes], state: State
+            ): State = {
     val newDungeon = state.dungeon.map(_.defeat(rank))
     val newState = getDiseases(monster, state.updatePlayer(currentPlayerId)(p =>
       p.copy(discard = monster :: p.discard, hand = finalHand, xp = p.xp + monster.experiencePoints)
     ).copy(
       dungeon = newDungeon
     ))
-    val possibleDestroys = getPossibleDestroys(monster, finalHand)
+    val possibleDestroys = getPossibleDestroys(monster, finalHand, attributes)
     val monsterSpoils = availableSpoils(monster :: Nil)
     if (possibleDestroys.length > 1) {
       newState.copy(currentStage = Destroying(
@@ -45,21 +45,26 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
         newState.currentPlayer.get.hand,
         possibleDestroys.head.getName
       )
-
       checkSpoils(monsterSpoils, newState.updatePlayer(currentPlayerId)(p => p.copy(hand = newHand)))
     } else {
       checkSpoils(monsterSpoils, newState)
     }
   }
 
-  def fightOff(monster: MonsterCard, rank: Int, finalHand: List[Card], state: State): State = {
+  def fightOff(
+                monster: MonsterCard,
+                rank: Int,
+                finalHand: List[Card],
+                attributes: Map[String, Attributes],
+                state: State
+              ): State = {
     val newDungeon = state.dungeon.map(_.banish(rank))
     val newState = getDiseases(monster, state.updatePlayer(currentPlayerId)(p =>
       p.copy(hand = finalHand)
     ).copy(
       dungeon = newDungeon
     ))
-    val possibleDestroys: List[Card] = getPossibleDestroys(monster, finalHand)
+    val possibleDestroys: List[Card] = getPossibleDestroys(monster, finalHand, attributes)
     if (possibleDestroys.length > 1) {
       newState.copy(currentStage = Destroying(currentPlayerId, possibleDestroys, monsterSpoils = Nil))
     } else if (possibleDestroys.length == 1) {
@@ -73,9 +78,11 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
     }
   }
 
-  private def getPossibleDestroys(monster: MonsterCard, finalHand: List[Card]): List[Card] = {
+  private def getPossibleDestroys(
+                                   monster: MonsterCard, finalHand: List[Card], attributes: Map[String, Attributes]
+                                 ): List[Card] = {
     val possibleDestroys = monster.battleEffects.filter(_.isDestroy).foldLeft(List[Card]())((soFar, effect) => {
-      soFar ::: finalHand.filter(c => effect.matchesRequiredCard(c))
+      soFar ::: finalHand.filter(c => effect.matchesRequiredCard(c, attributes))
     })
     possibleDestroys
   }
@@ -101,9 +108,10 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
                      finalHand: List[Card],
                      monster: MonsterCard,
                      rank: Int,
-                     attributes: Map[String, Int]
+                     attributes: Map[String, Attributes]
                    ): State = {
-    val lightAdjustedAttributes = attributes + ("Light" -> (attributes.getOrElse("Light", 0) - rank))
+    val combinedAttributes = combineAttributes(attributes.values.filter(!_.contains("No Attack")))
+    val lightAdjustedAttributes = combinedAttributes + ("Light" -> (combinedAttributes.getOrElse("Light", 0) - rank))
     val combinedEffects = (finalHand.flatten(c => c.getDungeonEffects) ::: monster.battleEffects).filter(_.isCombined)
     val adjustedAttributes = combinedEffects.foldLeft(lightAdjustedAttributes)((a, e) => {
       if (e.isCombinedActive(a)) {
@@ -120,13 +128,13 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
       adjustedAttributes.getOrElse("Attack", 0) + adjustedAttributes.getOrElse("Magic Attack", 0) >=
       monster.health + lightPenalty
     ) {
-      defeat(monster, rank, finalHand, state)
+      defeat(monster, rank, finalHand, attributes, state)
     } else {
-      fightOff(monster, rank, finalHand, state)
+      fightOff(monster, rank, finalHand, attributes, state)
     }
   }
 
-  def combineAttributes(attributes: List[Map[String, Int]]): Map[String, Int] = {
+  def combineAttributes(attributes: Iterable[Attributes]): Attributes = {
     attributes.foldLeft(Map[String, Int]())((a, b) => {
       b.foldLeft(a)((a, pair) => {
         val (key, value) = pair
@@ -145,7 +153,7 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
       case Battle(monsterIndex, cardArrangement) =>
         val hand = currentPlayer(state).get.hand
         try {
-          val monster = state.dungeon.get.monsterPile.drop(monsterIndex).headOption match {
+          val monster = state.dungeon.get.ranks.drop(monsterIndex).head match {
             case Some(m: MonsterCard) => m
             case _ => throw new GameException("Invalid monster to battle")
           }
@@ -157,37 +165,28 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
             ).flatten.filter(_.isGeneralEffect)
 
           val finalHand = removeDestroyed(hand, cardArrangement, includeSelfDestroyed = false)
-          val attributes: List[Map[String, Int]] = cardArrangement.map(slot => {
+          val attributes: Map[String, Attributes] = cardArrangement.map(slot => {
             slot.copy(hand = Some(hand)).battleAttributes(generalEffects, monster, monsterIndex + 1)
-          })
-          Right(resolveBattle(state, finalHand, monster, monsterIndex + 1, combineAttributes(attributes.filterNot(a =>
-            a.contains("No Attack")))))
+          }).toMap
+          Right(resolveBattle(state, finalHand, monster, monsterIndex + 1, attributes))
         } catch {
           case g: GameException => Left(GameError(g.getMessage))
         }
-      case Banish(banished) =>
-        @tailrec
-        def banishedMonsters(pile: List[Card], names: List[String], soFar: List[Card]): List[Card] = {
-          names match {
-            case x :: remaining if pile.exists(_.getName == x) =>
-              banishedMonsters(
-                CardManager.removeOneInstanceFromCards(pile, x),
-                remaining,
-                pile.find(_.getName == x).get :: soFar
-              )
-            case _ :: remaining =>
-              banishedMonsters(pile, remaining, soFar)
-            case Nil => soFar
-          }
-        }
-        val monstersBanished = banishedMonsters(state.dungeon.get.monsterPile.take(3), banished, Nil)
-        if (monstersBanished.length == banished.length && banishCount(state) >= banished.length) {
-          val newDungeonPile = banished.foldLeft(state.dungeon.get.monsterPile)((pile, name) => {
-            CardManager.removeOneInstanceFromCards(pile, name) ::: monstersBanished
-          })
-          Right(state.copy(dungeon = state.dungeon.map(d => d.copy(monsterPile = newDungeonPile))))
+      case b : Banish =>
+        val newOrder = b.cards(state.dungeon.get)
+        val ranksSize = state.dungeon.get.ranks.length
+        if (newOrder.flatten.length == state.dungeon.get.ranks.flatten.length) {
+          // if there is a card at the end put it at the bottom of the monster pile
+          val newMonsterPile = state.dungeon.get.monsterPile ::: newOrder.drop(ranksSize).flatten
+          val newState = state.copy(dungeon = Some(Dungeon(newMonsterPile, newOrder.take(ranksSize))))
+          val destroyedState = newState.updatePlayer(currentPlayerId)(p =>
+            p.copy(hand = CardManager.removeOneInstanceFromCards(p.hand, b.destroyed))
+          )
+          val filledHandState =
+            CardManager.givePlayerCards(destroyedState.currentPlayer.get, 1, destroyedState)._2
+          Right(newState.dungeon.get.fill(filledHandState))
         } else {
-          Left(GameError("Banish failed"))
+          Left(GameError("Invalid Dungeon Order"))
         }
       case m => Left(GameError("Unexpected message " + m.getClass.getSimpleName))
     }

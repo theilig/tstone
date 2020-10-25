@@ -135,7 +135,7 @@ case class Destroy(cardNames: Map[String, List[String]]) extends CurrentPlayerMe
     val cardList = cards(state)
     state.currentStage match {
       case _: Resting => cardList.length <= 1
-      case _: Destroying => cardList.length != 1
+      case _: Destroying => cardList.length == 1
       case _: Purchasing => cardList.nonEmpty
       case _ => true
     }
@@ -167,13 +167,39 @@ object Discard {
 }
 
 
-case class Banish(banished: List[String]) extends CurrentPlayerMessage {
+case class Banish(dungeonOrder: List[String], destroyed: String) extends CurrentPlayerMessage {
   override def validate(state: State): Boolean = {
-    val dungeon = state.dungeon.get.monsterPile.take(3)
-    val remaining = banished.foldLeft(dungeon)((d, name) => {
-      CardManager.removeOneInstanceFromCards(d, name)
-    })
-    remaining.length + banished.length == dungeon.length
+    @tailrec
+    def validRearrange(
+                        originalNames: List[String], newNames: List[String], isRearrange: Boolean, isBanish: Boolean
+                      ): Boolean = {
+      originalNames match {
+        case Nil => isRearrange ^ isBanish
+        case x :: xs if newNames.headOption.contains(x) =>
+          validRearrange(xs, newNames.drop(1), isRearrange, isBanish)
+        case _ :: xs if newNames.headOption.contains("CardBack") =>
+          validRearrange(xs, newNames.drop(1), isRearrange, isBanish = true)
+        case x :: xs => validRearrange(xs, newNames.drop(1), isRearrange = true, isBanish)
+      }
+    }
+    validRearrange(
+      state.dungeon.get.ranks.map(_.map(card => card.getName).getOrElse("CardBack")),
+      dungeonOrder,
+      isRearrange = false,
+      isBanish = false
+    ) && state.currentPlayer.get.hand.exists(c => c.getName == destroyed)
+  }
+  def cards(dungeon: Dungeon): List[Option[Card]] = {
+    def findCards(names: List[String], cardsByName: Map[String, List[Card]]): List[Option[Card]] = {
+        names match {
+          case Nil => Nil
+          case name :: remaining if cardsByName.contains(name) =>
+            cardsByName(name).headOption :: findCards(remaining, cardsByName + (name -> cardsByName(name).drop(1)))
+          case _ :: remaining => None :: findCards(remaining, cardsByName)
+        }
+    }
+    val cardsByName = dungeon.ranks.flatten.groupBy(c => c.getName)
+    findCards(dungeonOrder, cardsByName)
   }
 }
 

@@ -24,8 +24,9 @@ function Destroying(props) {
     }
 
     const renderChoices = () => {
-        const required = gameState.currentStage.data.minRequired ?? 0
-        if (Object.keys(getLowerMapFromArrangement(props.arrangement, "destroy")).length !== required) {
+        const required = gameState.currentStage.stage === "DiscardOrDestroy" ? 0 : 1
+        if (required > 0 &&
+            Object.keys(getLowerMapFromArrangement(props.arrangement, "destroy")).length !== required) {
             return (
                 <div>
                     <div style={{fontSize: "x-large"}}>You must destroy {required} card(s)</div>

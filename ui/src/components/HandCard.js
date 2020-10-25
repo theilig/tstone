@@ -157,11 +157,11 @@ export function HandCard(props) {
         marginTop = '0px'
     }
 
-    let style = {width: '126px', height: '180px', marginLeft: '10px', marginTop:marginTop}
+//    let style = {width: '126px', height: '180px', marginLeft: '10px', marginTop:marginTop}
 
-    if (props.small) {
-        style = {width: '70px', height: '100px', marginLeft: '10px', marginTop:marginTop}
-    }
+//    if (props.small) {
+        let style = {width: '70px', height: '100px', marginLeft: '10px', marginTop:marginTop}
+//    }
 
     return <div ref={drag}>
         <img style={style}

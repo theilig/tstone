@@ -46,11 +46,11 @@ function Upgrading(props) {
                 cards.forEach(c => {
                     if (oldName === 'Militia' && c.name === newName) {
                         level = 0
+                    } else if (oldCard.data.heroType === c.heroType) {
+                        level = oldCard.data.level
                     }
                     if (level != null && c.level === level + 1) {
                         upgradedCard = c
-                    } else if (c.name === oldName) {
-                        level = c.level
                     }
                 })
             }

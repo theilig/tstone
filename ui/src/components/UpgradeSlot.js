@@ -16,7 +16,7 @@ function UpgradeSlot(props) {
     if (props.cards[0] != null) {
         return (
             <div ref={drop}>
-                <img style={{width: '126px', height: '180px', marginLeft: '10px'}}
+                <img style={{width: '70px', height: '100px', marginLeft: '10px'}}
                      key={102} id={102}
                      src={upgrade} title={'Upgrade'} alt={'Upgrade'}
                 />
@@ -34,7 +34,7 @@ function UpgradeSlot(props) {
     } else {
         return (
             <div ref={drop}>
-                <img style={{width: '126px', height: '180px', marginLeft: '10px'}}
+                <img style={{width: '70px', height: '100px', marginLeft: '10px'}}
                      key={102} id={102}
                      src={upgrade} title={'Upgrade'} alt={'Upgrade'}
                 />

@@ -7,9 +7,9 @@ abstract class PlayerStage extends GameStage {
   def currentPlayerId: Int
   override def currentPlayer(state: State): Option[Player] = state.players.find(_.userId == currentPlayerId)
   def endTurn(state: State): State = {
-    val gameOver = state.dungeon.get.monsterPile match {
-      case (_: ThunderstoneCard) :: _ => true
-      case pile => !pile.exists {
+    val gameOver = state.dungeon.get.ranks.head match {
+      case Some(t : ThunderstoneCard) => true
+      case _ => !(state.dungeon.get.ranks.flatten ::: state.dungeon.get.monsterPile).exists {
         case _ : ThunderstoneCard => true
         case _ => false
       }
@@ -17,8 +17,9 @@ abstract class PlayerStage extends GameStage {
     if (gameOver) {
       state.copy(currentStage = GameEnded)
     } else {
-      CardManager.discardHand(currentPlayer(state).get, state).copy(
-        currentStage = ChoosingDestination(nextPlayer(state).userId)
+      val filledState = state.dungeon.get.fill(state)
+      CardManager.discardHand(currentPlayer(filledState).get, filledState).copy(
+        currentStage = ChoosingDestination(nextPlayer(filledState).userId)
       )
     }
   }

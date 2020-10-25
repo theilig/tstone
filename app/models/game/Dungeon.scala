@@ -42,7 +42,8 @@ case class Dungeon(monsterPile: List[Card], ranks: List[Option[Card]]) {
       ranks match {
         case Nil => Dungeon(pile, finalRanks)
         case Some(card) :: remaining => fillRanks(remaining, pile, finalRanks ::: Some(card) :: Nil)
-        case None :: remaining => fillRanks(remaining, pile.drop(1), finalRanks ::: pile.headOption :: Nil)
+        case None :: remaining if pile.isEmpty => fillRanks(remaining, pile, finalRanks)
+        case None :: remaining => fillRanks(remaining ::: (Some(pile.head) :: Nil), pile.drop(1), finalRanks)
       }
     }
     val newDungeon = fillRanks(ranks, monsterPile, Nil)
@@ -101,6 +102,10 @@ object Dungeon {
       val shuffledMonsters = random.shuffle(monsters)
       val thunderstoneIndex = random.between(0, 11)
       val thunderstoneList  = ThunderstoneCard(thunderstoneRow.head) :: shuffledMonsters.drop(20 + thunderstoneIndex)
+      new Dungeon(
+        shuffledMonsters.slice(3, thunderstoneIndex + 20) ::: thunderstoneList,
+        shuffledMonsters.take(3).map(m => Some(m))
+      )
       new Dungeon(shuffledMonsters.take(20 + thunderstoneIndex) ::: thunderstoneList, List(None, None, None))
     }
   }

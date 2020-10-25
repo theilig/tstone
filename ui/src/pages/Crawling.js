@@ -9,10 +9,9 @@ import PlayerHand from "../components/PlayerHand";
 import AttributeValues from "../components/AttributeValues";
 import {SourceIndexes, TargetIndexes} from "../components/SlotIndexes"
 import BattleSlot from "../components/BattleSlot";
-import {getLowerMapFromArrangement} from "../services/Arrangement";
 
 function Crawling(props) {
-    const {gameState} = useGameState()
+    const {gameState, haveBanished, haveSentToBottom} = useGameState()
     const [battling, setBattling] = useState(null)
     const [destroyed, setDestroyed] = useState({})
     const battle = () => {
@@ -52,14 +51,28 @@ function Crawling(props) {
     }
 
     const banish = () => {
-        const banishList = getLowerMapFromArrangement(props.arrangement, "banish")
-        const banished = Object.values(banishList).map(l => l[0])
+        const destroyed = banishDestroy().data.name
+        const dungeonNames = gameState.dungeonCards.map(c => c.data.name)
         props.gameSocket.send(JSON.stringify(
             {
                 messageType: "Banish",
                 data: {
                     gameId: gameState.gameId,
-                    banished: banished
+                    dungeonOrder: dungeonNames,
+                    destroyed: destroyed
+                }
+            }
+        ))
+    }
+
+    const sendToBottom = () => {
+        const banished = gameState.dungeonCards[gameState.dungeon.ranks.length]
+        props.gameSocket.send(JSON.stringify(
+            {
+                messageType: "SendToBottom",
+                data: {
+                    gameId: gameState.gameId,
+                    banished: banished.data.name
                 }
             }
         ))
@@ -82,14 +95,33 @@ function Crawling(props) {
         }
     }
 
+    const banishDestroy = () => {
+        let result = null
+        props.arrangement.forEach(slot => {
+            let canBanish = false
+            if (slot.cards[0].data.dungeonEffects) {
+                slot.cards[0].data.dungeonEffects.forEach(e => {
+                    if (e.effect === "Banish") {
+                        canBanish = true
+                    }
+                })
+            }
+            if (canBanish) {
+                if (slot.destroy && slot.destroy.length > 0) {
+                    result = slot.destroy[0]
+                }
+            }
+        })
+        return result
+    }
+
     const renderChoices = () => {
-        const banishList = getLowerMapFromArrangement(props.arrangement, "banish")
-        if (Object.keys(banishList).length > 0) {
+        if (haveBanished() || haveSentToBottom()) {
             return (<Options key={5}>
-                <Button onClick={banish}>Banish</Button>
+                {props.attributes["banishes"] > 0 && banishDestroy() != null && (<Button onClick={banish}>Banish</Button>)}
+                {props.attributes["sendToBottoms"] > 0 && haveSentToBottom() && (<Button onclick={sendToBottom}>Refill</Button>)}
             </Options>)
-        }
-        if (battling != null) {
+        } else if (battling != null) {
             return (
                 <Options key={5}>
                     <BattleSlot card={battling} registerHovered={props.registerHovered} registerDrop={registerDrop}

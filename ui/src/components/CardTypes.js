@@ -18,7 +18,7 @@ export const getDragType = (card) => {
             return CardTypes.HERO
         case "WeaponCard":
             return CardTypes.WEAPON
-        case "SpellType":
+        case "SpellCard":
             return CardTypes.SPELL
         case "VillagerCard":
             return CardTypes.VILLAGER
@@ -44,6 +44,8 @@ export const getDropTypes = (card) => {
                 CardTypes.VILLAGER, CardTypes.SPELL]
         case "Upgrade":
             return [CardTypes.VILLAGE]
+        case "Dungeon":
+            return [CardTypes.MONSTER]
         default:
                 return []
     }

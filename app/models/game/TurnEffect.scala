@@ -104,13 +104,24 @@ case class TurnEffect(
 
   def matchesRequiredCard(card: Card, isSelf: Boolean = false): Boolean = {
     requiredType.forall(required => {
-      (required, card) match {
-        case ("Self", _) => isSelf
+      required match {
+        case "Self" => isSelf
         case _ => CardManager.matchesType(card, required)
       }
     })
   }
 
+  def matchesRequiredCard(card: Card, attributes: Map[String, Attributes]): Boolean = {
+    requiredType.forall(required => {
+      required match {
+        case "MaxStrength" =>
+          val maxStrength = attributes.valuesIterator.reduceLeft((x, y) =>
+            if (x.getOrElse("Strength", 0) > y.getOrElse("Strength", 0)) x else y).getOrElse("Strength", 0)
+          attributes.contains(card.getName) && attributes(card.getName).getOrElse("Strength", 0) == maxStrength
+        case _ => matchesRequiredCard(card)
+      }
+    })
+  }
   def applyIndividualAdjustment(card: Card, destroyed: Boolean)(attributes: Attributes): Attributes = {
     val matchesCard = adjustment.filterNot(a => {
       isCombined || List("Light", "Card").contains(a.attribute)
@@ -158,6 +169,8 @@ case class TurnEffect(
         case "Equipped" => equipped(_ => true)
         case "!Rank1" => rank > 1
         case "Rank3" => rank >= 3
+        case "Food" if effect.contains("Destroy") =>
+          slot.destroyedCards.exists(c => c.getTraits.contains("Food"))
         case "Equipped+Edged" => equipped(c => c.getTraits.contains("Edged"))
         case "ClericVDoomknight" =>
           slot.baseCard.getTraits.contains("Cleric") && monster.getTraits.contains("Doomknight")
@@ -167,6 +180,8 @@ case class TurnEffect(
           case _: HeroCard => attributes.getOrElse("Strength", 0) >= 8
           case _ => false
         }
+        case _ if effect.contains("MakeMagic") => true
+        case _ => false
       }.getOrElse(late)
     })
     if (matchesCard) {
