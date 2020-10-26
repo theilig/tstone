@@ -21,7 +21,7 @@ case class TakingSpoils(currentPlayerId: Int, spoilsTypes: List[String]) extends
 
   def receive(message: Message, user: User, state: State): Either[GameError, State] = {
     message match {
-      case Purchase(bought, _) =>
+      case TakeSpoils(bought, sentToBottom) =>
         try {
           val totalGold = getBuyingPower(state.currentPlayer.get.hand)
           val result = bought.foldLeft((totalGold, spoilsTypes, state))((buyingPower, name) => {
@@ -42,7 +42,14 @@ case class TakingSpoils(currentPlayerId: Int, spoilsTypes: List[String]) extends
               currentPlayerId, stateWithNewHand.currentPlayer.get.hand
             )))
           } else {
-            Right(endTurn(result._3))
+            val newState = result._3
+            val banishedState = sentToBottom.map(monsterIndex => {
+              newState.copy(dungeon = newState.dungeon.map(d => d.copy(
+                ranks = d.ranks.take(monsterIndex) ::: (None :: d.ranks.drop(monsterIndex + 1)),
+                monsterPile = d.monsterPile ::: d.ranks.slice(monsterIndex, monsterIndex + 1).flatten
+              )))
+            }).getOrElse(newState)
+            Right(endTurn(banishedState))
           }
         } catch {
           case g: GameException => Left(GameError(g.getMessage))

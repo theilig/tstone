@@ -6,23 +6,50 @@ import play.api.libs.json._
 
 case class State(players: List[Player], village: Option[Village], dungeon: Option[Dungeon], currentStage: GameStage) {
   def ownerId: Int = players.filterNot(_.pending).headOption.map(_.userId).getOrElse(0)
-  def projection(userId: Int): State = {
+
+  def projection(userId: Int): JsObject = {
     currentStage match {
-      case GameEnded => this
+      case GameEnded => JsObject(
+        Seq(
+          "players" -> Json.toJson(players),
+          "currentStage" -> Json.toJson(currentStage)
+        )
+      )
       case _ =>
-        val dungeonProjection = dungeon match {
-          case Some(d) if d.monsterPile.nonEmpty => Some(d.copy(monsterPile = CardBack :: Nil))
-          case Some(d) => Some(d)
-          case None => None
+        val playerList = players.map {
+          case p if p.userId == userId => JsObject(
+            Seq(
+              "discard" -> Json.toJson(p.discard.take(1)),
+              "hand" -> Json.toJson(p.hand),
+              "attributes" -> Json.toJson(p.attributes),
+              "userId" -> JsNumber(p.userId),
+              "xp" -> JsNumber(p.xp)
+            )
+          )
+          case p => JsObject(Seq("userId" -> JsNumber(p.userId)))
         }
-        copy(
-          players = players.map {
-            case p if p.userId == userId => p.copy(discard = p.discard.take(1), deck = List(CardBack))
-            case p if currentStage.currentPlayer(this).exists(_.userId == p.userId) =>
-              p.copy(discard = p.discard.take(1), deck = List(CardBack))
-            case p => p.copy(discard = p.discard.take(1), hand = p.hand.map(_ => CardBack), deck = List(CardBack))
-          },
-          dungeon = dungeonProjection
+        val monsterPile: List[Card] = if (dungeon.get.monsterPile.nonEmpty) {
+          CardBack :: Nil
+        } else {
+          Nil
+        }
+        val ranks = dungeon.get.ranks.map({
+          case Some(m) => m
+          case None => CardBack
+        })
+        val dungeonProjection = JsObject(
+          Seq(
+            "ranks" -> Json.toJson(ranks),
+            "monsterPile" -> Json.toJson(monsterPile)
+          )
+        )
+        JsObject(
+          Seq(
+            "players" -> JsArray(playerList),
+            "village" -> Json.toJson(village),
+            "dungeon" -> dungeonProjection,
+            "currentStage" -> Json.toJson(currentStage)
+          )
         )
     }
   }

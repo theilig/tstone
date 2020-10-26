@@ -31,15 +31,21 @@ function Game() {
     const [ isAttached, setIsAttached ] = useState({})
     const [ using, setUsing ] = useState({})
     const [ player, setPlayer ] = useState(null)
+    const [ remoteAttributes, setRemoteAttributes ] = useState({})
 
     let game = useParams()
     let gameId = parseInt(game.gameId)
 
     const setState = (data) => {
-        if (isActivePlayer(gameState) && !isActivePlayer(data)) {
+        if (data.currentStage.stage === "ChoosingDestination") {
             setIsAttached({})
             setUsing({})
         }
+        data.players.forEach(p => {
+            if (authTokens.user.userId === p.userId) {
+                setRemoteAttributes(p.attributes)
+            }
+        })
         setGameState(data);
     }
 
@@ -55,14 +61,17 @@ function Game() {
 
     useEffect(() => {
         const indexCards = (state => {
-            if (state.currentStage.stage === "WaitingForPlayers") {
+            if (state.currentStage.stage === "WaitingForPlayers" ||
+                state.currentStage.stage === "GameEnded")  {
                 return state
             }
             state.players.forEach((p, index) => {
-                p.hand.forEach((c, cardIndex) => {
-                    c.data.sourceIndex = SourceIndexes.HandIndex + SourceIndexes.HandOffset * cardIndex +
-                        SourceIndexes.PlayerOffset * index
-                })
+                if (p.hand) {
+                    p.hand.forEach((c, cardIndex) => {
+                        c.data.sourceIndex = SourceIndexes.HandIndex + SourceIndexes.HandOffset * cardIndex +
+                            SourceIndexes.PlayerOffset * index
+                    })
+                }
             })
             let villageIndex = 0
             villageCategories.forEach(category => {
@@ -601,7 +610,8 @@ function Game() {
             renderHovered: renderHovered,
             registerDrop: registerDrop,
             haveBanished: haveBanished,
-            haveSentToBottom: haveSentToBottom
+            haveSentToBottom: haveSentToBottom,
+            remoteAttributes: remoteAttributes
         }}>
             <DndProvider backend={HTML5Backend}>
                 {renderGameStage()}

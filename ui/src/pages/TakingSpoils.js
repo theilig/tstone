@@ -8,21 +8,29 @@ import Village from "../components/Village";
 import PlayerHand from "../components/PlayerHand";
 import AttributeValues from "../components/AttributeValues";
 import BuySlot from "../components/BuySlot";
-import {TargetIndexes} from "../components/SlotIndexes"
-import {getLowerMapFromArrangement} from "../services/Arrangement";
+import {SourceIndexes, TargetIndexes} from "../components/SlotIndexes"
 
 function TakingSpoils(props) {
-    const {gameState} = useGameState()
+    const {gameState, haveSentToBottom} = useGameState()
     const [bought, setBought] = useState([])
     const endTurn = () => {
+        let banished = null
+        let banishedCard = null
+        if (gameState.dungeonCards) {
+            banishedCard = gameState.dungeonCards[gameState.dungeon.ranks.length]
+            banished = banishedCard.data.sourceIndex - SourceIndexes.DungeonIndex
+        }
+        let data = {
+            gameId: gameState.gameId,
+            bought: bought.map(c => c.data.name),
+        }
+        if (banished != null && banishedCard && banishedCard.data.name !== 'CardBack') {
+            data.sentToBottom = banished
+        }
         props.gameSocket.send(JSON.stringify(
             {
-                messageType: "Purchase",
-                data: {
-                    gameId: gameState.gameId,
-                    bought: bought.map(c => c.data.name),
-                    destroyed: getLowerMapFromArrangement(props.arrangement, "destroy"),
-                }
+                messageType: "TakeSpoils",
+                data: data
             }
         ))
     }
@@ -45,12 +53,18 @@ function TakingSpoils(props) {
     }
 
     const renderChoices = () => {
-        if (bought.length > 0) {
+        let needBuySlot = false
+        props.spoils.forEach(s => {
+            if (s !== "SendToBottom") {
+                needBuySlot = true
+            }
+        })
+        if (bought.length > 0 || haveSentToBottom()) {
             return (
                 <Options key={5}>
                     <div key={6} style={{fontSize: "x-large"}}>You can take {props.spoils.join(',')}</div>
-                    <BuySlot cards={bought} registerHovered={props.registerHovered} registerDrop={registerDrop}
-                             index={TargetIndexes.BuyIndex}/>
+                    {needBuySlot && (<BuySlot cards={bought} registerHovered={props.registerHovered} registerDrop={registerDrop}
+                             index={TargetIndexes.BuyIndex}/>)}
                     <Button onClick={endTurn}>Done</Button>
                 </Options>
             )
@@ -59,8 +73,8 @@ function TakingSpoils(props) {
                 <div key={5}>
                     <div key={6} style={{fontSize: "x-large"}}>You can take {props.spoils.join(',')}</div>
                     <Options key={7}>
-                        <BuySlot key={8} cards={bought} registerHovered={props.registerHovered}
-                                 registerDrop={registerDrop} index={TargetIndexes.BuyIndex} />
+                        {needBuySlot && (<BuySlot key={8} cards={bought} registerHovered={props.registerHovered}
+                                 registerDrop={registerDrop} index={TargetIndexes.BuyIndex} />)}
                         <Button key={9} onClick={endTurn}>Skip Spoils</Button>
                     </Options>
                 </div>
@@ -72,11 +86,21 @@ function TakingSpoils(props) {
         opacity: 0.4
     }
 
+    const regularStyle = {
+
+    }
+
+    let dungeonStyle = disabledStyle
+    if (props.spoils.includes("SendToBottom")) {
+        dungeonStyle = regularStyle
+    }
+
+
     return (
         <DndProvider backend={HTML5Backend}>
             <div>
-                <div key={1} style={disabledStyle}>
-                    <Dungeon registerHovered={props.registerHovered} />
+                <div key={1} style={dungeonStyle}>
+                    <Dungeon registerHovered={props.registerHovered} registerDrop={props.registerDrop}/>
                 </div>
                 <Village key={2} registerHovered={props.registerHovered} registerDrop={props.registerDrop}
                          purchased={bought.map(c => c.data.name)} />

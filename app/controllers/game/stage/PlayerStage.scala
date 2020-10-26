@@ -7,19 +7,39 @@ abstract class PlayerStage extends GameStage {
   def currentPlayerId: Int
   override def currentPlayer(state: State): Option[Player] = state.players.find(_.userId == currentPlayerId)
   def endTurn(state: State): State = {
-    val gameOver = state.dungeon.get.ranks.head match {
-      case Some(t : ThunderstoneCard) => true
-      case _ => !(state.dungeon.get.ranks.flatten ::: state.dungeon.get.monsterPile).exists {
+    def borrowed: Map[Int, String] = {
+      val borrowedWithStringKey: Map[String, String] = state.currentStage match {
+        case c: Crawling => c.borrowed
+        case b: BorrowHeroes => b.borrowed
+        case _ => Map()
+      }
+      borrowedWithStringKey.map(p => p._1.toInt -> p._2)
+    }
+
+    def returnCard(state: State, pair: (Int, String)): State = {
+      CardManager.getCardsFromHand(List(pair._2), currentPlayerId, state).map(c => {
+        val currentPlayerState = state.updatePlayer(currentPlayerId)(p =>
+          p.copy(hand = CardManager.removeOneInstanceFromCards(p.hand, pair._2))
+        )
+        currentPlayerState.updatePlayer(pair._1)(p => p.copy(discard = c :: p.discard))
+      }).headOption.getOrElse(state)
+    }
+    val filledState = state.dungeon.get.fill(state)
+
+    val gameOver = filledState.dungeon.get.ranks.head match {
+      case Some(_ : ThunderstoneCard) => true
+      case _ => !(filledState.dungeon.get.ranks.flatten ::: filledState.dungeon.get.monsterPile).exists {
         case _ : ThunderstoneCard => true
         case _ => false
       }
     }
     if (gameOver) {
-      state.copy(currentStage = GameEnded)
+      filledState.copy(currentStage = GameEnded)
     } else {
-      val filledState = state.dungeon.get.fill(state)
-      CardManager.discardHand(currentPlayer(filledState).get, filledState).copy(
-        currentStage = ChoosingDestination(nextPlayer(filledState).userId)
+      val returnedState =
+        borrowed.foldLeft(filledState)(returnCard)
+      CardManager.discardHand(currentPlayer(returnedState).get, returnedState).copy(
+        currentStage = ChoosingDestination(nextPlayer(returnedState).userId)
       )
     }
   }

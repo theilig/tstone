@@ -10,6 +10,15 @@ import scala.annotation.tailrec
 sealed trait Message {
   def validate(state: State): Boolean = true
   def checkPermissionError(user: User, state: State): Option[GameError] = None
+  def allCardsFound(cards: List[Card], arrangement: List[BattleSlot]): Boolean = {
+    arrangement match {
+      case Nil => cards.isEmpty
+      case bs :: remaining =>
+        allCardsFound((bs.card :: bs.destroyed ::: bs.equipped).foldLeft(cards)((h, cardName) => {
+          CardManager.removeOneInstanceFromCards(h, cardName)
+        }), remaining)
+    }
+  }
 }
 
 sealed trait OwnerMessage extends Message {
@@ -34,6 +43,20 @@ sealed trait CurrentPlayerMessage extends Message {
       case _ => Some(GameError("Unexpected message"))
     }
   }
+  def canBuyCards(village: Village, cards: List[String]): Boolean = {
+    cards.foldLeft((village, List[String]()))((status, cardName) => {
+      val (v, failures) = status
+      val (newVillage, possibleCard) = v.takeCard(cardName, topOnly = true)
+      if (possibleCard.isEmpty)
+        (v, cardName :: failures)
+      else
+        (newVillage, failures)
+    }) match {
+      case (_, Nil) => true
+      case (v, f) if f.length < cards.length => canBuyCards(v, f)
+      case _ => false
+    }
+  }
 }
 
 case class Authentication(token: String) extends Message
@@ -47,7 +70,7 @@ object ConnectToGame {
   implicit val connectFormat: Format[ConnectToGame] = Json.format
 }
 
-case class GameState(state: State) extends Message
+case class GameState(state: JsObject) extends Message
 object GameState {
   implicit val gameStateFormat: Format[GameState] = Json.format
 }
@@ -65,6 +88,11 @@ object AcceptPlayer {
 case class RejectPlayer(userId: Int) extends OwnerMessage
 object RejectPlayer {
   implicit val rejectPlayerFormat: Format[RejectPlayer] = Json.format
+}
+
+case class AttributeResult(attributes: Attributes) extends Message
+object AttributeResult {
+  implicit val attributeResultFormat: Format[AttributeResult] = Json.format
 }
 
 case object GameOver extends Message
@@ -93,10 +121,12 @@ object Message {
           case "ChooseDungeon" => JsSuccess(ChooseDungeon)
           case "Destroy" => (JsPath \ "data").read[Destroy].reads(js)
           case "Purchase" => (JsPath \ "data").read[Purchase].reads(js)
+          case "TakeSpoils" => (JsPath \ "data").read[TakeSpoils].reads(js)
           case "Battle" => (JsPath \ "data").read[Battle].reads(js)
           case "Upgrade" => (JsPath \ "data").read[Upgrade].reads(js)
           case "Banish" => (JsPath \ "data").read[Banish].reads(js)
           case "Loan" => (JsPath \ "data").read[Loan].reads(js)
+          case "GetAttributes" => (JsPath \ "data").read[GetAttributes].reads(js)
         }
       )
     },
@@ -179,7 +209,7 @@ case class Banish(dungeonOrder: List[String], destroyed: String) extends Current
           validRearrange(xs, newNames.drop(1), isRearrange, isBanish)
         case _ :: xs if newNames.headOption.contains("CardBack") =>
           validRearrange(xs, newNames.drop(1), isRearrange, isBanish = true)
-        case x :: xs => validRearrange(xs, newNames.drop(1), isRearrange = true, isBanish)
+        case _ :: xs => validRearrange(xs, newNames.drop(1), isRearrange = true, isBanish)
       }
     }
     validRearrange(
@@ -207,28 +237,27 @@ object Banish {
   implicit val banishFormat: Format[Banish] = Json.format
 }
 
+case class TakeSpoils(bought: List[String], sentToBottom: Option[Int]) extends CurrentPlayerMessage {
+  override def validate(state: State): Boolean = {
+    val canBanish = state.currentStage match {
+      case TakingSpoils(_, spoilsTypes) => spoilsTypes.contains("SendToBottom")
+      case _ => false
+    }
+    val validateBanish = sentToBottom.forall(monsterIndex => {
+      state.dungeon.get.ranks.drop(monsterIndex - 1).nonEmpty &&
+        canBanish
+    })
+    canBuyCards(state.village.get, bought) && validateBanish
+  }
+}
+
+object TakeSpoils {
+  implicit val takeSpoilsFormat: Format[TakeSpoils] = Json.format
+}
+
 case class Purchase(bought: List[String], destroyed: Map[String, List[String]]) extends CurrentPlayerMessage {
   override def validate(state: State): Boolean = {
-  @tailrec
-    def canBuyCards(village: Village, cards: List[String]): Boolean = {
-      cards.foldLeft((village, List[String]()))((status, cardName) => {
-        val (v, failures) = status
-        val (newVillage, possibleCard) = v.takeCard(cardName, topOnly = true)
-        if (possibleCard.isEmpty)
-          (v, cardName :: failures)
-        else
-          (newVillage, failures)
-    }) match {
-        case (_, Nil) => true
-        case (v, f) if f.length < cards.length => canBuyCards(v, f)
-        case _ => false
-      }
-    }
-    val correctDestroys = state.currentStage match {
-      case _: Purchasing => true
-      case _: TakingSpoils => destroyed.isEmpty
-    }
-    correctDestroys && canBuyCards(state.village.get, bought) && destroyed.foldLeft(
+    canBuyCards(state.village.get, bought) && destroyed.foldLeft(
       Right(state.currentStage.currentPlayer(state).get.hand): Either[GameError, List[Card]]
     )((possibleHand, pair) => {
       val (mainCard, otherCards) = pair
@@ -256,24 +285,20 @@ object Purchase {
 }
 case class Battle(monster: Int, arrangement: List[BattleSlot]) extends CurrentPlayerMessage {
   def validate(hand: List[Card], dungeon: Dungeon): Boolean = {
-    @tailrec
-    def allCardsFound(cards: List[Card], arrangement: List[BattleSlot]): Boolean = {
-      arrangement match {
-        case Nil => cards.isEmpty
-        case bs :: remaining =>
-          allCardsFound((bs.card :: bs.destroyed ::: bs.equipped).foldLeft(cards)((h, cardName) => {
-            CardManager.removeOneInstanceFromCards(h, cardName)
-          }), remaining)
-      }
-    }
-    allCardsFound(hand, arrangement) && (dungeon.monsterPile.drop(monster - 1).head match {
-      case _: MonsterCard => true
-      case _ => false
-    })
+    allCardsFound(hand, arrangement) && dungeon.hasMonster(monster)
   }
 }
 object Battle {
   implicit val battleFormat: Format[Battle] = Json.format
+}
+
+case class GetAttributes(monster: Option[Int], arrangement: List[BattleSlot]) extends Message {
+  def validate(hand: List[Card], dungeon: Dungeon): Boolean = {
+    allCardsFound(hand, arrangement) && monster.forall(index => dungeon.hasMonster(index))
+  }
+}
+object GetAttributes {
+  implicit val getAttributesFormat: Format[GetAttributes] = Json.format
 }
 
 case class Upgrade(upgrades: Map[String, String]) extends CurrentPlayerMessage {

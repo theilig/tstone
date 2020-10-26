@@ -3,6 +3,7 @@ package models.game
 import models.User
 import play.api.libs.json.{Json, OFormat, OWrites}
 import models.schema.Tables.UserRow
+import services.AttributeCalculator
 
 import scala.annotation.tailrec
 import scala.util.Random
@@ -13,7 +14,7 @@ case class Player(userId: Int,
                   discard: List[Card],
                   hand: List[Card],
                   deck: List[Card],
-                  xp: Int
+                  xp: Int,
                  ) {
   def finishTurn: Player = {
     @tailrec
@@ -31,11 +32,13 @@ case class Player(userId: Int,
     val (newDiscard, newDeck, newHand) = buildNewHand(discard, deck, hand)
     copy(discard = newDiscard, hand = newHand, deck = newDeck)
   }
+  def attributes: Attributes = AttributeCalculator.getValues(this, hand.map(c =>
+    BattleSlot(c.getName, Nil, Nil, Some(hand))), None).fold(_ => Map(), result => result.attributes
+  )
 }
 
 object Player {
   implicit val playerFormat: OFormat[Player] = Json.format[Player]
-  implicit val playerWrites: OWrites[Player] = Json.writes[Player]
 
   val HandSize = 6
 

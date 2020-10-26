@@ -9,6 +9,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
 case class Dungeon(monsterPile: List[Card], ranks: List[Option[Card]]) {
+  def hasMonster(index: Int): Boolean = ranks.drop(index - 1).head match {
+    case Some(_: MonsterCard) => true
+    case _ => false
+  }
+
   def banish(rank: Int): Dungeon = {
     val monster = ranks.drop(rank - 1).head.get
     val newRanks = ranks.take(rank - 1) ::: None :: ranks.drop(rank)

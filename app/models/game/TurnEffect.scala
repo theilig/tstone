@@ -111,13 +111,13 @@ case class TurnEffect(
     })
   }
 
-  def matchesRequiredCard(card: Card, attributes: Map[String, Attributes]): Boolean = {
+  def matchesRequiredCard(card: Card, attributes: List[(String, Attributes)]): Boolean = {
     requiredType.forall(required => {
       required match {
         case "MaxStrength" =>
-          val maxStrength = attributes.valuesIterator.reduceLeft((x, y) =>
+          val maxStrength = attributes.map(_._2).reduceLeft((x, y) =>
             if (x.getOrElse("Strength", 0) > y.getOrElse("Strength", 0)) x else y).getOrElse("Strength", 0)
-          attributes.contains(card.getName) && attributes(card.getName).getOrElse("Strength", 0) == maxStrength
+          attributes.exists(a => a._1 == card.getName && a._2.getOrElse("Strength", 0) == maxStrength)
         case _ => matchesRequiredCard(card)
       }
     })
@@ -149,14 +149,15 @@ case class TurnEffect(
       attributes
     }
   }
+
   def applyMatchupAdjustment(
                               slot: BattleSlot,
-                              monster: MonsterCard,
+                              monster: Option[MonsterCard],
                               rank: Int,
                               late: Boolean)(attributes: Attributes): Attributes = {
-    def equipped(p: Card => Boolean): Boolean = {
+    def equipped(filter: WeaponCard => Boolean): Boolean = {
       (slot.equippedCards ::: slot.destroyedCards).collect({
-        case w: WeaponCard => p(w)
+        case w: WeaponCard => filter(w)
       }).nonEmpty
     }
 
@@ -165,7 +166,10 @@ case class TurnEffect(
     }).exists(_ => {
       requiredType.map {
         case "!Magic Attack" => attributes.getOrElse("Magic Attack", 0) <= 0
-        case "!Equipped" => !equipped(_ => true)
+        case "!Equipped" => !equipped(_ => true) && (slot.baseCard match {
+          case _: HeroCard => true
+          case _ => false
+        })
         case "Equipped" => equipped(_ => true)
         case "!Rank1" => rank > 1
         case "Rank3" => rank >= 3
@@ -173,14 +177,17 @@ case class TurnEffect(
           slot.destroyedCards.exists(c => c.getTraits.contains("Food"))
         case "Equipped+Edged" => equipped(c => c.getTraits.contains("Edged"))
         case "ClericVDoomknight" =>
-          slot.baseCard.getTraits.contains("Cleric") && monster.getTraits.contains("Doomknight")
+          slot.baseCard.getTraits.contains("Cleric") && monster.exists(_.getTraits.contains("Doomknight"))
+        case "GoldValue" if effect.contains("Destroy") => slot.destroyedCards.exists(c => c.hasGoldValue)
+        case "Militia" if effect.contains("Destroy") => slot.destroyedCards.exists(c => c.getName == "Militia")
         case "ClericVUndead" =>
-          slot.baseCard.getTraits.contains("Cleric") && monster.getTraits.contains("Undead")
+          slot.baseCard.getTraits.contains("Cleric") && monster.exists(_.getTraits.contains("Undead"))
         case "Hero8Strength" => slot.baseCard match {
           case _: HeroCard => attributes.getOrElse("Strength", 0) >= 8
           case _ => false
         }
         case _ if effect.contains("MakeMagic") => true
+        case _ if effect.contains("Buys") => true
         case _ => false
       }.getOrElse(late)
     })

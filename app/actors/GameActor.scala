@@ -4,8 +4,8 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import controllers.game.stage.{ChoosingDestination, WaitingForPlayers}
 import dao.{CardDao, GameDao}
 import models.User
-import models.game.{ConnectToGame, GameError, GameOver, GameState, LeaveGame, Message, StartGame, State, UserMessage}
-import services.GameSetup
+import models.game.{Card, ConnectToGame, GameError, GameOver, GameState, GetAttributes, LeaveGame, Message, MonsterCard, StartGame, State, UserMessage}
+import services.{AttributeCalculator, GameSetup}
 
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -71,6 +71,19 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
           updateGameState(newState)
         }).recover {
           case t: Throwable => log.error(t.getMessage)
+        }
+      case GetAttributes(monster, slots) =>
+        val player = state.players.find(_.userId == user.userId)
+        val target: Option[Card] = state.dungeon.flatMap(d => monster.flatMap(index => d.ranks.drop(index - 1).headOption.flatten))
+        val monsterCard: Option[MonsterCard] = target match {
+          case Some(m: MonsterCard) => Some(m)
+          case _ => None
+        }
+
+        if (player.nonEmpty) {
+          sender() ! AttributeCalculator.getValues(player.get, slots, monsterCard.map(m => (monster.get, m)))
+        } else {
+          sender() ! GameError("You aren't playing")
         }
       case m if m.validate(state) => sendToStage(m)
       case _ => sender() ! GameError("Invalid Message")

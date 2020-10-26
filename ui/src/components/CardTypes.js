@@ -9,7 +9,8 @@ export const CardTypes = {
     DISCARD: 'Discard',
     DESTROY: 'Destroy',
     VILLAGE: 'Village',
-    DUNGEON: 'Dungeon'
+    DUNGEON: 'Dungeon',
+    DISEASE: 'Disease'
 }
 
 export const getDragType = (card) => {
@@ -24,6 +25,8 @@ export const getDragType = (card) => {
             return CardTypes.VILLAGER
         case "MonsterCard":
             return CardTypes.MONSTER
+        case "DiseaseCard":
+            return CardTypes.DISEASE
         case "ItemCard":
             if (card.data.traits.includes("Food")) {
                 return CardTypes.FOOD
@@ -41,7 +44,7 @@ export const getDropTypes = (card) => {
         case "TakeAny":
             return [
                 CardTypes.HERO, CardTypes.ITEM, CardTypes.WEAPON, CardTypes.FOOD, CardTypes.MONSTER,
-                CardTypes.VILLAGER, CardTypes.SPELL]
+                CardTypes.VILLAGER, CardTypes.SPELL, CardTypes.DISEASE]
         case "Upgrade":
             return [CardTypes.VILLAGE]
         case "Dungeon":

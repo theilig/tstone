@@ -6,8 +6,9 @@ import models.game._
 import play.api.libs.json.{Format, Json}
 import services.CardManager
 
-case class Crawling(currentPlayerId: Int) extends PlayerStage {
-
+case class Crawling(
+                     currentPlayerId: Int, banishes: Int = 0, sendToBottoms: Int = 0, borrowed: Map[String, String] = Map()
+                   ) extends PlayerStage {
   def removeDestroyed(hand: List[Card], arrangement: List[BattleSlot], includeSelfDestroyed: Boolean): List[Card] = {
     arrangement match {
       case Nil => hand
@@ -25,11 +26,15 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
   }
 
   def defeat(
-              monster: MonsterCard, rank: Int, finalHand: List[Card], attributes: Map[String, Attributes], state: State
+              monster: MonsterCard, rank: Int, finalHand: List[Card], attributes: List[(String, Attributes)], state: State
             ): State = {
     val newDungeon = state.dungeon.map(_.defeat(rank))
+    val cardsToTake = (rank, state.dungeon.get.ranks) match {
+      case (1, Some(monster) :: Some(t: ThunderstoneCard) :: _) => monster :: t :: Nil
+      case _ => monster :: Nil
+    }
     val newState = getDiseases(monster, state.updatePlayer(currentPlayerId)(p =>
-      p.copy(discard = monster :: p.discard, hand = finalHand, xp = p.xp + monster.experiencePoints)
+      p.copy(discard = cardsToTake ::: p.discard, hand = finalHand, xp = p.xp + monster.experiencePoints)
     ).copy(
       dungeon = newDungeon
     ))
@@ -55,7 +60,7 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
                 monster: MonsterCard,
                 rank: Int,
                 finalHand: List[Card],
-                attributes: Map[String, Attributes],
+                attributes: List[(String, Attributes)],
                 state: State
               ): State = {
     val newDungeon = state.dungeon.map(_.banish(rank))
@@ -79,7 +84,7 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
   }
 
   private def getPossibleDestroys(
-                                   monster: MonsterCard, finalHand: List[Card], attributes: Map[String, Attributes]
+                                   monster: MonsterCard, finalHand: List[Card], attributes: List[(String, Attributes)]
                                  ): List[Card] = {
     val possibleDestroys = monster.battleEffects.filter(_.isDestroy).foldLeft(List[Card]())((soFar, effect) => {
       soFar ::: finalHand.filter(c => effect.matchesRequiredCard(c, attributes))
@@ -108,9 +113,9 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
                      finalHand: List[Card],
                      monster: MonsterCard,
                      rank: Int,
-                     attributes: Map[String, Attributes]
+                     attributes: List[(String, Attributes)]
                    ): State = {
-    val combinedAttributes = combineAttributes(attributes.values.filter(!_.contains("No Attack")))
+    val combinedAttributes = combineAttributes(attributes.map(_._2).filter(!_.contains("No Attack")))
     val lightAdjustedAttributes = combinedAttributes + ("Light" -> (combinedAttributes.getOrElse("Light", 0) - rank))
     val combinedEffects = (finalHand.flatten(c => c.getDungeonEffects) ::: monster.battleEffects).filter(_.isCombined)
     val adjustedAttributes = combinedEffects.foldLeft(lightAdjustedAttributes)((a, e) => {
@@ -165,9 +170,9 @@ case class Crawling(currentPlayerId: Int) extends PlayerStage {
             ).flatten.filter(_.isGeneralEffect)
 
           val finalHand = removeDestroyed(hand, cardArrangement, includeSelfDestroyed = false)
-          val attributes: Map[String, Attributes] = cardArrangement.map(slot => {
-            slot.copy(hand = Some(hand)).battleAttributes(generalEffects, monster, monsterIndex + 1)
-          }).toMap
+          val attributes: List[(String, Attributes)] = cardArrangement.map(slot => {
+            slot.copy(hand = Some(hand)).battleAttributes(generalEffects, Some(monster), monsterIndex + 1)
+          })
           Right(resolveBattle(state, finalHand, monster, monsterIndex + 1, attributes))
         } catch {
           case g: GameException => Left(GameError(g.getMessage))
