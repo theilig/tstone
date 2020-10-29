@@ -6,7 +6,7 @@ import models.game._
 import play.api.libs.json.{Format, Json}
 import services.CardManager
 
-case class TakingSpoils(currentPlayerId: Int, spoilsTypes: List[String]) extends PlayerStage {
+case class TakingSpoils(currentPlayerId: Int, spoilsTypes: List[String], borrowed: List[Borrowed]) extends PlayerStage {
   def getBuyingPower(hand: List[Card]): Int = {
     hand.map(_.getGoldValue).sum
   }

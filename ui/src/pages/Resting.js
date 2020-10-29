@@ -1,5 +1,4 @@
 import React, {useState} from "react";
-import { useAuth } from "../context/auth";
 import { Button, Options } from "../components/inputElements"
 import {useGameState} from "../context/GameState";
 import Dungeon from "../components/Dungeon";
@@ -13,7 +12,7 @@ function Resting(props) {
     const { gameState } = useGameState()
 
     const endTurn = () => {
-        const destroys = getLowerMapFromArrangement(props.arrangement, "destroy")
+        const destroys = getLowerMapFromArrangement(props.arrangement, "destroyed")
         props.gameSocket.send(JSON.stringify(
             {
                 messageType: "Destroy",
@@ -28,8 +27,9 @@ function Resting(props) {
     }
 
     const renderChoices = () => {
-        const destroys = getLowerMapFromArrangement(props.arrangement, "destroy")
-        if (Object.keys(destroys).length === 0) {
+        const destroys = getLowerMapFromArrangement(props.arrangement, "destroyed")
+        const keys = Object.keys(destroys)
+        if (keys.length === 0 || destroys[keys[0]].length === 0) {
             return (
                 <div>
                     <div style={{fontSize: "x-large"}}>You may destroy one card</div>
@@ -38,6 +38,10 @@ function Resting(props) {
                     </Options>
                 </div>
             )
+        } else if (destroys[keys[0]].length > 1) {
+            return (<div>
+                <div style={{fontSize: "x-large"}}>You may only destroy one card</div>
+            </div>)
         } else {
             return (
                 <Options>

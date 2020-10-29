@@ -16,7 +16,7 @@ case class BattleSlot(card: String, equipped: List[String], destroyed: List[Stri
           val (card, destroyed) = pair
           applyAdjustments(
             card.attributes,
-            ( monsterEffects ::: generalEffects ::: card.getDungeonEffects).map(e => e.applyIndividualAdjustment(card, destroyed))
+            ( generalEffects ::: card.getDungeonEffects).map(e => e.applyIndividualAdjustment(card, destroyed))
           )
         })
         val slotResult = applyAdjustments(
@@ -32,7 +32,8 @@ case class BattleSlot(card: String, equipped: List[String], destroyed: List[Stri
 
   def villageAttributes: Attributes = {
     val liveCards = baseCard :: equippedCards
-    val slotAttributes = liveCards.map(_.attributes) ::: baseCard.getVillageEffects.map(e =>
+    val slotAttributes = liveCards.map(c => Map("Gold" -> c.getGoldValue)) :::
+      baseCard.getVillageEffects.map(e =>
       e.applyMatchupAdjustment(this, None, 0, late = false)(
         e.applyIndividualAdjustment(baseCard, destroyed.contains(baseCard.getName))(Map()))
     )

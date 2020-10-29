@@ -1,7 +1,7 @@
 package models.game
 
 import models.User
-import play.api.libs.json.{Json, OFormat, OWrites}
+import play.api.libs.json.{Json, OFormat}
 import models.schema.Tables.UserRow
 import services.AttributeCalculator
 
@@ -14,7 +14,7 @@ case class Player(userId: Int,
                   discard: List[Card],
                   hand: List[Card],
                   deck: List[Card],
-                  xp: Int,
+                  xp: Int
                  ) {
   def finishTurn: Player = {
     @tailrec
@@ -32,9 +32,9 @@ case class Player(userId: Int,
     val (newDiscard, newDeck, newHand) = buildNewHand(discard, deck, hand)
     copy(discard = newDiscard, hand = newHand, deck = newDeck)
   }
-  def attributes: Attributes = AttributeCalculator.getValues(this, hand.map(c =>
-    BattleSlot(c.getName, Nil, Nil, Some(hand))), None).fold(_ => Map(), result => result.attributes
-  )
+  def attributes: Attributes = AttributeCalculator.getValues(this, hand.map(
+    c => BattleSlot(c.getName, Nil, Nil, Some(hand))
+  ), None).attributes
 }
 
 object Player {

@@ -12,7 +12,7 @@ function AttributeValues(props) {
         <AttributeContainer>
                 {Object.keys(props.show).map((key) => {
                     const label = props.show[key]
-                    return (<div style={{marginLeft: '5px'}} key={key}>{label}:{props.values[key]}</div>)
+                    return (<div style={{marginLeft: '5px'}} key={key}>{label}:{props.values[key] ?? 0}</div>)
                 })}
         </AttributeContainer>
     )

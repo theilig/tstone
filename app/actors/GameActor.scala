@@ -1,7 +1,7 @@
 package actors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import controllers.game.stage.{ChoosingDestination, WaitingForPlayers}
+import controllers.game.stage.{ChoosingDestination, GameEnded, WaitingForPlayers}
 import dao.{CardDao, GameDao}
 import models.User
 import models.game.{Card, ConnectToGame, GameError, GameOver, GameState, GetAttributes, LeaveGame, Message, MonsterCard, StartGame, State, UserMessage}
@@ -38,7 +38,12 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
     def sendToStage(m: Message): Unit = {
       val result = state.currentStage.receive(m, user, state)
       result match {
-        case Right(newState) => updateGameState(newState)
+        case Right(newState) => newState.currentStage match {
+          case GameEnded =>
+            gameDao.completeGame(gameId)
+            updateGameState(newState)
+          case _ => updateGameState(newState)
+        }
         case Left(e) => sender() ! e
       }
     }

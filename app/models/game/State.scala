@@ -15,6 +15,12 @@ case class State(players: List[Player], village: Option[Village], dungeon: Optio
           "currentStage" -> Json.toJson(currentStage)
         )
       )
+      case WaitingForPlayers => JsObject(
+        Seq(
+          "players" -> Json.toJson(players),
+          "currentStage" -> Json.toJson(currentStage)
+        )
+      )
       case _ =>
         val playerList = players.map {
           case p if p.userId == userId => JsObject(

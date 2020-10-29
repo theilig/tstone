@@ -1,7 +1,7 @@
 package services
 
 import controllers.GameException
-import models.game.{Card, GameError, HeroCard, ItemCard, MonsterCard, Player, SpellCard, State, WeaponCard}
+import models.game.{BattleSlot, Card, GameError, HeroCard, ItemCard, MonsterCard, Player, SpellCard, State, WeaponCard}
 
 import scala.annotation.tailrec
 import scala.util.Random
@@ -19,6 +19,7 @@ object CardManager {
     case (heroTrait, h: HeroCard) if h.traits.contains(heroTrait) => true
     case (notHeroTrait, h: HeroCard)
       if notHeroTrait.startsWith("!") && !h.traits.contains(notHeroTrait.substring(1)) => true
+    case ("Any", _) => true
     case _ => false
   }
 }
@@ -100,5 +101,23 @@ object CardManager {
       ).getOrElse((hand, alreadyFound))
     })._2
   }
+
+  @tailrec
+  def removeDestroyed(hand: List[Card], arrangement: List[BattleSlot], keepSelfDestroyed: Boolean): List[Card] = {
+    arrangement match {
+      case Nil => hand
+      case x :: remaining =>
+        removeDestroyed(
+          x.destroyed.foldLeft(hand)((newHand, destroyedCard) => {
+            if (destroyedCard != x.card || !keepSelfDestroyed)
+              CardManager.removeOneInstanceFromCards(newHand, destroyedCard)
+            else
+              newHand
+          }),
+          remaining, keepSelfDestroyed
+        )
+    }
+  }
+
 
 }

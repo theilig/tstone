@@ -6,6 +6,8 @@ import DestroySlot from "./DestroySlot";
 import UpgradeSlot from "./UpgradeSlot";
 import BanishSlot from "./BanishSlot"
 import {SourceIndexes, TargetIndexes} from "./SlotIndexes";
+import LoanSlot from "./LoanSlot";
+import DiscardSlot from "./DiscardSlot";
 
 const HandContainer = styled.div`
     display: flex;
@@ -52,15 +54,37 @@ function PlayerHand(props) {
                                 upgradee={column.cards[0]}
                             />
                         )}
-                        {column.destroy && (
+                        {column.destroyed && (
                             <DestroySlot
-                                cards={column.destroy}
+                                cards={column.destroyed}
                                 index={TargetIndexes.DestroyIndex - TargetIndexes.HandIndex + column.cards[0].data.sourceIndex}
                                 key={TargetIndexes.DestroyIndex - TargetIndexes.HandIndex + column.cards[0].data.sourceIndex}
                                 registerDrop={props.registerDrop}
                                 registerDestroy={props.registerDestroy}
                                 registerHovered={props.registerHovered}
                                 name={column.cards[0].data.name}
+                            />
+                        )}
+                        {column.loan && (
+                            <LoanSlot
+                                cards={column.loan}
+                                index={TargetIndexes.LoanIndex}
+                                key={TargetIndexes.LoanIndex}
+                                registerDrop={props.registerDrop}
+                                registerDestroy={props.registerDestroy}
+                                registerHovered={props.registerHovered}
+                                name={"Loan Hero"}
+                            />
+                        )}
+                        {column.discard && (
+                            <DiscardSlot
+                                cards={column.discard}
+                                index={TargetIndexes.DiscardIndex}
+                                key={TargetIndexes.DiscardIndex}
+                                registerDrop={props.registerDrop}
+                                registerDestroy={props.registerDestroy}
+                                registerHovered={props.registerHovered}
+                                name={"Discard"}
                             />
                         )}
                     </Pair>

@@ -27,7 +27,12 @@ case class Dungeon(monsterPile: List[Card], ranks: List[Option[Card]]) {
           val newHeroPiles = state.village.get.heroes.map(p => p.copy(cards = p.cards.drop(2)))
           state.copy(village = state.village.map(v => v.copy(heroes = newHeroPiles)))
         case Some(DiscardTwoCards) => state.copy(currentStage =
-          PlayerDiscard(state.currentPlayer.get.userId, state.players.map(_.userId), 2, breach = true)
+          PlayerDiscard(
+            currentPlayerId = state.currentPlayer.get.userId,
+            playerIds = state.players.map(_.userId).toSet,
+            howMany = 2,
+            isBreach = true
+          )
         )
         case None => state
       }
@@ -111,7 +116,10 @@ object Dungeon {
         shuffledMonsters.slice(3, thunderstoneIndex + 20) ::: thunderstoneList,
         shuffledMonsters.take(3).map(m => Some(m))
       )
-      new Dungeon(shuffledMonsters.take(20 + thunderstoneIndex) ::: thunderstoneList, List(None, None, None))
+      new Dungeon(
+        shuffledMonsters.slice(3, thunderstoneIndex + 23) ::: thunderstoneList,
+        shuffledMonsters.take(3).map(m => Some(m))
+      )
     }
   }
 }

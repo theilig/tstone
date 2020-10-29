@@ -38,7 +38,12 @@ function Upgrading(props) {
         let upgradedCard = null
         let purchasedCards = []
         const upgradedData = getLowerMapFromArrangement(props.arrangement, "upgrade")
-        purchasedCards = Object.keys(upgradedData)
+        Object.keys(upgradedData).forEach(key => {
+            if (upgradedData[key][0] != null) {
+                purchasedCards.push(upgradedData[key][0])
+            }
+        })
+
         const village = gameState.village
         village["heroes"].forEach((pile) => {
             if (pile.cards) {
@@ -95,13 +100,23 @@ function Upgrading(props) {
         opacity: 0.4
     }
 
+    let purchasedCards = []
+    const upgradedData = getLowerMapFromArrangement(props.arrangement, "upgrade")
+    Object.keys(upgradedData).forEach(key => {
+        if (upgradedData[key][0] != null) {
+            purchasedCards.push(upgradedData[key][0])
+        }
+    })
+
     return (
         <DndProvider backend={HTML5Backend}>
             <div>
                 <div style={disabledStyle}>
                     <Dungeon registerHovered={props.registerHovered} />
                 </div>
-                <Village registerHovered={props.registerHovered} upgrading={props.upgrading}/>
+                <Village registerHovered={props.registerHovered} upgrading={props.upgrading}
+                            purchased={purchasedCards}
+                />
                 <AttributeValues key={3} values={props.attributes} show={{
                     experience: "Experience"
                 }} />

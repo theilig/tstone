@@ -4,7 +4,7 @@ import Village from "../components/Village";
 import PlayerHand from "../components/PlayerHand"
 import AttributeValues from "../components/AttributeValues";
 
-function WaitingForHeroes(props) {
+function WaitingForDiscards(props) {
     return (
         <div>
             <Dungeon registerHovered={props.registerHovered} />
@@ -23,10 +23,10 @@ function WaitingForHeroes(props) {
                 arrangement={props.arrangement}
                 registerDrop={props.registerDrop}
             />
-            <div key={6} style={{fontSize: "x-large"}}>Waiting For Heroes</div>
+            <div key={6} style={{fontSize: "x-large"}}>Waiting For Discards</div>
             {props.renderHovered()}
         </div>
     )
 }
 
-export default WaitingForHeroes;
+export default WaitingForDiscards;

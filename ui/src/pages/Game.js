@@ -18,9 +18,9 @@ import {SourceIndexes, TargetIndexes} from "../components/SlotIndexes";
 import {villageCategories} from "../components/Village";
 import Destroying from "./Destroying";
 import TakingSpoils from "./TakingSpoils";
-import WaitingForHeroes from "./WaitingForHeroes";
-import Loaning from "./Loaning";
+import Discarding from "./Discarding";
 import GameResult from "./GameResult";
+import {serializeArrangement} from "../services/Arrangement";
 
 function Game() {
     const [ gameState, setGameState ] = useState()
@@ -42,7 +42,7 @@ function Game() {
             setUsing({})
         }
         data.players.forEach(p => {
-            if (authTokens.user.userId === p.userId) {
+            if (authTokens.user.userId === p.userId && p.attributes) {
                 setRemoteAttributes(p.attributes)
             }
         })
@@ -59,7 +59,26 @@ function Game() {
         }
     }
 
-    useEffect(() => {
+    const connectToGame = (ws, gameId) => {
+        ws.send(JSON.stringify(
+            {
+                messageType: "Authentication",
+                data: {
+                    token: authTokens.token
+                }
+            }
+        ))
+        ws.send(JSON.stringify(
+            {
+                messageType: "ConnectToGame",
+                data: {
+                    gameId: gameId
+                }
+            }
+        ))
+    }
+
+    const openSocket = () => {
         const indexCards = (state => {
             if (state.currentStage.stage === "WaitingForPlayers" ||
                 state.currentStage.stage === "GameEnded")  {
@@ -86,55 +105,76 @@ function Game() {
             state.dungeon.ranks.concat(state.dungeon.monsterPile).forEach((c, index) => {
                 c.data.sourceIndex = SourceIndexes.DungeonIndex + index
             })
-            return state
-        })
-        if (gameSocket === null) {
-            let ws = new WebSocket('ws://localhost:9000/api/game')
-            setGameSocket(ws)
-            ws.onopen = () => {
-                ws.send(JSON.stringify(
-                    {
-                        messageType: "Authentication",
-                        data: {
-                            token: authTokens.token
-                        }
-                    }
-                ))
-                ws.send(JSON.stringify(
-                    {
-                        messageType: "ConnectToGame",
-                        data: {
-                            gameId: gameId
-                        }
-                    }
-                ))
-            }
-            ws.onmessage = evt => {
-                // listen to data sent from the websocket server
-                const message = JSON.parse(evt.data)
-                if (message.messageType === "GameState") {
-
-                    setState(indexCards(message.data.state))
-                } else if (message.messageType === "GameOver") {
-                    setGameOver(true)
-                }
-                console.log(message)
-            }
-            ws.onclose = () => {
-                console.log('disconnected')
-                // automatically try to reconnect on connection loss
-            }
-        }
-        if (gameState) {
-            gameState.players.forEach((p) => {
+            state.players.forEach((p) => {
                 if (authTokens.user.userId === p.userId) {
                     setPlayer(p)
                 }
             })
+
+            return state
+        })
+
+        let ws = new WebSocket('ws://localhost:9000/api/game')
+        setGameSocket(ws)
+        ws.onopen = () => {
+            connectToGame(ws, gameId)
         }
+        ws.onmessage = evt => {
+            // listen to data sent from the websocket server
+            const message = JSON.parse(evt.data)
+            if (message.messageType === "GameState") {
+                setState(indexCards(message.data.state))
+            } else if (message.messageType === "GameOver") {
+                setGameOver(true)
+            } else if (message.messageType === "AttributeResult") {
+                setRemoteAttributes(message.data.attributes)
+            } else if (message.messageType === "Not Authenticated") {
+                connectToGame(ws, gameId)
+            }
+            console.log(message)
+        }
+        ws.onclose = () => {
+            console.log('disconnected')
+            // automatically try to reconnect on connection loss
+        }
+        return ws
+    }
 
-    }, [gameSocket, authTokens.token, gameId, gameState, authTokens.user.userId])
+    const sendMessage = (message) => {
+        let ws = gameSocket
+        if (!gameSocket || gameSocket.readyState === WebSocket.CLOSED) {
+            ws = openSocket()
+        }
+        ws.send(message)
+    }
 
+    useEffect(() => {
+        if (gameSocket == null) {
+            openSocket()
+        }
+    }, [openSocket])
+
+    const updateAttributes = (currentAttached, currentUsing) => {
+        let activePlayer = isActivePlayer(gameState)
+        const arrangement =
+            getArrangement(
+                player,
+                activePlayer ? gameState.currentStage : {stage: "ChoosingDestination"},
+                currentAttached,
+                currentUsing
+            )
+
+        let finalArrangement = serializeArrangement(arrangement)
+        gameSocket.send(JSON.stringify(
+            {
+                messageType: "GetAttributes",
+                data: {
+                    gameId: gameState.gameId,
+                    arrangement: finalArrangement
+                }
+            }
+        ))
+    }
     const isActivePlayer = (state) => {
         if (state && state.currentStage) {
             const stage = state.currentStage
@@ -285,6 +325,7 @@ function Game() {
             setUsing(newUsing)
             setIsAttached(newAttached)
         }
+        updateAttributes(newAttached, newUsing)
     }
 
     const canUpgrade = (card, xp) => {
@@ -398,7 +439,7 @@ function Game() {
         return false
     }
 
-    const getArrangement = (player, stage) => {
+    const getArrangement = (player, stage, currentAttached, currentUsing) => {
         const hand = player.hand
         const xp = player.xp
         const canDestroy = (effects) => {
@@ -417,51 +458,63 @@ function Game() {
         }
         let cardArrangement = []
         const addDestroy = (c, includeEffects) => {
-            if (includeEffects && stage === "Purchasing" && canDestroy(c.data.villageEffects)) {
+            if (includeEffects && stage.stage === "Purchasing" && canDestroy(c.data.villageEffects)) {
                 return true
             }
-            if (includeEffects && stage === "Crawling" && canDestroy(c.data.dungeonEffects)) {
+            if (includeEffects && stage.stage === "Crawling" && canDestroy(c.data.dungeonEffects)) {
                 return true
             }
-            if (stage === "Destroying") {
-                const targets = gameState.currentStage.data.possibleCards.map(c => c.data.name)
+            if (stage.stage === "Destroying") {
+                const targets = stage.data.possibleCards.map(c => c.data.name)
                 return targets.includes(c.data.name)
             }
-            if (stage === "DiscardOrDestroy") {
+            if (stage.stage === "DiscardOrDestroy") {
                 return true
             }
         }
+        let playerDiscarding = stage.stage === "PlayerDiscard" && stage.data.howMany > stage.data.borrows &&
+            stage.data.playerIds.includes(player.userId)
+        let playerLoaning = stage.stage === "PlayerDiscard" && stage.data.borrows > 0 &&
+            stage.data.playerIds.includes(player.userId)
         hand.forEach(card => {
             let destroyIndex = TargetIndexes.DestroyIndex - TargetIndexes.HandIndex + card.data.sourceIndex
-            if (isAttached[card.data.sourceIndex] == null || using[destroyIndex] != null) {
+            if (currentAttached[card.data.sourceIndex] == null || currentUsing[destroyIndex] != null) {
                 let arrangementIndex = cardArrangement.length
                 cardArrangement.push({cards: [card]})
-                let destroySlot = (stage === "Resting" && arrangementIndex === 0) || using[destroyIndex] != null
-                const upgradeSlot = (stage === "Upgrading" && canUpgrade(card, xp))
-                const banishSlot = addBanish(stage, card)
+                let destroySlot = (stage.stage === "Resting" && arrangementIndex === 0) ||
+                    (currentUsing[destroyIndex] != null && currentUsing[destroyIndex].length > 0)
+                const upgradeSlot = (stage.stage === "Upgrading" && canUpgrade(card, xp))
+                const banishSlot = addBanish(stage.stage, card)
+                const discardSlot = playerDiscarding && (
+                    (arrangementIndex === 0 && !playerLoaning) ||
+                    (arrangementIndex === 1 && playerLoaning)
+                )
+                const loanSlot = (arrangementIndex === 0 && playerLoaning)
                 destroySlot = destroySlot || addDestroy(card, card.cardType !== "WeaponCard")
 
-                if (using[card.data.sourceIndex] != null) {
-                    using[card.data.sourceIndex].forEach(card => {
+                if (currentUsing[card.data.sourceIndex] != null) {
+                    currentUsing[card.data.sourceIndex].forEach(card => {
                         cardArrangement[arrangementIndex].cards.push(card)
                         destroySlot = destroySlot || addDestroy(card, true)
                     })
                 }
                 if (upgradeSlot) {
-                    cardArrangement[arrangementIndex].upgrade = using[TargetIndexes.UpgradeIndex -
+                    cardArrangement[arrangementIndex].upgrade = currentUsing[TargetIndexes.UpgradeIndex -
                     TargetIndexes.HandIndex + card.data.sourceIndex] ?? []
                 }
                 if (destroySlot) {
-                    if (stage === "Resting") {
-                        cardArrangement[arrangementIndex].destroy = using[TargetIndexes.DestroyIndex] ?? []
-                    } else {
-                        cardArrangement[arrangementIndex].destroy = using[TargetIndexes.DestroyIndex +
-                            card.data.sourceIndex - TargetIndexes.HandIndex] ?? []
-                    }
+                    cardArrangement[arrangementIndex].destroyed = currentUsing[TargetIndexes.DestroyIndex +
+                        card.data.sourceIndex - TargetIndexes.HandIndex] ?? []
                 }
                 if (banishSlot) {
-                    cardArrangement[arrangementIndex].banish = using[TargetIndexes.BanishIndex +
+                    cardArrangement[arrangementIndex].banish = currentUsing[TargetIndexes.BanishIndex +
                         card.data.sourceIndex - TargetIndexes.HandIndex] ?? []
+                }
+                if (discardSlot) {
+                    cardArrangement[arrangementIndex].discard = currentUsing[TargetIndexes.DiscardIndex] ?? []
+                }
+                if (loanSlot) {
+                    cardArrangement[arrangementIndex].loan = currentUsing[TargetIndexes.LoanIndex] ?? []
                 }
             }
         })
@@ -479,7 +532,11 @@ function Game() {
         let upgrading = []
         let activePlayer = isActivePlayer(gameState)
         if (player && player.hand.length > 0) {
-            arrangement = getArrangement(player, activePlayer ? stage.stage : "ChoosingDestination")
+            arrangement = getArrangement(
+                player,
+                (activePlayer || stage.stage === "PlayerDiscard") ? stage : {stage: "ChoosingDestination"},
+                isAttached,
+                using)
             if (stage.stage === "Upgrading") {
                 upgrading = player.hand.filter(c => canUpgrade(c, player.xp)).map(c => c.data.name)
                 attributes = {experience: player.xp - arrangement.map(columns => {
@@ -531,8 +588,8 @@ function Game() {
                                        spoils={stage.data.spoilsTypes.filter(s => s !== "DiscardOrDestroy")}
                                        gameSocket={gameSocket} arrangement={arrangement} />
 
-                case "BorrowHeroes":
-                    return <WaitingForHeroes registerHovered={registerHovered} renderHovered={renderHovered}
+                case "PlayerDiscard":
+                    return <Discarding registerHovered={registerHovered} renderHovered={renderHovered}
                                          registerDrop={registerDrop} attributes={attributes}
                                          gameSocket={gameSocket} arrangement={arrangement} />
                 default:
@@ -543,19 +600,19 @@ function Game() {
             switch (stage.stage) {
                 case "WaitingForPlayers":
                     return <Startup gameSocket={gameSocket} />
-                case "BorrowHeroes":
-                    let needLoan = false
+                case "PlayerDiscard":
+                    let needDiscards = false
                     stage.data.playerIds.forEach(p => {
                         if (p === parseInt(authTokens.user.userId)) {
-                            needLoan = true
+                            needDiscards = true
                         }
                     })
-                    if (needLoan) {
-                        return (<Loaning
+                    if (needDiscards) {
+                        return (<Discarding
                             registerHovered={registerHovered} renderHovered={renderHovered}
                             registerDrop={registerDrop} attributes={attributes}
                             gameSocket={gameSocket} arrangement={arrangement}
-                            />)
+                        />)
                     }
                     break;
                 case "GameEnded":
@@ -611,7 +668,8 @@ function Game() {
             registerDrop: registerDrop,
             haveBanished: haveBanished,
             haveSentToBottom: haveSentToBottom,
-            remoteAttributes: remoteAttributes
+            remoteAttributes: remoteAttributes,
+            sendMessage: sendMessage
         }}>
             <DndProvider backend={HTML5Backend}>
                 {renderGameStage()}

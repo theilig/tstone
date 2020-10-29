@@ -68,6 +68,7 @@ export const cardMatches = (card, effect, activeCard) => {
         case "Militia": return card.data.name === "Militia"
         case "Self": return activeCard && card.data.sourceIndex === activeCard.data.sourceIndex
         case "GoldValue": return card.data.goldValue != null
+        case "Disease": return card.cardType === "DiseaseCard"
         case undefined: return true
         default: return false
     }

@@ -437,7 +437,7 @@ case class WeaponCard(
                        victoryPoints: Int,
                        override val frequency: Int
                     ) extends Card(name, imageName, frequency) {
-  override def attributes: Map[String, Int] = super.attributes + ("Weight" -> weight)
+  override def attributes: Map[String, Int] = super.attributes + ("Weight" -> weight, "Equipped" -> 1)
 
   override def getLight: Int = light
 

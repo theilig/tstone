@@ -49,40 +49,6 @@ case class Purchasing(currentPlayerId: Int) extends PlayerStage {
     performDestroys(possibleDestroys, destroyed, hand, Map())
   }
 
-  def processDestroyDrawing(cardsDestroyed: Map[String, List[String]], state: State): Either[GameError, State] = {
-    val initialResult: Either[GameError, State] = Right(state)
-    cardsDestroyed.foldLeft(initialResult)((currentResult, destroy) => {
-      currentResult.fold(
-        e => Left(e),
-        s => {
-        val (destroyer, destroyed) = destroy
-        val destroyedCards = destroyed.flatMap(name => s.currentPlayer.get.hand.find(_.getName == name))
-        val possibleEffect = s.currentPlayer.get.hand.find(_.getName == destroyer).flatMap(destroyerCard => {
-          destroyerCard.getVillageEffects.find(e => e.effect.contains("Destroy") && e.adjustment.exists(
-            p => p.attribute == "Card" &&
-              destroyedCards.forall(c => e.matchesRequiredCard(c, c.getName == destroyerCard.getName))))
-        })
-        possibleEffect match {
-          case Some(effect) =>
-            val updatedHand = destroyed.foldLeft(s.currentPlayer.get.hand)((adjustedHand, cardName) => {
-              CardManager.removeOneInstanceFromCards(adjustedHand, cardName)
-            })
-            if (updatedHand.length + destroyed.length == s.currentPlayer.get.hand.length) {
-              val destroyedState = s.updatePlayer(currentPlayerId)(p => p.copy(hand = updatedHand))
-              Right(CardManager.givePlayerCards(
-                destroyedState.currentPlayer.get,
-                effect.adjustment.get.amount * destroyed.length,
-                destroyedState)._2
-              )
-            } else {
-              Left(GameError("Couldn't find all destroyed cards in hand"))
-            }
-          case None => Left(GameError(s"Couldn't destroy all cards with $destroyer"))
-        }
-      })
-    })
-  }
-
   def getBuyingPower(hand: List[Card], destroyed: Map[Card, List[Card]]): (Int, Int, Int, List[Card]) = {
     val startingAttributes = hand.foldLeft(Map(
       "Gold" -> 0, "Experience" -> 0, "Buys" -> 0
@@ -147,7 +113,7 @@ case class Purchasing(currentPlayerId: Int) extends PlayerStage {
         } catch {
           case g: GameException => Left(GameError(g.getMessage))
         }
-      case Destroy(cardNames) => processDestroyDrawing(cardNames, state)
+      case Destroy(cardNames, _) => processDestroyDrawing(cardNames, c => c.getVillageEffects, state)
       case m => Left(GameError("Unexpected message " + m.getClass.getSimpleName))
     }
   }

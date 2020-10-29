@@ -8,7 +8,7 @@ import PlayerHand from "../components/PlayerHand"
 import AttributeValues from "../components/AttributeValues";
 
 function ChoosingDestination(props) {
-    const { gameState } = useGameState()
+    const { gameState, remoteAttributes, sendMessage } = useGameState()
     const { authTokens } = useAuth()
     const renderChoices = () => {
         const stage = gameState.currentStage
@@ -24,7 +24,7 @@ function ChoosingDestination(props) {
     }
 
     const chooseDestination = (messageType) => {
-        props.gameSocket.send(JSON.stringify(
+        sendMessage(JSON.stringify(
             {
                 messageType: messageType,
                 data: {
@@ -45,8 +45,16 @@ function ChoosingDestination(props) {
                 attack: "Attack",
                 magicAttack: "Magic Attack",
                 experience: "Experience"
-                }}
-            />
+
+            }} />
+            <AttributeValues values={remoteAttributes} show={{
+                Gold: "Gold",
+                Buys: "Buys",
+                Light: "Light",
+                Attack: "Attack",
+                "Magic Attack": "Magic Attack",
+                Experience: "Experience"
+            }} />
             <PlayerHand
                 registerHovered={props.registerHovered}
                 arrangement={props.arrangement}

@@ -25,18 +25,42 @@ case class ChoosingDestination(currentPlayerId: Int) extends PlayerStage {
   }
 
   def enterDungeon(state: State): State = {
-    val playersToBorrowFrom = if (state.currentPlayer.get.hand.exists(c => c.getDungeonEffects.exists(e => {
-      e.effect.contains("Borrow")
-    }))) {
-      state.players.filter(p => p.userId != currentPlayerId && p.hand.exists({
-        case _: HeroCard => true
-        case _ => false
-      }))
-    } else {
-      Nil
-    }
-    if (playersToBorrowFrom.nonEmpty) {
-      state.copy(currentStage = BorrowHeroes(currentPlayerId, playersToBorrowFrom.map(_.userId), Map()))
+    val nextStage = PlayerDiscard(
+      currentPlayerId = currentPlayerId,
+      playerIds = Set(),
+      howMany = 0
+    )
+    val discardStage = state.currentPlayer.get.hand.flatMap(c =>
+      c.getDungeonEffects).foldLeft(nextStage)((stage, effect) => {
+        effect.effect match {
+          case Some("Borrow") => stage.copy(
+            playerIds = stage.playerIds ++ state.players.filterNot(p =>
+              p.userId == currentPlayerId || p.hand.collect {case _: HeroCard => true}.isEmpty).map(_.userId).toSet,
+            borrows = stage.borrows + 1,
+            howMany = stage.howMany + 1
+          )
+          case Some("DiscardHero|2Cards") => stage.copy(
+            playerIds = stage.playerIds ++ state.players.filterNot(p =>
+              p.userId == currentPlayerId || p.hand.isEmpty).map(_.userId).toSet,
+            howMany = stage.howMany + 2,
+            heroesDouble = stage.heroesDouble + 1
+          )
+          case Some("Discard")  => stage.copy(
+            playerIds = stage.playerIds ++ state.players.filterNot(p =>
+              p.userId == currentPlayerId || p.hand.isEmpty).map(_.userId).toSet,
+            howMany = stage.howMany + 1
+          )
+          case _ if effect.requiredType.contains("OtherPlayer") => stage.copy(
+            playerIds = stage.playerIds ++ state.players.filterNot(p =>
+              p.userId == currentPlayerId || p.hand.isEmpty).map(_.userId).toSet,
+            howMany = stage.howMany + 1
+          )
+          case _ => stage
+        }
+    })
+
+    if (discardStage.playerIds.nonEmpty) {
+      addCards(c => c.getDungeonEffects, currentPlayer(state).get.hand, state).copy(currentStage = discardStage)
     } else {
       addCards(c => c.getDungeonEffects, currentPlayer(state).get.hand, state).copy(
         currentStage = Crawling(currentPlayerId))

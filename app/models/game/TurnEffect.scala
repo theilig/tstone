@@ -91,7 +91,7 @@ case class TurnEffect(
       case AttributeAdjustment(op, amount, attribute) =>
         (op, attribute) match {
           case (Net, "Gold") => currentValues + ("Gold" ->
-            (currentValues.getOrElse("Gold", 0) + amount - oldCard.get.getGoldValue))
+            (currentValues.getOrElse("Gold", 0) + amount + oldCard.get.getGoldValue))
           case (Add, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) + amount))
           case (Subtract, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) - amount))
           // Don't multiply a -1 by 0 (i.e. disease effect)
@@ -161,41 +161,44 @@ case class TurnEffect(
       }).nonEmpty
     }
 
-    val matchesCard = adjustment.filterNot(a => {
+    val filteredAdjustment = adjustment.filterNot(a => {
       isCombined || List("Card").contains(a.attribute)
-    }).exists(_ => {
-      requiredType.map {
-        case "!Magic Attack" => attributes.getOrElse("Magic Attack", 0) <= 0
-        case "!Equipped" => !equipped(_ => true) && (slot.baseCard match {
-          case _: HeroCard => true
-          case _ => false
-        })
-        case "Equipped" => equipped(_ => true)
-        case "!Rank1" => rank > 1
-        case "Rank3" => rank >= 3
-        case "Food" if effect.contains("Destroy") =>
-          slot.destroyedCards.exists(c => c.getTraits.contains("Food"))
-        case "Equipped+Edged" => equipped(c => c.getTraits.contains("Edged"))
-        case "ClericVDoomknight" =>
-          slot.baseCard.getTraits.contains("Cleric") && monster.exists(_.getTraits.contains("Doomknight"))
-        case "GoldValue" if effect.contains("Destroy") => slot.destroyedCards.exists(c => c.hasGoldValue)
-        case "Militia" if effect.contains("Destroy") => slot.destroyedCards.exists(c => c.getName == "Militia")
-        case "ClericVUndead" =>
-          slot.baseCard.getTraits.contains("Cleric") && monster.exists(_.getTraits.contains("Undead"))
-        case "Hero8Strength" => slot.baseCard match {
-          case _: HeroCard => attributes.getOrElse("Strength", 0) >= 8
-          case _ => false
-        }
-        case _ if effect.contains("MakeMagic") => true
-        case _ if effect.contains("Buys") => true
-        case _ => false
-      }.getOrElse(late)
     })
+    val destroyedCard: Option[Card] = filteredAdjustment.flatMap(_ => requiredType.flatMap {
+      case "GoldValue" if effect.contains("Destroy") => slot.destroyedCards.find(c => c.hasGoldValue)
+      case "Militia" if effect.contains("Destroy") => slot.destroyedCards.find(c => c.getName == "Militia")
+      case "Food" if effect.contains("Destroy") => slot.destroyedCards.find(c => c.getTraits.contains("Food"))
+      case _ => None
+    })
+    val matchesCard = filteredAdjustment.flatMap(_ => requiredType.map {
+      case "!Magic Attack" => attributes.getOrElse("Magic Attack", 0) <= 0
+      case "!Equipped" => slot.baseCard match {
+        case _: HeroCard => !attributes.contains("Equipped")
+        case _ => false
+      }
+      case "Equipped" => attributes.contains("Equipped")
+      case "!Rank1" => rank > 1
+      case "Rank3" => rank >= 3
+      case "Equipped+Edged" => equipped(c => c.getTraits.contains("Edged"))
+      case "ClericVDoomknight" =>
+        slot.baseCard.getTraits.contains("Cleric") && monster.exists(_.getTraits.contains("Doomknight"))
+      case "ClericVUndead" =>
+        slot.baseCard.getTraits.contains("Cleric") && monster.exists(_.getTraits.contains("Undead"))
+      case "Hero8Strength" => slot.baseCard match {
+        case _: HeroCard => attributes.getOrElse("Strength", 0) >= 8
+        case _ => false
+      }
+      case _ if effect.contains("MakeMagic") => true
+      case _ if effect.contains("Buys") => true
+      case _ if effect.contains("Destroy") => destroyedCard.nonEmpty
+      case _ => false
+    }).getOrElse(late)
+
     if (matchesCard) {
       if (isCombined && late) {
-        adjustAttributes(attributes)
+        adjustAttributes(attributes, destroyedCard)
       } else if (!isCombined && !late) {
-        adjustAttributes(attributes)
+        adjustAttributes(attributes, destroyedCard)
       } else {
         attributes
       }

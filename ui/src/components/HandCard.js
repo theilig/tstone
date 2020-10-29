@@ -38,7 +38,7 @@ export const getAttributes = (slots, generalEffects, isVillage) => {
     }
 
     const activeCard = slots.cards[0]
-    const selfDestroyed = slots.destroy && slots.destroy.filter(c => {
+    const selfDestroyed = slots.destroyed && slots.destroyed.filter(c => {
         return c.data.sourceIndex === activeCard.data.sourceIndex
     }).length > 0
     if (activeCard && activeCard.cardType !== "WeaponCard") {
@@ -49,8 +49,8 @@ export const getAttributes = (slots, generalEffects, isVillage) => {
             attributes = addInitialEffects(attachedCard, generalEffects, attributes)
         })
 
-        if (slots.destroy) {
-            slots.destroy.forEach((destroyedCard) => {
+        if (slots.destroyed) {
+            slots.destroyed.forEach((destroyedCard) => {
                 if (isVillage) {
                     attributes = addDestroyEffects(
                         destroyedCard,

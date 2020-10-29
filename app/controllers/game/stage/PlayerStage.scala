@@ -1,29 +1,12 @@
 package controllers.game.stage
 
-import models.game.{Card, GameError, MonsterCard, Player, State, ThunderstoneCard}
+import models.game.{Borrowed, Card, GameError, MonsterCard, Player, State, ThunderstoneCard, TurnEffect}
 import services.CardManager
 
 abstract class PlayerStage extends GameStage {
   def currentPlayerId: Int
   override def currentPlayer(state: State): Option[Player] = state.players.find(_.userId == currentPlayerId)
   def endTurn(state: State): State = {
-    def borrowed: Map[Int, String] = {
-      val borrowedWithStringKey: Map[String, String] = state.currentStage match {
-        case c: Crawling => c.borrowed
-        case b: BorrowHeroes => b.borrowed
-        case _ => Map()
-      }
-      borrowedWithStringKey.map(p => p._1.toInt -> p._2)
-    }
-
-    def returnCard(state: State, pair: (Int, String)): State = {
-      CardManager.getCardsFromHand(List(pair._2), currentPlayerId, state).map(c => {
-        val currentPlayerState = state.updatePlayer(currentPlayerId)(p =>
-          p.copy(hand = CardManager.removeOneInstanceFromCards(p.hand, pair._2))
-        )
-        currentPlayerState.updatePlayer(pair._1)(p => p.copy(discard = c :: p.discard))
-      }).headOption.getOrElse(state)
-    }
     val filledState = state.dungeon.get.fill(state)
 
     val gameOver = filledState.dungeon.get.ranks.head match {
@@ -36,8 +19,15 @@ abstract class PlayerStage extends GameStage {
     if (gameOver) {
       filledState.copy(currentStage = GameEnded)
     } else {
-      val returnedState =
-        borrowed.foldLeft(filledState)(returnCard)
+      val borrowed: List[Borrowed] = filledState.currentStage match {
+        case Crawling(_, _, _, b) => b
+        case TakingSpoils(_, _, b) => b
+        case Destroying(_, _, _, b) => b
+        case _ => Nil
+      }
+      val returnedState = borrowed.foldLeft(filledState)((s, borrow) => {
+        s.updatePlayer(borrow.userId)(p => p.copy(discard = borrow.card :: p.discard))
+      })
       CardManager.discardHand(currentPlayer(returnedState).get, returnedState).copy(
         currentStage = ChoosingDestination(nextPlayer(returnedState).userId)
       )
@@ -55,7 +45,7 @@ abstract class PlayerStage extends GameStage {
     after(currentPlayer(state).get, state.players).getOrElse(state.players.head)
   }
 
-  def checkSpoils(monsterSpoils: List[String], state: State): State = {
+  def checkSpoils(monsterSpoils: List[String], borrowed: List[Borrowed], state: State): State = {
     // only take monster card spoils if it's the monster we just killed
     val spoils = monsterSpoils ::: availableSpoils(state.currentPlayer.get.hand.filterNot({
       case _ : MonsterCard => true
@@ -66,7 +56,7 @@ abstract class PlayerStage extends GameStage {
       case "DiscardOrDestroy" :: Nil =>
         val newHandState = CardManager.discardHand(state.currentPlayer.get, state)
         newHandState.copy(currentStage = DiscardOrDestroy(currentPlayerId, newHandState.currentPlayer.get.hand))
-      case spoils => state.copy(currentStage = TakingSpoils(currentPlayerId, spoils))
+      case spoils => state.copy(currentStage = TakingSpoils(currentPlayerId, spoils, borrowed))
     }
   }
 
@@ -83,16 +73,43 @@ abstract class PlayerStage extends GameStage {
     cardNames.foldLeft(initial)((currentState, cardName) => {
       currentState.flatMap(s => CardManager.destroy(cardName, s))
     }).map(finalState => finalTransform(finalState))
-
   }
 
-  def removePlayerFromList(playerIds: List[Int], playerId: Int): List[Int] = {
-    playerIds.foldLeft(List[Int]())((soFar, p) => {
-      if (p == playerId) {
-        soFar
-      } else {
-        p :: soFar
-      }
+  def processDestroyDrawing(
+                             cardsDestroyed: Map[String, List[String]],
+                             getEffects: Card => List[TurnEffect],
+                             state: State
+                           ): Either[GameError, State] = {
+    val initialResult: Either[GameError, State] = Right(state)
+    cardsDestroyed.foldLeft(initialResult)((currentResult, destroy) => {
+      currentResult.fold(
+        e => Left(e),
+        s => {
+          val (destroyer, destroyed) = destroy
+          val destroyedCards = destroyed.flatMap(name => s.currentPlayer.get.hand.find(_.getName == name))
+          val possibleEffect = s.currentPlayer.get.hand.find(_.getName == destroyer).flatMap(destroyerCard => {
+            getEffects(destroyerCard).find(e => e.effect.contains("Destroy") && e.adjustment.exists(
+              p => p.attribute == "Card" &&
+                destroyedCards.forall(c => e.matchesRequiredCard(c, c.getName == destroyerCard.getName))))
+          })
+          possibleEffect match {
+            case Some(effect) =>
+              val updatedHand = destroyed.foldLeft(s.currentPlayer.get.hand)((adjustedHand, cardName) => {
+                CardManager.removeOneInstanceFromCards(adjustedHand, cardName)
+              })
+              if (updatedHand.length + destroyed.length == s.currentPlayer.get.hand.length) {
+                val destroyedState = s.updatePlayer(currentPlayerId)(p => p.copy(hand = updatedHand))
+                Right(CardManager.givePlayerCards(
+                  destroyedState.currentPlayer.get,
+                  effect.adjustment.get.amount * destroyed.length,
+                  destroyedState)._2
+                )
+              } else {
+                Left(GameError("Couldn't find all destroyed cards in hand"))
+              }
+            case None => Left(GameError(s"Couldn't destroy all cards with $destroyer"))
+          }
+        })
     })
   }
 

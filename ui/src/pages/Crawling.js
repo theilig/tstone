@@ -9,35 +9,14 @@ import PlayerHand from "../components/PlayerHand";
 import AttributeValues from "../components/AttributeValues";
 import {SourceIndexes, TargetIndexes} from "../components/SlotIndexes"
 import BattleSlot from "../components/BattleSlot";
+import {destroyForCards, getCardDestroysFromArrangement, serializeArrangement} from "../services/Arrangement";
 
 function Crawling(props) {
-    const {gameState, haveBanished, haveSentToBottom} = useGameState()
+    const {gameState, haveBanished, haveSentToBottom, remoteAttributes} = useGameState()
     const [battling, setBattling] = useState(null)
     const [destroyed, setDestroyed] = useState({})
     const battle = () => {
-        let finalArrangement = []
-        props.arrangement.forEach(slot => {
-            const equippedSlot = slot.cards
-            const destroyedSlot = slot.destroy ?? []
-            let mainCard = null
-            let equippedCards = []
-            let destroyedCards = []
-            equippedSlot.forEach((card, index) => {
-                if (index === 0) {
-                    mainCard = card.data.name
-                } else {
-                    equippedCards.push(card.data.name)
-                }
-            })
-            destroyedSlot.forEach(card => {
-                destroyedCards.push(card.data.name)
-            })
-            finalArrangement.push({
-                card: mainCard,
-                equipped: equippedCards,
-                destroyed: destroyedCards
-            })
-        })
+        let finalArrangement = serializeArrangement(props.arrangement)
         props.gameSocket.send(JSON.stringify(
             {
                 messageType: "Battle",
@@ -60,6 +39,18 @@ function Crawling(props) {
                     gameId: gameState.gameId,
                     dungeonOrder: dungeonNames,
                     destroyed: destroyed
+                }
+            }
+        ))
+    }
+
+    const doDestroy = () => {
+        props.gameSocket.send(JSON.stringify(
+            {
+                messageType: "Destroy",
+                data: {
+                    gameId: gameState.gameId,
+                    cardNames: getCardDestroysFromArrangement(props.arrangement)
                 }
             }
         ))
@@ -107,8 +98,8 @@ function Crawling(props) {
                 })
             }
             if (canBanish) {
-                if (slot.destroy && slot.destroy.length > 0) {
-                    result = slot.destroy[0]
+                if (slot.destroyed && slot.destroyed.length > 0) {
+                    result = slot.destroyed[0]
                 }
             }
         })
@@ -116,12 +107,17 @@ function Crawling(props) {
     }
 
     const renderChoices = () => {
-        if (haveBanished() || haveSentToBottom()) {
-            return (<Options key={5}>
-                {props.attributes["banishes"] > 0 && banishDestroy() != null && (<Button onClick={banish}>Banish</Button>)}
-                {props.attributes["sendToBottoms"] > 0 && haveSentToBottom() && (<Button onclick={sendToBottom}>Refill</Button>)}
-            </Options>)
-        } else if (battling != null) {
+        let options = []
+        if (destroyForCards(props.arrangement)) {
+            options.push((<Button onClick={doDestroy}>Destroy</Button>))
+        }
+        if (props.attributes.banishes > 0 && haveBanished() && banishDestroy() != null) {
+            options.push((<Button onClick={banish}>Banish</Button>))
+        }
+        if (props.attributes.sendToBottoms > 0 && haveSentToBottom()) {
+            options.push((<Button onclick={sendToBottom}>Refill</Button>))
+        }
+        if (options.length === 0 && battling != null) {
             return (
                 <Options key={5}>
                     <BattleSlot card={battling} registerHovered={props.registerHovered} registerDrop={registerDrop}
@@ -134,6 +130,7 @@ function Crawling(props) {
                 <div key={5}>
                     <div key={6} style={{fontSize: "x-large"}}>Select a monster to battle</div>
                     <Options key={7}>
+                        {options}
                         <BattleSlot key={8} card={null} registerHovered={props.registerHovered}
                                  registerDrop={registerDrop} index={TargetIndexes.BattleIndex} />
                     </Options>
@@ -158,6 +155,11 @@ function Crawling(props) {
                     light: "Light",
                     attack: "Attack",
                     magicAttack: "Magic Attack"
+                }} />
+                <AttributeValues key={6} values={remoteAttributes} show={{
+                    Light: "Light",
+                    Attack: "Attack",
+                    "Magic Attack": "Magic Attack"
                 }} />
                 <PlayerHand key={4} registerHovered={props.registerHovered} registerDrop={registerDrop}
                             registerDestroy={registerDestroy} arrangement={props.arrangement} />

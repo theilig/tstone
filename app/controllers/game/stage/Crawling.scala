@@ -7,24 +7,11 @@ import play.api.libs.json.{Format, Json}
 import services.CardManager
 
 case class Crawling(
-                     currentPlayerId: Int, banishes: Int = 0, sendToBottoms: Int = 0, borrowed: Map[String, String] = Map()
+                     currentPlayerId: Int,
+                     banishes: Int = 0,
+                     sendToBottoms: Int = 0,
+                     borrowed: List[Borrowed] = List()
                    ) extends PlayerStage {
-  def removeDestroyed(hand: List[Card], arrangement: List[BattleSlot], includeSelfDestroyed: Boolean): List[Card] = {
-    arrangement match {
-      case Nil => hand
-      case x :: remaining =>
-        removeDestroyed(
-          x.destroyed.foldLeft(hand)((newHand, destroyedCard) => {
-            if (destroyedCard != x.card || !includeSelfDestroyed)
-              CardManager.removeOneInstanceFromCards(newHand, destroyedCard)
-            else
-              newHand
-          }),
-          remaining, includeSelfDestroyed
-        )
-    }
-  }
-
   def defeat(
               monster: MonsterCard, rank: Int, finalHand: List[Card], attributes: List[(String, Attributes)], state: State
             ): State = {
@@ -44,15 +31,17 @@ case class Crawling(
       newState.copy(currentStage = Destroying(
         currentPlayerId,
         possibleDestroys,
-        monsterSpoils = monsterSpoils))
+        monsterSpoils = monsterSpoils,
+        borrowed = borrowed
+      ))
     } else if (possibleDestroys.length == 1) {
       val newHand = CardManager.removeOneInstanceFromCards(
         newState.currentPlayer.get.hand,
         possibleDestroys.head.getName
       )
-      checkSpoils(monsterSpoils, newState.updatePlayer(currentPlayerId)(p => p.copy(hand = newHand)))
+      checkSpoils(monsterSpoils, borrowed, newState.updatePlayer(currentPlayerId)(p => p.copy(hand = newHand)))
     } else {
-      checkSpoils(monsterSpoils, newState)
+      checkSpoils(monsterSpoils, borrowed, newState)
     }
   }
 
@@ -71,7 +60,7 @@ case class Crawling(
     ))
     val possibleDestroys: List[Card] = getPossibleDestroys(monster, finalHand, attributes)
     if (possibleDestroys.length > 1) {
-      newState.copy(currentStage = Destroying(currentPlayerId, possibleDestroys, monsterSpoils = Nil))
+      newState.copy(currentStage = Destroying(currentPlayerId, possibleDestroys, monsterSpoils = Nil, borrowed))
     } else if (possibleDestroys.length == 1) {
       val newHand = CardManager.removeOneInstanceFromCards(
         newState.currentPlayer.get.hand,
@@ -164,12 +153,12 @@ case class Crawling(
           }
           val generalEffects = (
             monster.battleEffects ::
-              removeDestroyed(hand, cardArrangement, includeSelfDestroyed = true).map(
+              CardManager.removeDestroyed(hand, cardArrangement, keepSelfDestroyed = true).map(
                _.getDungeonEffects
               )
             ).flatten.filter(_.isGeneralEffect)
 
-          val finalHand = removeDestroyed(hand, cardArrangement, includeSelfDestroyed = false)
+          val finalHand = CardManager.removeDestroyed(hand, cardArrangement, keepSelfDestroyed = false)
           val attributes: List[(String, Attributes)] = cardArrangement.map(slot => {
             slot.copy(hand = Some(hand)).battleAttributes(generalEffects, Some(monster), monsterIndex + 1)
           })
@@ -193,6 +182,7 @@ case class Crawling(
         } else {
           Left(GameError("Invalid Dungeon Order"))
         }
+      case Destroy(cardNames, _) => processDestroyDrawing(cardNames, c => c.getDungeonEffects, state)
       case m => Left(GameError("Unexpected message " + m.getClass.getSimpleName))
     }
 }

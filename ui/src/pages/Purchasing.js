@@ -12,7 +12,7 @@ import {TargetIndexes} from "../components/SlotIndexes"
 import {destroyForCards, getCardDestroysFromArrangement, getLowerMapFromArrangement} from "../services/Arrangement";
 
 function Purchasing(props) {
-    const {gameState} = useGameState()
+    const {gameState, remoteAttributes} = useGameState()
     const [bought, setBought] = useState([])
     const endTurn = () => {
         props.gameSocket.send(JSON.stringify(
@@ -21,13 +21,13 @@ function Purchasing(props) {
                 data: {
                     gameId: gameState.gameId,
                     bought: bought.map(c => c.data.name),
-                    destroyed: getLowerMapFromArrangement(props.arrangement, "destroy"),
+                    destroyed: getLowerMapFromArrangement(props.arrangement, "destroyed"),
                 }
             }
         ))
     }
 
-    const destroy = () => {
+    const doDestroy = () => {
         props.gameSocket.send(JSON.stringify(
             {
                 messageType: "Destroy",
@@ -62,7 +62,7 @@ function Purchasing(props) {
                 <Options key={5}>
                     <BuySlot cards={bought} registerHovered={props.registerHovered} registerDrop={registerDrop}
                              index={TargetIndexes.BuyIndex}/>
-                     ({destroyForCards(props.arrangement) && (<Button onClick={destroy}>Destroy</Button>)}
+                     ({destroyForCards(props.arrangement) && (<Button onClick={doDestroy}>Destroy</Button>)}
                     <Button onClick={endTurn}>Done</Button>
                 </Options>
             )
@@ -73,7 +73,7 @@ function Purchasing(props) {
                     <Options key={7}>
                         <BuySlot key={8} cards={bought} registerHovered={props.registerHovered}
                                  registerDrop={registerDrop} index={TargetIndexes.BuyIndex} />
-                        ({destroyForCards(props.arrangement) && (<Button onClick={destroy}>Destroy</Button>)}
+                        ({destroyForCards(props.arrangement) && (<Button onClick={doDestroy}>Destroy</Button>)}
                     </Options>
                 </div>
             )
@@ -84,7 +84,7 @@ function Purchasing(props) {
                     <Options key={7}>
                         <BuySlot key={8} cards={bought} registerHovered={props.registerHovered}
                                  registerDrop={registerDrop} index={TargetIndexes.BuyIndex} />
-                        ({destroyForCards(props.arrangement) && (<Button onClick={destroy}>Destroy</Button>)}
+                        ({destroyForCards(props.arrangement) && (<Button onClick={doDestroy}>Destroy</Button>)}
                         <Button key={9} onClick={endTurn}>Skip Buys</Button>
                     </Options>
                 </div>
@@ -108,6 +108,11 @@ function Purchasing(props) {
                     goldValue: "Gold",
                     buys: "Buys",
                     experience: "Experience"
+                }} />
+                <AttributeValues key={6} values={remoteAttributes} show={{
+                    Gold: "Gold",
+                    Buys: "Buys",
+                    Experience: "Experience"
                 }} />
                 <PlayerHand key={4} registerHovered={props.registerHovered} registerDrop={registerDrop}
                             arrangement={props.arrangement} />
