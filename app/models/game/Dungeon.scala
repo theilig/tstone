@@ -21,7 +21,7 @@ case class Dungeon(monsterPile: List[Card], ranks: List[Option[Card]]) {
   }
 
   def breachEffect(state: State): State =
-    ranks.head match {
+    state.dungeon.get.ranks.head match {
       case Some(monster: MonsterCard) => monster.breachEffect match {
         case Some(DestroyTwoHeroesFromVillagePiles) =>
           val newHeroPiles = state.village.get.heroes.map(p => p.copy(cards = p.cards.drop(2)))

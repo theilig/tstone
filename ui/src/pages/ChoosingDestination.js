@@ -8,7 +8,7 @@ import PlayerHand from "../components/PlayerHand"
 import AttributeValues from "../components/AttributeValues";
 
 function ChoosingDestination(props) {
-    const { gameState, remoteAttributes, sendMessage } = useGameState()
+    const { gameState, remoteAttributes, sendMessage, renderHovered } = useGameState()
     const { authTokens } = useAuth()
     const renderChoices = () => {
         const stage = gameState.currentStage
@@ -24,29 +24,17 @@ function ChoosingDestination(props) {
     }
 
     const chooseDestination = (messageType) => {
-        sendMessage(JSON.stringify(
-            {
-                messageType: messageType,
-                data: {
-                    gameId: gameState.gameId
-                }
-            }
-        ))
+        sendMessage({
+            messageType: messageType,
+            data: {}
+        })
+
     }
 
     return (
         <div>
-            <Dungeon registerHovered={props.registerHovered} />
-            <Village registerHovered={props.registerHovered} />
-            <AttributeValues values={props.attributes} show={{
-                goldValue: "Gold",
-                buys: "Buys",
-                light: "Light",
-                attack: "Attack",
-                magicAttack: "Magic Attack",
-                experience: "Experience"
-
-            }} />
+            <Dungeon />
+            <Village />
             <AttributeValues values={remoteAttributes} show={{
                 Gold: "Gold",
                 Buys: "Buys",
@@ -56,12 +44,10 @@ function ChoosingDestination(props) {
                 Experience: "Experience"
             }} />
             <PlayerHand
-                registerHovered={props.registerHovered}
                 arrangement={props.arrangement}
-                registerDrop={props.registerDrop}
             />
             {renderChoices()}
-            {props.renderHovered()}
+            {renderHovered()}
         </div>
     )
 }

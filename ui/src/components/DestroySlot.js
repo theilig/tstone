@@ -3,13 +3,14 @@ import { useDrop } from 'react-dnd'
 import { getDropTypes } from "./CardTypes";
 import trash from "../img/trash.png"
 import { HandCard } from "./HandCard";
+import {useGameState} from "../context/GameState";
 
 function DestroySlot(props) {
-
+    const {registerDrop} = useGameState()
     const [, drop] = useDrop({
         accept: getDropTypes({cardType: "TakeAny"}),
         drop: (c) => {
-            props.registerDrop(c.card, props.index)
+            registerDrop(c.card, props.index)
         }
     })
 
@@ -23,8 +24,6 @@ function DestroySlot(props) {
                 <HandCard key={c.data.sourceIndex}
                           card={c}
                           position={1}
-                          registerHovered={props.registerHovered}
-                          registerDrop={props.registerDrop}
                           style={{
                               zIndex: index,
                           }}

@@ -3,7 +3,8 @@ import {useGameState} from "../context/GameState";
 import cardImages from "../img/cards/cards"
 import styled from "styled-components";
 import DungeonSlot from "./DungeonSlot";
-import {SourceIndexes, TargetIndexes} from "./SlotIndexes";
+import {TargetIndexes} from "./SlotIndexes";
+import DropSlot from "./DropSlot";
 
 const DungeonContainer = styled.div`
     display: flex;
@@ -28,10 +29,9 @@ function Dungeon(props) {
                     key={index}
                     cards={[card]}
                     index={TargetIndexes.DungeonIndex + index}
-                    registerHovered={props.registerHovered}
-                    registerDrop={props.registerDrop}
                 />
             ))}
+            {props.extraSlot != null && <DropSlot slotInfo={props.extraSlot} />}
             <DungeonCard id={100} src={cardImages['Disease']} title={'Disease'} />
         </DungeonContainer>
     )

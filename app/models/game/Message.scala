@@ -1,6 +1,6 @@
 package models.game
 
-import controllers.game.stage.{BorrowHeroes, Destroying, PlayerDiscard, PlayerStage, Purchasing, Resting, TakingSpoils}
+import controllers.game.stage.{BorrowHeroes, Crawling, Destroying, PlayerDiscard, PlayerStage, Purchasing, Resting, TakingSpoils}
 import models.User
 import play.api.libs.json.{Format, JsError, JsObject, JsPath, JsResult, JsString, JsSuccess, Json, Reads, Writes}
 import services.CardManager
@@ -125,6 +125,7 @@ object Message {
           case "Battle" => (JsPath \ "data").read[Battle].reads(js)
           case "Upgrade" => (JsPath \ "data").read[Upgrade].reads(js)
           case "Banish" => (JsPath \ "data").read[Banish].reads(js)
+          case "SendToBottom" => (JsPath \ "data").read[SendToBottom].reads(js)
           case "GetAttributes" => (JsPath \ "data").read[GetAttributes].reads(js)
           case "Discard" => (JsPath \ "data").read[Discard].reads(js)
           case "Borrow" => (JsPath \ "data").read[Borrow].reads(js)
@@ -220,6 +221,19 @@ case class Borrow(borrowed: List[Int]) extends CurrentPlayerMessage {
 
 object Borrow {
   implicit val borrowFormat: Format[Borrow] = Json.format
+}
+
+case class SendToBottom(banished: Int) extends CurrentPlayerMessage {
+  override def validate(state: State): Boolean = {
+    state.currentStage match {
+      case c: Crawling => c.sendToBottoms < c.effectCount("SendToBottom", state) && state.dungeon.get.ranks.drop(banished).head.nonEmpty
+      case _ => false
+    }
+  }
+}
+
+object SendToBottom {
+  implicit val sendToBottomFormat: Format[SendToBottom] = Json.format
 }
 
 case class Banish(dungeonOrder: List[String], destroyed: String) extends CurrentPlayerMessage {

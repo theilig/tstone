@@ -9,19 +9,16 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import {getLowerMapFromArrangement} from "../services/Arrangement";
 
 function Destroying(props) {
-    const { gameState } = useGameState()
+    const { gameState, sendMessage, renderHovered } = useGameState()
 
     const endTurn = () => {
-        props.gameSocket.send(JSON.stringify(
-            {
-                messageType: "Destroy",
-                data: {
-                    gameId: gameState.gameId,
-                    cardNames: getLowerMapFromArrangement(props.arrangement, "destroyed"),
-                    borrowedDestroy: []
-                }
+        sendMessage({
+            messageType: "Destroy",
+            data: {
+                cardNames: getLowerMapFromArrangement(props.arrangement, "destroyed"),
+                borrowedDestroy: []
             }
-        ))
+        })
     }
 
     const renderChoices = () => {
@@ -51,15 +48,12 @@ function Destroying(props) {
         <DndProvider backend={HTML5Backend}>
             <div>
                 <div style={disabledStyle}>
-                    <Dungeon registerHovered={props.registerHovered} />
-                    <Village registerHovered={props.registerHovered}/>
+                    <Dungeon />
+                    <Village />
                 </div>
-                <PlayerHand arrangement={props.arrangement}
-                            registerHovered={props.registerHovered}
-                            registerDrop={props.registerDrop}
-                />
+                <PlayerHand arrangement={props.arrangement} />
                 {renderChoices()}
-                {props.renderHovered()}
+                {renderHovered()}
             </div>
         </DndProvider>
     )

@@ -28,8 +28,6 @@ function Village(props) {
                     })
                     return (
                         <VillagePile key={index + 10} pile={cards}
-                                     registerHovered={props.registerHovered}
-                                     registerDrop={props.registerDrop}
                                      upgrading={props.upgrading}
                                      purchased={purchased}
                         />
@@ -40,9 +38,7 @@ function Village(props) {
                         return {cardType: 'WeaponCard', data: c}
                     })
                     return (
-                        <VillagePile key={index + 20} pile={cards} registerHovered={props.registerHovered}
-                                     registerDrop={props.registerDrop}
-                                     purchased={purchased}
+                        <VillagePile key={index + 20} pile={cards} purchased={purchased}
                         />
 
                     )
@@ -54,9 +50,7 @@ function Village(props) {
                         return {cardType: 'SpellCard', data: c}
                     })
                     return (
-                        <VillagePile key={index + 30} pile={cards} registerHovered={props.registerHovered}
-                                     registerDrop={props.registerDrop}
-                                     purchased={purchased}
+                        <VillagePile key={index + 30} pile={cards} purchased={purchased}
                         />
                     )
                 })}
@@ -65,9 +59,7 @@ function Village(props) {
                         return {cardType: 'ItemCard', data: c}
                     })
                     return (
-                        <VillagePile key={index + 40} pile={cards} registerHovered={props.registerHovered}
-                                     registerDrop={props.registerDrop}
-                                     purchased={purchased}
+                        <VillagePile key={index + 40} pile={cards} purchased={purchased}
                         />
                     )
                 })}
@@ -76,9 +68,7 @@ function Village(props) {
                         return {cardType: 'VillagerCard', data: c}
                     })
                     return (
-                        <VillagePile key={index + 50} pile={cards} registerHovered={props.registerHovered}
-                                     registerDrop={props.registerDrop}
-                                     purchased={purchased}
+                        <VillagePile key={index + 50} pile={cards} purchased={purchased}
                         />
                     )
                 })}

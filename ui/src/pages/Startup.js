@@ -19,60 +19,40 @@ const Options = styled.div`
 
 function Startup(props) {
     const { authTokens } = useAuth()
-    const { gameState } = useGameState()
+    const { gameState, sendMessage } = useGameState()
     const MAX_PLAYERS = 5
     function leaveGame() {
-        props.gameSocket.send(
-            JSON.stringify(
-                {
-                    messageType: "LeaveGame"
-                }
-            )
-        )
+        sendMessage({
+            messageType: "LeaveGame"
+        })
     }
     function requestToJoin() {
-        props.gameSocket.send(
-            JSON.stringify(
-                {
-                    messageType: "JoinGame"
-                }
-            )
-        )
+        sendMessage({
+            messageType: "JoinGame"
+        })
     }
     function startGame() {
-        props.gameSocket.send(
-            JSON.stringify(
-                {
-                    messageType: "StartGame"
-                }
-            )
-        )
+        sendMessage({
+            messageType: "StartGame"
+        })
     }
 
     function acceptPlayer(userId) {
-        props.gameSocket.send(
-            JSON.stringify(
-                {
-                    messageType: "AcceptPlayer",
-                    data: {
-                        userId: userId
-                    }
-                }
-            )
-        )
+        sendMessage({
+            messageType: "AcceptPlayer",
+            data: {
+                userId: userId
+            }
+        })
     }
 
     function rejectPlayer(userId) {
-        props.gameSocket.send(
-            JSON.stringify(
-                {
-                    messageType: "RejectPlayer",
-                    data: {
-                        userId: userId
-                    }
-                }
-            )
-        )
+        sendMessage({
+            messageType: "RejectPlayer",
+            data: {
+                userId: userId
+            }
+        })
     }
 
     const renderOptions = (isGameOwner) => {

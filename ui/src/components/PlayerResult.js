@@ -12,8 +12,6 @@ function PlayerResult(props) {
                 <HandCard key={c.data.sourceIndex}
                           card={c}
                           position={index}
-                          registerHovered={props.registerHovered}
-                          registerDrop={props.registerDrop}
                           style={{
                               zIndex: 100 - index
                          }}

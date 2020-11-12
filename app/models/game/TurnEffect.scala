@@ -22,7 +22,12 @@ case class TurnEffect(
   }
 
   def isCombined: Boolean = {
-    (adjustment.exists(combinedOperation) && !repeatable) || requiredType.contains("LightPenalty")
+      val lateEffects = Set("MakeMagic", "Buys", "Banish", "SendToBottom")
+      val lateRequirements = Set("LightPenalty")
+
+      (adjustment.exists(combinedOperation) && !repeatable) ||
+        requiredType.exists(r => lateRequirements.contains(r)) ||
+        effect.exists(e => lateEffects.contains(e))
   }
 
   def isGeneralEffect: Boolean = {
@@ -99,7 +104,15 @@ case class TurnEffect(
           case (Multiply, a)  => currentValues + (a -> (currentValues.getOrElse(a, 0) * amount))
           case (Divide, a) => currentValues + (a -> (currentValues.getOrElse(a, 0) / amount))
         }
-    }.getOrElse(currentValues)
+    }.getOrElse({
+      effect.map {
+        case "MakeMagic" => currentValues +
+          ("Attack" -> 0) +
+          ("Magic Attack" -> (currentValues.getOrElse("Attack", 0) + currentValues.getOrElse("Magic Attack", 0)))
+        case "Banish" => currentValues + ("Banishes" -> (currentValues.getOrElse("Banishes", 0) + 1))
+        case "SendToBottom" => currentValues + ("SendToBottoms" -> (currentValues.getOrElse("SendToBottoms", 0) + 1))
+      }.getOrElse(currentValues)
+    })
   }
 
   def matchesRequiredCard(card: Card, isSelf: Boolean = false): Boolean = {
@@ -162,7 +175,7 @@ case class TurnEffect(
     }
 
     val filteredAdjustment = adjustment.filterNot(a => {
-      isCombined || List("Card").contains(a.attribute)
+      (isCombined && !repeatable) || List("Card").contains(a.attribute)
     })
     val destroyedCard: Option[Card] = filteredAdjustment.flatMap(_ => requiredType.flatMap {
       case "GoldValue" if effect.contains("Destroy") => slot.destroyedCards.find(c => c.hasGoldValue)
@@ -170,7 +183,7 @@ case class TurnEffect(
       case "Food" if effect.contains("Destroy") => slot.destroyedCards.find(c => c.getTraits.contains("Food"))
       case _ => None
     })
-    val matchesCard = filteredAdjustment.flatMap(_ => requiredType.map {
+    val matchesType = requiredType.exists {
       case "!Magic Attack" => attributes.getOrElse("Magic Attack", 0) <= 0
       case "!Equipped" => slot.baseCard match {
         case _: HeroCard => !attributes.contains("Equipped")
@@ -188,11 +201,10 @@ case class TurnEffect(
         case _: HeroCard => attributes.getOrElse("Strength", 0) >= 8
         case _ => false
       }
-      case _ if effect.contains("MakeMagic") => true
-      case _ if effect.contains("Buys") => true
       case _ if effect.contains("Destroy") => destroyedCard.nonEmpty
       case _ => false
-    }).getOrElse(late)
+    }
+    val matchesCard = filteredAdjustment.map(_ => matchesType).getOrElse(late && matchesType)
 
     if (matchesCard) {
       if (isCombined && late) {

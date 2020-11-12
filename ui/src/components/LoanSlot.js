@@ -3,11 +3,13 @@ import { useDrop } from 'react-dnd'
 import { CardTypes } from "./CardTypes";
 import borrow from "../img/borrow.png"
 import { HandCard } from "./HandCard";
+import {useGameState} from "../context/GameState";
 function LoanSlot(props) {
+    const {registerDrop} = useGameState()
     const [, drop] = useDrop({
         accept: CardTypes.HERO,
         drop: (c) => {
-            props.registerDrop(c.card, props.index)
+            registerDrop(c.card, props.index)
         }
     })
 
@@ -23,8 +25,6 @@ function LoanSlot(props) {
                           small={true}
                           shiftHovered={true}
                           position={1}
-                          registerHovered={props.registerHovered}
-                          registerDrop={props.registerDrop}
                           style={{
                               zIndex: index + 1,
                           }}

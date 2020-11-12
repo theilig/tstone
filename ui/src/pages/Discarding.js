@@ -11,7 +11,7 @@ import {getLowerMapFromArrangement} from "../services/Arrangement";
 import { useAuth } from "../context/auth";
 
 function Discarding(props) {
-    const {gameState} = useGameState()
+    const {gameState, remoteAttributes, sendMessage} = useGameState()
     const { authTokens } = useAuth()
 
     const endTurn = () => {
@@ -27,16 +27,13 @@ function Discarding(props) {
         if (discardKeys.length > 0) {
             discards = discardsData[discardKeys[0]]
         }
-        props.gameSocket.send(JSON.stringify(
-            {
-                messageType: "Discard",
-                data: {
-                    gameId: gameState.gameId,
-                    borrows: borrows,
-                    discards: discards
-                }
+        sendMessage({
+            messageType: "Discard",
+            data: {
+                borrows: borrows,
+                discards: discards
             }
-        ))
+        })
     }
 
     const correctBorrows = () => {
@@ -115,17 +112,15 @@ function Discarding(props) {
         <DndProvider backend={HTML5Backend}>
             <div>
                 <div key={1} style={disabledStyle}>
-                    <Dungeon registerHovered={props.registerHovered} />
-                    <Village key={2} registerHovered={props.registerHovered} registerDrop={props.registerDrop}
-                         purchased={[]} />
+                    <Dungeon />
+                    <Village key={2} purchased={[]} />
                 </div>
-                <AttributeValues key={3} values={props.attributes} show={{
+                <AttributeValues key={3} values={remoteAttributes} show={{
                     goldValue: "Gold",
                     buys: "Buys",
                     experience: "Experience"
                 }} />
-                <PlayerHand key={4} registerHovered={props.registerHovered} registerDrop={props.registerDrop}
-                            arrangement={props.arrangement} />
+                <PlayerHand key={4} arrangement={props.arrangement} />
                 {renderChoices()}
                 {props.renderHovered()}
             </div>

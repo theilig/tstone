@@ -12,18 +12,16 @@ const ResultContainer = styled.div`
 
 
 function GameResult(props) {
-    const {gameState} = useGameState()
+    const {gameState, renderHovered} = useGameState()
     return (
         <div>
             <ResultContainer>
                 {gameState.players.map(p => {
                     const cards = p.hand.concat(p.discard, p.deck)
-                    return (<PlayerResult registerHovered={props.registerHovered}
-                                          cards={cards}
-                                          name={p.name}
+                    return (<PlayerResult cards={cards} name={p.name}
                     />)
                 })}
-                {props.renderHovered()}
+                {renderHovered()}
             </ResultContainer>
             <Button onClick={props.leaveGame}>Leave Game</Button>
         </div>

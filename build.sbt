@@ -4,6 +4,8 @@ version := "1.0"
       
 lazy val `tstone` = (project in file(".")).enablePlugins(PlayScala)
 
+enablePlugins(DockerPlugin)
+
 resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
       
 resolvers += "Akka Snapshot Repository" at "https://repo.akka.io/snapshots/"
@@ -35,4 +37,7 @@ libraryDependencies ++= Seq(
 )
 
 unmanagedResourceDirectories in Test +=  baseDirectory ( _ /"target/web/public/test" ).value
+
+dockerExposedPorts := Seq(9000, 3000)
+daemonUser in Docker    := "tstone"
 

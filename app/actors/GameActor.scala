@@ -79,7 +79,11 @@ class GameActor(gameId: Int, gameDao: GameDao, cardDao: CardDao)
         }
       case GetAttributes(monster, slots) =>
         val player = state.players.find(_.userId == user.userId)
-        val target: Option[Card] = state.dungeon.flatMap(d => monster.flatMap(index => d.ranks.drop(index - 1).headOption.flatten))
+        val target: Option[Card] = state.dungeon.flatMap(d =>
+          monster.flatMap(index =>
+            d.ranks.drop(index).headOption.flatten
+          )
+        )
         val monsterCard: Option[MonsterCard] = target match {
           case Some(m: MonsterCard) => Some(m)
           case _ => None

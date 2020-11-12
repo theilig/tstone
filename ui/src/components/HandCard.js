@@ -3,6 +3,7 @@ import {cardMatches, executeEffect, isActive, isEarlyEffect} from "../services/e
 import cardImages from "../img/cards/cards";
 import {useDrag} from "react-dnd";
 import {getDragType} from "./CardTypes";
+import {useGameState} from "../context/GameState";
 
 export const upgradeCost = (card) => {
     if (card.data.level == null || card.data.level >= 3) {
@@ -127,11 +128,12 @@ const addDestroyEffects = (destroyedCard, activeCard, effects, currentAttributes
 }
 
 export function HandCard(props) {
-    const [,drag, preview] = useDrag({
+    const {registerDrop, registerHovered} = useGameState()
+    const [,drag] = useDrag({
         item: {type: getDragType(props.card), card: props.card},
         end: (item, monitor) => {
             if (!monitor.didDrop() && props.registerDrop) {
-                props.registerDrop(props.card, null)
+                registerDrop(props.card, null)
             }
         }
     })
@@ -145,23 +147,24 @@ export function HandCard(props) {
             if (shift) {
                 top = location.bottom - 375
             }
-            props.registerHovered(props.card.data.name, {left: location.left, top: top})
+            registerHovered(props.card.data.name, {left: location.left, top: top})
         }
     }
 
     let marginTop = '-140px'
+    let marginLeft = '10px'
     if (props.small) {
         marginTop = '-78px'
     }
     if (props.position === 0) {
         marginTop = '0px'
+    } else if (props.rightShift) {
+        marginTop = '0px'
+        marginLeft = '-70px'
     }
 
-//    let style = {width: '126px', height: '180px', marginLeft: '10px', marginTop:marginTop}
 
-//    if (props.small) {
-        let style = {width: '70px', height: '100px', marginLeft: '10px', marginTop:marginTop}
-//    }
+     let style = {width: '70px', height: '100px', marginLeft: marginLeft, marginTop:marginTop}
 
     return <div ref={drag}>
         <img style={style}
@@ -169,8 +172,8 @@ export function HandCard(props) {
               src={cardImages[props.card.data.name]} title={props.card.data.name} alt={props.card.data.name}
               ref={refContainer}
               onMouseOver={() => handleHovered(props.shiftHovered)}
-              onMouseDown={() => props.registerHovered(null, null)}
-              onMouseOut={() => props.registerHovered(null, null)}
+              onMouseDown={() => registerHovered(null, null)}
+              onMouseOut={() => registerHovered(null, null)}
         />
 
     </div>

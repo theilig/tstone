@@ -12,7 +12,7 @@ import {getLowerMapFromArrangement} from "../services/Arrangement";
 import AttributeValues from "../components/AttributeValues";
 
 function Upgrading(props) {
-    const { gameState } = useGameState()
+    const { gameState, remoteAttributes, sendMessage, renderHovered } = useGameState()
     const { authTokens } = useAuth()
 
     const upgrade = () => {
@@ -21,15 +21,12 @@ function Upgrading(props) {
         Object.keys(upgradedData).forEach(key => {
             upgradedData[key] = upgradedData[key][0]
         })
-        props.gameSocket.send(JSON.stringify(
-            {
-                messageType: "Upgrade",
-                data: {
-                    gameId: gameState.gameId,
-                    upgrades: upgradedData
-                }
+        sendMessage({
+            messageType: "Upgrade",
+            data: {
+                upgrades: upgradedData
             }
-        ))
+        })
     }
 
     const getUpgradedCard = (oldCard, newName) => {
@@ -112,22 +109,19 @@ function Upgrading(props) {
         <DndProvider backend={HTML5Backend}>
             <div>
                 <div style={disabledStyle}>
-                    <Dungeon registerHovered={props.registerHovered} />
+                    <Dungeon />
                 </div>
-                <Village registerHovered={props.registerHovered} upgrading={props.upgrading}
-                            purchased={purchasedCards}
+                <Village upgrading={props.upgrading} purchased={purchasedCards}
                 />
-                <AttributeValues key={3} values={props.attributes} show={{
-                    experience: "Experience"
+                <AttributeValues key={3} values={remoteAttributes} show={{
+                    Experience: "Experience"
                 }} />
                 <PlayerHand arrangement={props.arrangement}
-                            registerHovered={props.registerHovered}
-                            registerDrop={props.registerDrop}
                             registerUpgrade={registerUpgrade}
                             upgrading={props.upgrading}
                 />
                 {renderChoices()}
-                {props.renderHovered()}
+                {renderHovered()}
             </div>
         </DndProvider>
     )

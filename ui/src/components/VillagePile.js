@@ -3,6 +3,7 @@ import cardImages from "../img/cards/cards"
 import styled from "styled-components";
 import { useDrag } from "react-dnd";
 import { CardTypes } from "./CardTypes";
+import {useGameState} from "../context/GameState";
 
 const VillageCard = styled.img`
     width: 70px;
@@ -25,6 +26,7 @@ export const removePurchased = (cards, purchased) => {
 
 
 function VillagePile(props) {
+    const {registerHovered} = useGameState()
     const cards = removePurchased(props.pile, props.purchased)
 
     const getNames = () => {
@@ -32,7 +34,7 @@ function VillagePile(props) {
             return self.indexOf(value) === index
         })
     }
-    const [,drag, preview] = useDrag({
+    const [,drag] = useDrag({
         item: {
             type: CardTypes.VILLAGE,
             card: cards[0],
@@ -68,7 +70,7 @@ function VillagePile(props) {
                 name = cards[0].data.name
             }
             if (name) {
-                props.registerHovered(name, refContainer.current.getBoundingClientRect())
+                registerHovered(name, refContainer.current.getBoundingClientRect())
             }
         }
     }
@@ -87,10 +89,7 @@ function VillagePile(props) {
                     data={card}
                     key={card.id} id={card.name} src={cardImages[card.name]} title={card.name}
                     ref={refContainer}
-                    registerDrop={props.registerDrop}
                     onMouseOver={() => handleHovered(true)}
-                    onMouseOut={() => props.registerHovered(null, null)}
-                    onMouseDown={() => props.registerHovered(null, null)}
                 />
             </div>
         )

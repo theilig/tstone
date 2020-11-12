@@ -3,13 +3,15 @@ import {useDrop} from 'react-dnd'
 import {getDropTypes} from "./CardTypes";
 import upgrade from "../img/upgrade.png"
 import {HandCard} from "./HandCard";
+import {useGameState} from "../context/GameState";
 
 function UpgradeSlot(props) {
+    const {registerDrop} = useGameState()
     const [, drop] = useDrop({
         accept: getDropTypes({cardType: "Upgrade"}),
         drop: (c) => {
             const newCard = props.registerUpgrade(props.upgradee, c.card.data.name)
-            props.registerDrop(newCard, props.index)
+            registerDrop(newCard, props.index)
         }
     })
 
@@ -23,8 +25,6 @@ function UpgradeSlot(props) {
                 <HandCard position={1}
                           index={props.cards[0].sourceIndex}
                           card={props.cards[0]}
-                          registerHovered={props.registerHovered}
-                          registerDrop={props.registerDrop}
                           style={{
                               zIndex: 1,
                           }}

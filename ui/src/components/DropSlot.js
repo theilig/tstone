@@ -1,30 +1,29 @@
 import React from "react";
 import { useDrop } from 'react-dnd'
-import { CardTypes } from "./CardTypes";
-import buy from "../img/buy.png"
 import { HandCard } from "./HandCard";
-function BuySlot(props) {
+import {useGameState} from "../context/GameState";
+function DropSlot(props) {
+    const {registerDrop} = useGameState()
     const [, drop] = useDrop({
-        accept: CardTypes.VILLAGE,
+        accept: props.slotInfo.dropTypes,
         drop: (c) => {
-            props.registerDrop(c.card, props.index)
+            registerDrop(c.card, props.slotInfo.index, props.slotInfo.singleDrop)
         }
     })
 
     return (
-        <div ref={drop}>
+        <div ref={drop} style={{display: 'flex', marginRight: '20px'}}>
             <img style={{width: '70px', height: '100px', marginLeft: '10px', marginRight: '20px'}}
                  key={102} id={102}
-                 src={buy} title={'Purchase'} alt={'Purchase'}
+                 src={props.slotInfo.image} title={props.slotInfo.title} alt={props.slotInfo.altText}
             />
-            {props.cards.map((c, index) => (
+            {props.slotInfo.cards.map((c, index) => (
                 <HandCard key={c.data.sourceIndex}
                           card={c}
                           small={true}
-                          shiftHovered={true}
-                          position={1}
-                          registerHovered={props.registerHovered}
-                          registerDrop={props.registerDrop}
+                          shiftHovered={false}
+                          position={index + 1}
+                          rightShift={true}
                           style={{
                               zIndex: index + 1,
                           }}
@@ -34,4 +33,4 @@ function BuySlot(props) {
     )
 }
 
-export default BuySlot;
+export default DropSlot;

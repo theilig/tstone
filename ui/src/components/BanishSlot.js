@@ -3,11 +3,13 @@ import { useDrop } from 'react-dnd'
 import { CardTypes } from "./CardTypes";
 import banish from "../img/banish.png"
 import { HandCard } from "./HandCard";
+import {useGameState} from "../context/GameState";
 function BanishSlot(props) {
+    const {registerDrop} = useGameState()
     const [, drop] = useDrop({
         accept: CardTypes.MONSTER,
         drop: (c) => {
-            props.registerDrop(c.card, props.index)
+            registerDrop(c.card, props.index)
         }
     })
 
@@ -23,8 +25,6 @@ function BanishSlot(props) {
                           small={true}
                           shiftHovered={true}
                           position={1}
-                          registerHovered={props.registerHovered}
-                          registerDrop={props.registerDrop}
                           style={{
                               zIndex: 1,
                           }}

@@ -30,16 +30,11 @@ function PlayerHand(props) {
                             cards={column.cards}
                             index={column.cards[0].data.sourceIndex}
                             key={column.cards[0].data.sourceIndex}
-                            registerDrop={props.registerDrop}
-                            registerHovered={props.registerHovered}
                         />
                         {column.banish && (<BanishSlot
                                 card={column.banish[0]}
                                 index={TargetIndexes.BanishIndex - TargetIndexes.HandIndex + column.cards[0].data.sourceIndex}
                                 key={TargetIndexes.BanishIndex - TargetIndexes.HandIndex + column.cards[0].data.sourceIndex}
-                                registerDrop={props.registerDrop}
-                                registerDestroy={props.registerDestroy}
-                                registerHovered={props.registerHovered}
                                 name={column.cards[0].data.name}
                             />)}
                         {column.upgrade && (
@@ -47,9 +42,7 @@ function PlayerHand(props) {
                                 cards={column.upgrade}
                                 index={TargetIndexes.UpgradeIndex - TargetIndexes.HandIndex + column.cards[0].data.sourceIndex}
                                 key={TargetIndexes.UpgradeIndex - TargetIndexes.HandIndex + column.cards[0].data.sourceIndex}
-                                registerDrop={props.registerDrop}
                                 registerUpgrade={props.registerUpgrade}
-                                registerHovered={props.registerHovered}
                                 name={column.cards[0].data.name}
                                 upgradee={column.cards[0]}
                             />
@@ -59,9 +52,6 @@ function PlayerHand(props) {
                                 cards={column.destroyed}
                                 index={TargetIndexes.DestroyIndex - TargetIndexes.HandIndex + column.cards[0].data.sourceIndex}
                                 key={TargetIndexes.DestroyIndex - TargetIndexes.HandIndex + column.cards[0].data.sourceIndex}
-                                registerDrop={props.registerDrop}
-                                registerDestroy={props.registerDestroy}
-                                registerHovered={props.registerHovered}
                                 name={column.cards[0].data.name}
                             />
                         )}
@@ -70,9 +60,6 @@ function PlayerHand(props) {
                                 cards={column.loan}
                                 index={TargetIndexes.LoanIndex}
                                 key={TargetIndexes.LoanIndex}
-                                registerDrop={props.registerDrop}
-                                registerDestroy={props.registerDestroy}
-                                registerHovered={props.registerHovered}
                                 name={"Loan Hero"}
                             />
                         )}
@@ -81,9 +68,6 @@ function PlayerHand(props) {
                                 cards={column.discard}
                                 index={TargetIndexes.DiscardIndex}
                                 key={TargetIndexes.DiscardIndex}
-                                registerDrop={props.registerDrop}
-                                registerDestroy={props.registerDestroy}
-                                registerHovered={props.registerHovered}
                                 name={"Discard"}
                             />
                         )}
