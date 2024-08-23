@@ -42,7 +42,7 @@ class UserDao @Inject() (
   }
 
   private def createConfirmation(userId: Int): Future[Tables.UserConfirmationRow] = {
-    val ConfirmationLength = 32
+    val ConfirmationLength = 8
     val confirmation = Tables.UserConfirmationRow(userConfirmationId = 0, token = Random.alphanumeric.take(ConfirmationLength).mkString, userId = userId)
     db.run(insertConfirmationQuery += confirmation)
   }

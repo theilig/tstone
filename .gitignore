@@ -15,3 +15,4 @@ dist
 /.settings
 public
 .DS_Store
+services/nginx/keys
